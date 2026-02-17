@@ -1,5 +1,7 @@
 import { AppBar, Box, Button, Toolbar } from '@mui/material';
+import { Link as RouterLink } from "react-router-dom";
 import Logo from '../../../components/base/Logo';
+import paths from '../../../routes/paths';
 
 export default function MainAppBar() {
   return (
@@ -16,9 +18,20 @@ export default function MainAppBar() {
         <Logo />
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button color="inherit">Find a pro</Button>
+          {/* Navigare actualizată */}
+          <Button component={RouterLink} to={paths.home} color="inherit">
+            Home
+          </Button>
+
+          <Button component={RouterLink} to={paths.findAPro} color="inherit">
+            Find a pro
+          </Button>
+
           <Button color="inherit">Become a pro</Button>
-          <Button variant="contained">Sign in</Button>
+
+          <Button variant="contained" component={RouterLink} to={paths.home}>
+            Sign in
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>
