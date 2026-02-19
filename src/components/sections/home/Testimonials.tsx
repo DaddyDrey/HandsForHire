@@ -1,19 +1,23 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
+import { useLanguage } from '../../../i18n/LanguageContext';
+import type { TranslationKey } from '../../../i18n/translations';
 
-const quotes = [
-  { text: 'Booked a plumber in 10 minutes. Super smooth.', author: 'Dana' },
-  { text: 'Great quality work and fair price. Loved the reviews feature.', author: 'Vlad' },
-  { text: 'Found a reliable electrician for my apartment renovation.', author: 'Elena' },
+const quotes: { textKey: TranslationKey; author: string }[] = [
+  { textKey: 'testimonial1', author: 'Dana' },
+  { textKey: 'testimonial2', author: 'Vlad' },
+  { textKey: 'testimonial3', author: 'Elena' },
 ];
 
 export default function Testimonials() {
+  const { t } = useLanguage();
+
   return (
     <Section>
       <ContainerMax>
         <Typography variant="h2" sx={{ mb: 3 }}>
-          People love it
+          {t('peopleLoveIt')}
         </Typography>
 
         <Box
@@ -26,7 +30,7 @@ export default function Testimonials() {
           {quotes.map((q) => (
             <Card key={q.author}>
               <CardContent>
-                <Typography sx={{ mb: 2 }}>"{q.text}"</Typography>
+                <Typography sx={{ mb: 2 }}>"{t(q.textKey)}"</Typography>
                 <Typography variant="body2" color="text.secondary">
                   — {q.author}
                 </Typography>

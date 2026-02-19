@@ -1,19 +1,23 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
+import { useLanguage } from '../../../i18n/LanguageContext';
+import type { TranslationKey } from '../../../i18n/translations';
 
-const steps = [
-  { title: 'Describe your job', desc: 'Tell us what you need and where.' },
-  { title: 'Compare professionals', desc: 'Check profiles, ratings, and pricing.' },
-  { title: 'Book & get it done', desc: 'Message, schedule, and pay securely.' },
+const steps: { titleKey: TranslationKey; descKey: TranslationKey }[] = [
+  { titleKey: 'step1Title', descKey: 'step1Desc' },
+  { titleKey: 'step2Title', descKey: 'step2Desc' },
+  { titleKey: 'step3Title', descKey: 'step3Desc' },
 ];
 
 export default function HowItWorks() {
+  const { t } = useLanguage();
+
   return (
     <Section>
       <ContainerMax>
         <Typography variant="h2" sx={{ mb: 3 }}>
-          How it works
+          {t('howItWorks')}
         </Typography>
 
         <Box
@@ -24,18 +28,18 @@ export default function HowItWorks() {
           }}
         >
           {steps.map((s, idx) => (
-            <Card key={s.title}>
+            <Card key={s.titleKey}>
               <CardContent>
                 <Typography sx={{ fontWeight: 800, opacity: 0.7 }}>
                   0{idx + 1}
                 </Typography>
 
                 <Typography variant="h4" sx={{ mt: 1 }}>
-                  {s.title}
+                  {t(s.titleKey)}
                 </Typography>
 
                 <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  {s.desc}
+                  {t(s.descKey)}
                 </Typography>
               </CardContent>
             </Card>
