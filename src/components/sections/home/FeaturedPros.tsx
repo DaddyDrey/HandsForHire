@@ -1,14 +1,18 @@
 import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
+import { useLanguage } from '../../../i18n/LanguageContext';
+import type { TranslationKey } from '../../../i18n/translations';
 
-const pros = [
-  { name: 'Alex M.', role: 'Electrician', rating: '4.9', tag: 'Verified' },
-  { name: 'Irina P.', role: 'Plumber', rating: '4.8', tag: 'Top rated' },
-  { name: 'Mihai C.', role: 'Carpenter', rating: '4.9', tag: 'Fast response' },
+const pros: { name: string; roleKey: TranslationKey; rating: string; tagKey: TranslationKey }[] = [
+  { name: 'Alex M.', roleKey: 'electrician', rating: '4.9', tagKey: 'verified' },
+  { name: 'Irina P.', roleKey: 'plumber', rating: '4.8', tagKey: 'topRated' },
+  { name: 'Mihai C.', roleKey: 'carpenter', rating: '4.9', tagKey: 'fastResponse' },
 ];
 
 export default function FeaturedPros() {
+  const { t } = useLanguage();
+
   return (
     <Section>
       <ContainerMax>
@@ -18,8 +22,8 @@ export default function FeaturedPros() {
           alignItems={{ xs: 'flex-start', sm: 'baseline' }}
           sx={{ mb: 3, gap: 1 }}
         >
-          <Typography variant="h2">Featured professionals</Typography>
-          <Typography color="text.secondary">Hand-picked based on reviews</Typography>
+          <Typography variant="h2">{t('featuredProfessionals')}</Typography>
+          <Typography color="text.secondary">{t('handPickedReviews')}</Typography>
         </Stack>
 
         <Box
@@ -38,12 +42,12 @@ export default function FeaturedPros() {
                   <Stack spacing={0.5}>
                     <Typography sx={{ fontWeight: 750 }}>{p.name}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {p.role} • ⭐ {p.rating}
+                      {t(p.roleKey)} • ⭐ {p.rating}
                     </Typography>
                   </Stack>
 
                   <Chip
-                    label={p.tag}
+                    label={t(p.tagKey)}
                     size="small"
                     sx={{ ml: 'auto' }}
                     variant="outlined"

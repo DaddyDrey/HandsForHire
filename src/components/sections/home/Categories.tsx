@@ -2,22 +2,26 @@ import { Box, Card, CardContent, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
 import IconifyIcon from '../../base/IconifyIcon';
+import { useLanguage } from '../../../i18n/LanguageContext';
+import type { TranslationKey } from '../../../i18n/translations';
 
-const items = [
-  { title: 'Electrician', icon: 'material-symbols:bolt' },
-  { title: 'Plumber', icon: 'material-symbols:water-drop' },
-  { title: 'Carpenter', icon: 'material-symbols:carpenter' },
-  { title: 'Painter', icon: 'material-symbols:format-paint' },
-  { title: 'HVAC', icon: 'material-symbols:mode-fan' },
-  { title: 'Handyman', icon: 'material-symbols:handyman' },
+const items: { key: TranslationKey; icon: string }[] = [
+  { key: 'electrician', icon: 'material-symbols:bolt' },
+  { key: 'plumber', icon: 'material-symbols:water-drop' },
+  { key: 'carpenter', icon: 'material-symbols:carpenter' },
+  { key: 'painter', icon: 'material-symbols:format-paint' },
+  { key: 'hvac', icon: 'material-symbols:mode-fan' },
+  { key: 'handyman', icon: 'material-symbols:handyman' },
 ];
 
 export default function Categories() {
+  const { t } = useLanguage();
+
   return (
     <Section>
       <ContainerMax>
         <Typography variant="h2" sx={{ mb: 3 }}>
-          Popular categories
+          {t('popularCategories')}
         </Typography>
 
         <Box
@@ -32,10 +36,10 @@ export default function Categories() {
           }}
         >
           {items.map((it) => (
-            <Card key={it.title}>
+            <Card key={it.key}>
               <CardContent sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                 <IconifyIcon icon={it.icon} />
-                <Typography sx={{ fontWeight: 650 }}>{it.title}</Typography>
+                <Typography sx={{ fontWeight: 650 }}>{t(it.key)}</Typography>
               </CardContent>
             </Card>
           ))}
