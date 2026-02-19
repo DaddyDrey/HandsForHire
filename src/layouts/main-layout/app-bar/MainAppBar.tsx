@@ -1,5 +1,7 @@
 import { AppBar, Box, Button, IconButton, Toolbar, Tooltip } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import Logo from '../../../components/base/Logo';
+import paths from '../../../routes/paths';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { type Language } from '../../../i18n/translations';
 
@@ -28,10 +30,19 @@ export default function MainAppBar() {
         <Logo />
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Button color="inherit">{t('findAPro')}</Button>
-          <Button color="inherit">{t('becomeAPro')}</Button>
-          <Button variant="contained">{t('signIn')}</Button>
-          <Tooltip title={`EN → RO → RU`}>
+          <Button component={RouterLink} to={paths.findAPro} color="inherit">
+            {t('findAPro')}
+          </Button>
+
+          <Button component={RouterLink} to={paths.becomeAPro ?? '#'} color="inherit">
+            {t('becomeAPro')}
+          </Button>
+
+          <Button variant="contained" component={RouterLink} to={paths.signIn ?? paths.home}>
+            {t('signIn')}
+          </Button>
+
+          <Tooltip title="EN → RO → RU">
             <IconButton
               onClick={cycleLanguage}
               sx={{

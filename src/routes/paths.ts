@@ -1,5 +1,6 @@
 const paths = {
-  home: '/',
+  home: "/",
+  findAPro: "/pros",
 };
 
 export default paths;
