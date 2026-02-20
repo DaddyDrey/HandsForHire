@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -16,10 +16,12 @@ import {
   TextField,
   Typography,
   Button,
+  ToggleButton,
 } from '@mui/material';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import { useSearchParams } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
@@ -49,12 +51,30 @@ type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
 
 export default function FindAProPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const verifiedFromUrl = searchParams.get('verified') === 'true';
+
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
   const [trade, setTrade] = useState<TradeOption>('All');
   const [minRating, setMinRating] = useState<number>(4.5);
   const [priceRange, setPriceRange] = useState<number[]>([0, 30]);
   const [sort, setSort] = useState<SortOption>('relevance');
+  const [verifiedOnly, setVerifiedOnly] = useState<boolean>(verifiedFromUrl);
+
+  useEffect(() => {
+    setVerifiedOnly(verifiedFromUrl);
+  }, [verifiedFromUrl]);
+
+  const toggleVerified = () => {
+    const next = !verifiedOnly;
+    setVerifiedOnly(next);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (next) nextParams.set('verified', 'true');
+    else nextParams.delete('verified');
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,8 +91,9 @@ export default function FindAProPage() {
       const matchTrade = trade === 'All' || p.trade === trade;
       const matchRating = p.rating >= minRating;
       const matchPrice = p.hourlyFrom >= priceRange[0] && p.hourlyFrom <= priceRange[1];
+      const matchVerified = !verifiedOnly || p.tags.some((t) => t.toLowerCase() === 'verified');
 
-      return matchQ && matchCity && matchTrade && matchRating && matchPrice;
+      return matchQ && matchCity && matchTrade && matchRating && matchPrice && matchVerified;
     });
 
     list = [...list].sort((a, b) => {
@@ -80,13 +101,12 @@ export default function FindAProPage() {
       if (sort === 'price_low') return a.hourlyFrom - b.hourlyFrom;
       if (sort === 'price_high') return b.hourlyFrom - a.hourlyFrom;
 
-      // relevance (simplu): rating + reviews as proxy
       const score = (x: Pro) => x.rating * 10 + Math.min(100, x.reviews);
       return score(b) - score(a);
     });
 
     return list;
-  }, [query, city, trade, minRating, priceRange, sort]);
+  }, [query, city, trade, minRating, priceRange, sort, verifiedOnly]);
 
   const clearFilters = () => {
     setQuery('');
@@ -95,13 +115,17 @@ export default function FindAProPage() {
     setMinRating(4.5);
     setPriceRange([0, 30]);
     setSort('relevance');
+    setVerifiedOnly(false);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('verified');
+    setSearchParams(nextParams, { replace: true });
   };
 
   return (
     <Section sx={{ py: { xs: 4, md: 6 } }}>
       <ContainerMax>
         <Stack spacing={2.5}>
-          {/* Header */}
           <Box>
             <Typography variant="h1" sx={{ fontSize: { xs: '2.2rem', md: '3rem' } }}>
               Find a Pro
@@ -111,7 +135,6 @@ export default function FindAProPage() {
             </Typography>
           </Box>
 
-          {/* Filters */}
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
               <Stack spacing={2}>
@@ -194,6 +217,15 @@ export default function FindAProPage() {
                     />
                   </Box>
 
+                  <ToggleButton
+                    value="verified"
+                    selected={verifiedOnly}
+                    onChange={toggleVerified}
+                    sx={{ height: 56, px: 2, borderRadius: 2, whiteSpace: 'nowrap' }}
+                  >
+                    Verified
+                  </ToggleButton>
+
                   <FormControl sx={{ minWidth: { xs: '100%', md: 220 } }}>
                     <InputLabel>Sort</InputLabel>
                     <Select value={sort} label="Sort" onChange={(e) => setSort(e.target.value as SortOption)}>
@@ -212,9 +244,10 @@ export default function FindAProPage() {
             </CardContent>
           </Card>
 
-          {/* Results */}
           <Stack direction="row" justifyContent="space-between" alignItems="baseline">
-            <Typography color="text.secondary">{filtered.length} results</Typography>
+            <Typography color="text.secondary">
+              {filtered.length} results{verifiedOnly ? ' • Verified only' : ''}
+            </Typography>
           </Stack>
 
           <Box
@@ -260,7 +293,6 @@ export default function FindAProPage() {
             ))}
           </Box>
 
-          {/* Empty state */}
           {filtered.length === 0 && (
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent>

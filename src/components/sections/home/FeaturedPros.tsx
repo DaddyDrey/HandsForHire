@@ -1,4 +1,5 @@
 import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
 import { useLanguage } from '../../../i18n/LanguageContext';
@@ -23,7 +24,18 @@ export default function FeaturedPros() {
           sx={{ mb: 3, gap: 1 }}
         >
           <Typography variant="h2">{t('featuredProfessionals')}</Typography>
-          <Typography color="text.secondary">{t('handPickedReviews')}</Typography>
+
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Chip
+              label="Verified profiles"
+              component={RouterLink}
+              to="/pros?verified=true"
+              clickable
+              variant="outlined"
+              sx={{ cursor: 'pointer' }}
+            />
+            <Typography color="text.secondary">{t('handPickedReviews')}</Typography>
+          </Stack>
         </Stack>
 
         <Box
@@ -46,12 +58,7 @@ export default function FeaturedPros() {
                     </Typography>
                   </Stack>
 
-                  <Chip
-                    label={t(p.tagKey)}
-                    size="small"
-                    sx={{ ml: 'auto' }}
-                    variant="outlined"
-                  />
+                  <Chip label={t(p.tagKey)} size="small" sx={{ ml: 'auto' }} variant="outlined" />
                 </Stack>
               </CardContent>
             </Card>
