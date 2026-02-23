@@ -11,7 +11,7 @@ const translations = {
     // AppBar
     findAPro: 'Find a pro',
     becomeAPro: 'Become a pro',
-    signIn: 'Sign in',
+    signIn: 'Log In',
 
     // Hero
     heroChip: 'Modern • Verified pros • Fast booking',
@@ -67,7 +67,7 @@ const translations = {
     // AppBar
     findAPro: 'Găsește un specialist',
     becomeAPro: 'Devino specialist',
-    signIn: 'Autentificare',
+    signIn: 'Logare',
 
     // Hero
     heroChip: 'Modern • Specialiști verificați • Rezervare rapidă',

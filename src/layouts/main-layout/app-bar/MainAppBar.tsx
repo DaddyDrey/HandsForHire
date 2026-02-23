@@ -34,12 +34,12 @@ export default function MainAppBar() {
             {t('findAPro')}
           </Button>
 
-          <Button component={RouterLink} to={paths.becomeAPro ?? '#'} color="inherit">
-            {t('becomeAPro')}
+          <Button component={RouterLink} to={paths.home} color="inherit">          
+           {t('becomeAPro')}
           </Button>
 
-          <Button variant="contained" component={RouterLink} to={paths.signIn ?? paths.home}>
-            {t('signIn')}
+          <Button variant="contained" component={RouterLink} to={paths.login}>          
+           {t('signIn')}
           </Button>
 
           <Tooltip title="EN → RO → RU">

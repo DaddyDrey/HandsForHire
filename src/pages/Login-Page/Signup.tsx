@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { login } from "../../auth/auth.ts";
+import { login, saveMockUser } from "../../auth/auth.ts";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-export default function LoginPage() {
+export default function Signup() {
   const nav = useNavigate();
   const location = useLocation();
 
@@ -15,46 +15,44 @@ export default function LoginPage() {
     return st?.from || "/";
   }, [location.state]);
 
-  const [email, setEmail] = useState("demo@handsforhire.com");
-  const [password, setPassword] = useState("demo1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [remember, setRemember] = useState(true);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!isValidEmail(email)) {
-      setError("Introdu un email valid.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Parola trebuie să aibă minim 6 caractere.");
-      return;
-    }
+    if (!isValidEmail(email)) return setError("Introdu un email valid.");
+    if (password.length < 6) return setError("Parola trebuie să aibă minim 6 caractere.");
+    if (password !== confirm) return setError("Parolele nu coincid.");
 
-try {
-  setLoading(true);
-  await login(email, password, remember);
-  nav(redirectTo, { replace: true });
-} catch (err: unknown) {
-  const message =
-    err instanceof Error ? err.message : "Nu s-a putut face login.";
-  setError(message);
-} finally {
-  setLoading(false);
-}
+    try {
+      setLoading(true);
+
+      
+      saveMockUser(email, password);
+
+      await login(email, password, remember);
+
+      nav(redirectTo, { replace: true });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Nu s-a putut face signup.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Login</h1>
-        <p style={styles.sub}>
-          Demo: <b>demo@handsforhire.com</b> / <b>demo1234</b>
-        </p>
+        <h1 style={styles.title}>Create account</h1>
+        <p style={styles.sub}>Mock signup (fără backend).</p>
 
         {error && <div style={styles.error}>{error}</div>}
 
@@ -79,7 +77,19 @@ try {
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete="new-password"
+            />
+          </label>
+
+          <label style={styles.label}>
+            Confirmă parola
+            <input
+              style={styles.input}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              type="password"
+              placeholder="••••••••"
+              autoComplete="new-password"
             />
           </label>
 
@@ -93,28 +103,27 @@ try {
           </label>
 
           <button disabled={loading} style={styles.button} type="submit">
-            {loading ? "Se autentifică..." : "Autentificare"}
+            {loading ? "Se creează..." : "Sign up"}
           </button>
-          <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-  <div style={{ fontSize: 13, opacity: 0.9 }}>
-    Don&apos;t have an account?{" "}
-    <button
-      type="button"
-      onClick={() => nav("/signup")}
-      style={{
-        background: "transparent",
-        border: "none",
-        padding: 0,
-        cursor: "pointer",
-        textDecoration: "underline",
-        fontWeight: 700,
-        color: "inherit",
-      }}
-    >
-      Create one!
-    </button>
-  </div>
-</div>
+
+          <div style={{ fontSize: 13, opacity: 0.9 }}>
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => nav("/login")}
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                textDecoration: "underline",
+                fontWeight: 700,
+                color: "inherit",
+              }}
+            >
+              Sign in
+            </button>
+          </div>
         </form>
       </div>
     </div>
