@@ -4,8 +4,7 @@ const paths = {
   becomeAPro: "/become-a-pro",
   login:"/login",
   signup: "/signup",
-  account: "/account", 
-  becomeAPro: "/become-a-pro",
+  account: "/account",
   
 };
 
