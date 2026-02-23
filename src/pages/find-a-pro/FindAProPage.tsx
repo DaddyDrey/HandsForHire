@@ -21,7 +21,7 @@ import {
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
@@ -29,8 +29,8 @@ import { useLanguage } from '../../i18n/LanguageContext';
 
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
 import { MOCK_PROS, type Pro } from '../../mock_data/pros';
-
-import MessageDialog from '../../components/findAPro/MessageDialog';
+import { getUser } from '../../auth/auth';
+import paths from '../../routes/paths';
 
 const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
 type TradeOption = (typeof TRADE_OPTIONS)[number];
@@ -38,9 +38,20 @@ type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
 
 export default function FindAProPage() {
-  const { t } = useLanguage();
+  const nav = useNavigate();
+
   const [searchParams, setSearchParams] = useSearchParams();
   const verifiedFromUrl = searchParams.get('verified') === 'true';
+
+  // IMPORTANT: calculează user în componentă (poate deveni null/nonnull)
+  const user = getUser();
+
+  const requireAuth = () => {
+    // păstrează query params și revino înapoi la /pros după login
+    const qs = searchParams.toString();
+    const from = qs ? `${paths.findAPro}?${qs}` : paths.findAPro;
+    nav(paths.login, { replace: true, state: { from } });
+  };
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
@@ -52,19 +63,6 @@ export default function FindAProPage() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
-
-  const [messageOpen, setMessageOpen] = useState(false);
-  const [messagePro, setMessagePro] = useState<Pro | null>(null);
-
-  const openMessage = (p: Pro) => {
-    setMessagePro(p);
-    setMessageOpen(true);
-  };
-
-  const closeMessage = () => {
-    setMessageOpen(false);
-    setMessagePro(null);
-  };
 
   useEffect(() => {
     setVerifiedOnly(verifiedFromUrl);
@@ -81,6 +79,7 @@ export default function FindAProPage() {
   };
 
   const openProfile = (p: Pro) => {
+    if (!user) return requireAuth();
     setSelectedPro(p);
     setProfileOpen(true);
   };
@@ -292,8 +291,16 @@ export default function FindAProPage() {
                     <Button fullWidth variant="outlined" onClick={() => openProfile(p)}>
                       {t('viewProfile')}
                     </Button>
-                    <Button fullWidth variant="contained" onClick={() => openMessage(p)}>
-                      {t('message')}
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => {
+                        if (!user) return requireAuth();
+                        // aici mai târziu: message flow
+                      }}
+                    >
+                      Message
                     </Button>
                   </Stack>
                 </CardContent>
@@ -313,7 +320,6 @@ export default function FindAProPage() {
           )}
 
           <ViewProfileDialog open={profileOpen} onClose={closeProfile} pro={selectedPro} />
-          <MessageDialog open={messageOpen} onClose={closeMessage} pro={messagePro} />
         </Stack>
       </ContainerMax>
     </Section>
