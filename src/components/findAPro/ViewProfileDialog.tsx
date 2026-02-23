@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import type { Pro } from '../../mock_data/pros';
+import MessageDialog from './MessageDialog';
 
 type Props = {
   open: boolean;
@@ -47,6 +48,12 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
     const topIds = new Set(topReviews.map((r) => r.id));
     return pro.reviews.filter((r) => !topIds.has(r.id)).slice(0, 7);
   }, [pro, topReviews]);
+
+  const [messageOpen, setMessageOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) setMessageOpen(false);
+  }, [open]);
 
   if (!pro) return null;
 
@@ -129,7 +136,7 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 140 }}>
-              <Button fullWidth variant="contained">
+              <Button fullWidth variant="contained" onClick={() => setMessageOpen(true)}>
                 Message
               </Button>
               <Button fullWidth variant="outlined" onClick={onClose}>
@@ -198,6 +205,7 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
           </Stack>
         </CardContent>
       </Card>
+      <MessageDialog open={messageOpen} onClose={() => setMessageOpen(false)} pro={pro} />
     </Dialog>
   );
 }
