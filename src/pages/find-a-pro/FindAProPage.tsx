@@ -41,6 +41,7 @@ export default function FindAProPage() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const verifiedFromUrl = searchParams.get('verified') === 'true';
+  const tradeFromUrl = searchParams.get('trade');
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
@@ -69,6 +70,13 @@ export default function FindAProPage() {
   useEffect(() => {
     setVerifiedOnly(verifiedFromUrl);
   }, [verifiedFromUrl]);
+
+  useEffect(() => {
+    if (!tradeFromUrl) return;
+    if (TRADE_OPTIONS.includes(tradeFromUrl as TradeOption)) {
+      setTrade(tradeFromUrl as TradeOption);
+    }
+  }, [tradeFromUrl]);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;
@@ -133,6 +141,7 @@ export default function FindAProPage() {
 
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('verified');
+    nextParams.delete('trade');
     setSearchParams(nextParams, { replace: true });
   };
 

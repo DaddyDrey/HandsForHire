@@ -134,6 +134,13 @@ const translations = {
     fieldRequired: 'This field is required',
     selectTrade: 'Select a trade',
 
+    electricianDesc: 'Wiring, outlets, lighting, panels, troubleshooting, and safe electrical installs.',
+    plumberDesc: 'Leaks, pipes, faucets, toilets, boilers, and quick fixes for water systems.',
+    carpenterDesc: 'Furniture, doors, flooring, custom woodwork, repairs, and precise installations.',
+    painterDesc: 'Walls and ceilings painting, surface prep, touch-ups, and clean finishing work.',
+    hvacDesc: 'Air conditioning and ventilation: install, maintenance, filter changes, and diagnostics.',
+    handymanDesc: 'General home repairs: mounting, assembling, small fixes, and everyday maintenance.',
+
     // Footer
     footerText: 'HandsForHire. Built with care.',
   },
@@ -265,6 +272,13 @@ const translations = {
     fieldRequired: 'Acest câmp este obligatoriu',
     selectTrade: 'Selectează o meserie',
 
+    electricianDesc: 'Cablaje, prize, iluminat, tablouri electrice, depanare și instalări în siguranță.',
+    plumberDesc: 'Scurgeri, țevi, robinete, toalete, boilere și reparații rapide pentru instalații sanitare.',
+    carpenterDesc: 'Mobilă, uși, podele, lucrări din lemn la comandă, reparații și montaj precis.',
+    painterDesc: 'Vopsire pereți și tavane, pregătire suprafețe, retușuri și finisaj curat.',
+    hvacDesc: 'Climatizare și ventilație: instalare, mentenanță, filtre și diagnosticare.',
+    handymanDesc: 'Reparații generale: montaj, asamblare, mici intervenții și întreținere zilnică.',
+
     // Footer
     footerText: 'HandsForHire. Construit cu grijă.',
   },
@@ -395,6 +409,13 @@ const translations = {
     applicationSuccess: 'Заявка успешно отправлена!',
     fieldRequired: 'Это поле обязательно',
     selectTrade: 'Выберите специальность',
+
+    electricianDesc: 'Проводка, розетки, освещение, электрощиты, диагностика и безопасная установка.',
+    plumberDesc: 'Протечки, трубы, краны, сантехника, бойлеры и быстрые решения для воды.',
+    carpenterDesc: 'Мебель, двери, полы, столярные работы, ремонт и точный монтаж.',
+    painterDesc: 'Покраска стен и потолков, подготовка поверхности, мелкий ремонт и аккуратная отделка.',
+    hvacDesc: 'Климат и вентиляция: установка, обслуживание, фильтры и диагностика.',
+    handymanDesc: 'Бытовой мастер: мелкий ремонт, крепления, сборка, помощь по дому.',
 
     // Footer
     footerText: 'HandsForHire. Сделано с заботой.',
