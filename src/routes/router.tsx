@@ -5,6 +5,7 @@ import FindAProPage from "../pages/find-a-pro/FindAProPage";
 import paths from "./paths";
 import LoginPage from "../pages/Login-Page/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
+import Signup from "../pages/Login-Page/Signup";
 
 const router = createBrowserRouter([
   {
@@ -12,8 +13,8 @@ const router = createBrowserRouter([
     children: [
       { path: paths.login, element: <LoginPage /> },
       { path: paths.home, element: <HomePage /> },
-      {
-        path: paths.findAPro,
+      { path: paths.signup, element: <Signup /> },
+      { path: paths.findAPro,
         element: (
           <ProtectedRoute>
             <FindAProPage />
