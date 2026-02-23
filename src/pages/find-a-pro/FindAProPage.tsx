@@ -25,6 +25,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
 import { MOCK_PROS, type Pro } from '../../mock_data/pros';
@@ -97,13 +98,13 @@ export default function FindAProPage() {
         !q ||
         p.name.toLowerCase().includes(q) ||
         p.trade.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q));
+        p.tags.some((tag) => tag.toLowerCase().includes(q));
 
       const matchCity = !c || p.city.toLowerCase().includes(c);
       const matchTrade = trade === 'All' || p.trade === trade;
       const matchRating = p.rating >= minRating;
       const matchPrice = p.hourlyFrom >= priceRange[0] && p.hourlyFrom <= priceRange[1];
-      const matchVerified = !verifiedOnly || p.tags.some((t) => t.toLowerCase() === 'verified');
+      const matchVerified = !verifiedOnly || p.tags.some((tag) => tag.toLowerCase() === 'verified');
 
       return matchQ && matchCity && matchTrade && matchRating && matchPrice && matchVerified;
     });
@@ -140,10 +141,10 @@ export default function FindAProPage() {
         <Stack spacing={2.5}>
           <Box>
             <Typography variant="h1" sx={{ fontSize: { xs: '2.2rem', md: '3rem' } }}>
-              Find a Pro
+              {t('findAProTitle')}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-              Search verified professionals by trade, location, rating, and budget.
+              {t('findAProSubtitle')}
             </Typography>
           </Box>
 
@@ -153,10 +154,10 @@ export default function FindAProPage() {
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
                     fullWidth
-                    label="Search"
+                    label={t('search')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="electrician, plumber, verified..."
+                    placeholder={t('searchPlaceholder')}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -168,10 +169,10 @@ export default function FindAProPage() {
 
                   <TextField
                     fullWidth
-                    label="City"
+                    label={t('city')}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="Chișinău, Bălți..."
+                    placeholder={t('cityPlaceholder')}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -182,11 +183,11 @@ export default function FindAProPage() {
                   />
 
                   <FormControl fullWidth>
-                    <InputLabel>Trade</InputLabel>
-                    <Select value={trade} label="Trade" onChange={(e) => setTrade(e.target.value as TradeOption)}>
-                      {TRADE_OPTIONS.map((t) => (
-                        <MenuItem key={t} value={t}>
-                          {t}
+                    <InputLabel>{t('trade')}</InputLabel>
+                    <Select value={trade} label={t('trade')} onChange={(e) => setTrade(e.target.value as TradeOption)}>
+                      {TRADE_OPTIONS.map((opt) => (
+                        <MenuItem key={opt} value={opt}>
+                          {opt === 'All' ? t('all') : t(opt.toLowerCase() as 'electrician' | 'plumber' | 'carpenter' | 'painter' | 'hvac' | 'handyman')}
                         </MenuItem>
                       ))}
                     </Select>
@@ -198,7 +199,7 @@ export default function FindAProPage() {
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems={{ md: 'center' }}>
                   <Box sx={{ flex: 1 }}>
                     <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
-                      <Typography fontWeight={650}>Minimum rating</Typography>
+                      <Typography fontWeight={650}>{t('minimumRating')}</Typography>
                       <Stack direction="row" spacing={0.75} alignItems="center">
                         <StarRoundedIcon fontSize="small" />
                         <Typography>{minRating.toFixed(1)}+</Typography>
@@ -209,7 +210,7 @@ export default function FindAProPage() {
 
                   <Box sx={{ flex: 1 }}>
                     <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
-                      <Typography fontWeight={650}>Hourly rate</Typography>
+                      <Typography fontWeight={650}>{t('hourlyRateLabel')}</Typography>
                       <Typography color="text.secondary">
                         {priceRange[0]}–{priceRange[1]} €
                       </Typography>
@@ -229,21 +230,21 @@ export default function FindAProPage() {
                     onChange={toggleVerified}
                     sx={{ height: 56, px: 2, borderRadius: 2, whiteSpace: 'nowrap' }}
                   >
-                    Verified
+                    {t('verified')}
                   </ToggleButton>
 
                   <FormControl sx={{ minWidth: { xs: '100%', md: 220 } }}>
-                    <InputLabel>Sort</InputLabel>
-                    <Select value={sort} label="Sort" onChange={(e) => setSort(e.target.value as SortOption)}>
-                      <MenuItem value="relevance">Relevance</MenuItem>
-                      <MenuItem value="rating">Rating</MenuItem>
-                      <MenuItem value="price_low">Price: low to high</MenuItem>
-                      <MenuItem value="price_high">Price: high to low</MenuItem>
+                    <InputLabel>{t('sort')}</InputLabel>
+                    <Select value={sort} label={t('sort')} onChange={(e) => setSort(e.target.value as SortOption)}>
+                      <MenuItem value="relevance">{t('sortRelevance')}</MenuItem>
+                      <MenuItem value="rating">{t('sortRating')}</MenuItem>
+                      <MenuItem value="price_low">{t('sortPriceLow')}</MenuItem>
+                      <MenuItem value="price_high">{t('sortPriceHigh')}</MenuItem>
                     </Select>
                   </FormControl>
 
                   <Button variant="text" onClick={clearFilters} sx={{ alignSelf: { xs: 'stretch', md: 'center' } }}>
-                    Clear
+                    {t('clear')}
                   </Button>
                 </Stack>
               </Stack>
@@ -252,7 +253,7 @@ export default function FindAProPage() {
 
           <Stack direction="row" justifyContent="space-between" alignItems="baseline">
             <Typography color="text.secondary">
-              {filtered.length} results{verifiedOnly ? ' • Verified only' : ''}
+              {filtered.length} {t('results')}{verifiedOnly ? ` • ${t('verifiedOnlyLabel')}` : ''}
             </Typography>
           </Stack>
 
@@ -281,14 +282,14 @@ export default function FindAProPage() {
 
                   <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
                     <Chip size="small" label={`⭐ ${p.rating.toFixed(1)} (${p.reviewsCount})`} variant="outlined" />
-                    {p.tags.slice(0, 2).map((t) => (
-                      <Chip key={t} size="small" label={t} variant="outlined" />
+                    {p.tags.slice(0, 2).map((tag) => (
+                      <Chip key={tag} size="small" label={tag} variant="outlined" />
                     ))}
                   </Stack>
 
                   <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                     <Button fullWidth variant="outlined" onClick={() => openProfile(p)}>
-                      View profile
+                      {t('viewProfile')}
                     </Button>
 
                     <Button
@@ -310,9 +311,9 @@ export default function FindAProPage() {
           {filtered.length === 0 && (
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent>
-                <Typography sx={{ fontWeight: 750 }}>No results</Typography>
+                <Typography sx={{ fontWeight: 750 }}>{t('noResults')}</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Try adjusting your filters or search terms.
+                  {t('noResultsHint')}
                 </Typography>
               </CardContent>
             </Card>

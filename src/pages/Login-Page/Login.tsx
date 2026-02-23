@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "../../auth/auth.ts";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const nav = useNavigate();
   const location = useLocation();
 
@@ -27,11 +29,11 @@ export default function LoginPage() {
     setError("");
 
     if (!isValidEmail(email)) {
-      setError("Introdu un email valid.");
+      setError(t('invalidEmail'));
       return;
     }
     if (password.length < 6) {
-      setError("Parola trebuie să aibă minim 6 caractere.");
+      setError(t('passwordTooShort'));
       return;
     }
 
@@ -41,7 +43,7 @@ try {
   nav(redirectTo, { replace: true });
 } catch (err: unknown) {
   const message =
-    err instanceof Error ? err.message : "Nu s-a putut face login.";
+    err instanceof Error ? err.message : t('loginFailed');
   setError(message);
 } finally {
   setLoading(false);
@@ -51,7 +53,7 @@ try {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Login</h1>
+        <h1 style={styles.title}>{t('loginTitle')}</h1>
         <p style={styles.sub}>
           Demo: <b>demo@handsforhire.com</b> / <b>demo1234</b>
         </p>
@@ -60,7 +62,7 @@ try {
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
           <label style={styles.label}>
-            Email
+            {t('email')}
             <input
               style={styles.input}
               value={email}
@@ -72,7 +74,7 @@ try {
           </label>
 
           <label style={styles.label}>
-            Parolă
+            {t('password')}
             <input
               style={styles.input}
               value={password}
@@ -89,15 +91,15 @@ try {
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
             />
-            Ține-mă minte
+            {t('rememberMe')}
           </label>
 
           <button disabled={loading} style={styles.button} type="submit">
-            {loading ? "Se autentifică..." : "Autentificare"}
+            {loading ? t('loggingIn') : t('loginButton')}
           </button>
           <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
   <div style={{ fontSize: 13, opacity: 0.9 }}>
-    Don&apos;t have an account?{" "}
+    {t('noAccount')}{" "}
     <button
       type="button"
       onClick={() => nav("/signup")}
@@ -111,7 +113,7 @@ try {
         color: "inherit",
       }}
     >
-      Create one!
+      {t('createOne')}
     </button>
   </div>
 </div>
