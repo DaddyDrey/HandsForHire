@@ -38,17 +38,16 @@ type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
 
 export default function FindAProPage() {
+  const { t } = useLanguage();
   const nav = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const verifiedFromUrl = searchParams.get('verified') === 'true';
   const tradeFromUrl = searchParams.get('trade');
 
-  // IMPORTANT: calculează user în componentă (poate deveni null/nonnull)
   const user = getUser();
 
   const requireAuth = () => {
-    // păstrează query params și revino înapoi la /pros după login
     const qs = searchParams.toString();
     const from = qs ? `${paths.findAPro}?${qs}` : paths.findAPro;
     nav(paths.login, { replace: true, state: { from } });
