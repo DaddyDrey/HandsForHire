@@ -26,24 +26,8 @@ import { useSearchParams } from 'react-router-dom';
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 
-type Pro = {
-  id: string;
-  name: string;
-  trade: string;
-  city: string;
-  rating: number;
-  reviews: number;
-  hourlyFrom: number;
-  tags: string[];
-};
-
-const MOCK_PROS: Pro[] = [
-  { id: '1', name: 'Alex M.', trade: 'Electrician', city: 'Chișinău', rating: 4.9, reviews: 128, hourlyFrom: 15, tags: ['Verified', 'Fast response'] },
-  { id: '2', name: 'Irina P.', trade: 'Plumber', city: 'Bălți', rating: 4.8, reviews: 86, hourlyFrom: 12, tags: ['Top rated'] },
-  { id: '3', name: 'Mihai C.', trade: 'Carpenter', city: 'Chișinău', rating: 4.9, reviews: 64, hourlyFrom: 18, tags: ['Verified'] },
-  { id: '4', name: 'Elena D.', trade: 'Painter', city: 'Cahul', rating: 4.7, reviews: 41, hourlyFrom: 10, tags: ['Fast response'] },
-  { id: '5', name: 'Sergiu R.', trade: 'Handyman', city: 'Orhei', rating: 4.6, reviews: 33, hourlyFrom: 9, tags: ['Budget'] },
-];
+import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
+import { MOCK_PROS, type Pro } from '../../mock_data/pros';
 
 const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
 type TradeOption = (typeof TRADE_OPTIONS)[number];
@@ -57,10 +41,13 @@ export default function FindAProPage() {
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
   const [trade, setTrade] = useState<TradeOption>('All');
-  const [minRating, setMinRating] = useState<number>(4.5);
+  const [minRating, setMinRating] = useState<number>(1);
   const [priceRange, setPriceRange] = useState<number[]>([0, 30]);
   const [sort, setSort] = useState<SortOption>('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(verifiedFromUrl);
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
 
   useEffect(() => {
     setVerifiedOnly(verifiedFromUrl);
@@ -74,6 +61,16 @@ export default function FindAProPage() {
     if (next) nextParams.set('verified', 'true');
     else nextParams.delete('verified');
     setSearchParams(nextParams, { replace: true });
+  };
+
+  const openProfile = (p: Pro) => {
+    setSelectedPro(p);
+    setProfileOpen(true);
+  };
+
+  const closeProfile = () => {
+    setProfileOpen(false);
+    setSelectedPro(null);
   };
 
   const filtered = useMemo(() => {
@@ -101,7 +98,7 @@ export default function FindAProPage() {
       if (sort === 'price_low') return a.hourlyFrom - b.hourlyFrom;
       if (sort === 'price_high') return b.hourlyFrom - a.hourlyFrom;
 
-      const score = (x: Pro) => x.rating * 10 + Math.min(100, x.reviews);
+      const score = (x: Pro) => x.rating * 10 + Math.min(100, x.reviewsCount);
       return score(b) - score(a);
     });
 
@@ -112,7 +109,7 @@ export default function FindAProPage() {
     setQuery('');
     setCity('');
     setTrade('All');
-    setMinRating(4.5);
+    setMinRating(1);
     setPriceRange([0, 30]);
     setSort('relevance');
     setVerifiedOnly(false);
@@ -192,13 +189,7 @@ export default function FindAProPage() {
                         <Typography>{minRating.toFixed(1)}+</Typography>
                       </Stack>
                     </Stack>
-                    <Slider
-                      value={minRating}
-                      min={0}
-                      max={5}
-                      step={0.1}
-                      onChange={(_, v) => setMinRating(v as number)}
-                    />
+                    <Slider value={minRating} min={0} max={5} step={0.1} onChange={(_, v) => setMinRating(v as number)} />
                   </Box>
 
                   <Box sx={{ flex: 1 }}>
@@ -274,14 +265,14 @@ export default function FindAProPage() {
                   </Stack>
 
                   <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
-                    <Chip size="small" label={`⭐ ${p.rating.toFixed(1)} (${p.reviews})`} variant="outlined" />
+                    <Chip size="small" label={`⭐ ${p.rating.toFixed(1)} (${p.reviewsCount})`} variant="outlined" />
                     {p.tags.slice(0, 2).map((t) => (
                       <Chip key={t} size="small" label={t} variant="outlined" />
                     ))}
                   </Stack>
 
                   <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                    <Button fullWidth variant="outlined">
+                    <Button fullWidth variant="outlined" onClick={() => openProfile(p)}>
                       View profile
                     </Button>
                     <Button fullWidth variant="contained">
@@ -303,6 +294,8 @@ export default function FindAProPage() {
               </CardContent>
             </Card>
           )}
+
+          <ViewProfileDialog open={profileOpen} onClose={closeProfile} pro={selectedPro} />
         </Stack>
       </ContainerMax>
     </Section>
