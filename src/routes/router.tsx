@@ -6,6 +6,7 @@ import paths from "./paths";
 import LoginPage from "../pages/Login-Page/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import Signup from "../pages/Login-Page/Signup";
+import ProfilePage from "../pages/profile/ProfilePage";
 
 const router = createBrowserRouter([
   {
@@ -14,10 +15,13 @@ const router = createBrowserRouter([
       { path: paths.login, element: <LoginPage /> },
       { path: paths.home, element: <HomePage /> },
       { path: paths.signup, element: <Signup /> },
-      { path: paths.findAPro,
+
+      { path: paths.findAPro, element: <FindAProPage /> },
+
+      { path: paths.account,
         element: (
           <ProtectedRoute>
-            <FindAProPage />
+            <ProfilePage />
           </ProtectedRoute>
         ),
       },

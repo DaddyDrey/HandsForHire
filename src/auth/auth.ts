@@ -63,3 +63,36 @@ export function getUser(): User | null {
     return null;
   }
 }
+export function changePassword(email: string, newPassword: string) {
+  const e = email.trim().toLowerCase();
+  const users = loadUsers();
+  if (!users[e]) throw new Error("User not found.");
+  users[e] = newPassword;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+export function deleteAccount(email: string) {
+  const e = email.trim().toLowerCase();
+  const users = loadUsers();
+
+  if (e === "demo@handsforhire.com") {
+    throw new Error("Demo account cannot be deleted.");
+  }
+
+  delete users[e];
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  logout();
+}
+const AVATAR_KEY = "handsforhire_avatar";
+
+export function getAvatarDataUrl(): string | null {
+  return localStorage.getItem(AVATAR_KEY);
+}
+
+export function setAvatarDataUrl(dataUrl: string) {
+  localStorage.setItem(AVATAR_KEY, dataUrl);
+}
+
+export function clearAvatar() {
+  localStorage.removeItem(AVATAR_KEY);
+}
