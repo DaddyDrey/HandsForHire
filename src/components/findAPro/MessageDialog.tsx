@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { Pro } from '../../mock_data/pros';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 type Props = {
   open: boolean;
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function MessageDialog({ open, onClose, pro, onSend }: Props) {
+  const { t } = useLanguage();
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function MessageDialog({ open, onClose, pro, onSend }: Props) {
           <Avatar>{initials}</Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography sx={{ fontWeight: 850 }} noWrap>
-              {pro?.name ?? 'Message'}
+              {pro?.name ?? t('message')}
             </Typography>
             {pro && (
               <Typography variant="body2" color="text.secondary" noWrap>
@@ -77,8 +79,8 @@ export default function MessageDialog({ open, onClose, pro, onSend }: Props) {
           fullWidth
           multiline
           minRows={4}
-          label="Your message"
-          placeholder="Hi! I need help with..."
+          label={t('yourMessage')}
+          placeholder={t('messagePlaceholder')}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
@@ -86,10 +88,10 @@ export default function MessageDialog({ open, onClose, pro, onSend }: Props) {
 
       <DialogActions sx={{ px: 3, pb: 2.5 }}>
         <Button variant="outlined" onClick={onClose}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button variant="contained" disabled={!canSend} onClick={handleSend}>
-          Send
+          {t('send')}
         </Button>
       </DialogActions>
     </Dialog>

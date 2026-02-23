@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import type { Pro } from '../../mock_data/pros';
+import { useLanguage } from '../../i18n/LanguageContext';
 import MessageDialog from './MessageDialog';
 
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export default function ViewProfileDialog({ open, onClose, pro }: Props) {
+  const { t } = useLanguage();
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   useEffect(() => {
@@ -112,7 +114,7 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
               </Typography>
 
               <Typography color="text.secondary" noWrap>
-                {pro.trade} • {pro.city} • {pro.age} years
+                {pro.trade} • {pro.city} • {pro.age} {t('years')}
               </Typography>
 
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.75, flexWrap: 'wrap' }}>
@@ -137,26 +139,26 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 140 }}>
               <Button fullWidth variant="contained" onClick={() => setMessageOpen(true)}>
-                Message
+                {t('message')}
               </Button>
               <Button fullWidth variant="outlined" onClick={onClose}>
-                Close
+                {t('close')}
               </Button>
             </Box>
           </Stack>
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography sx={{ fontWeight: 750, mb: 0.5 }}>About</Typography>
+          <Typography sx={{ fontWeight: 750, mb: 0.5 }}>{t('about')}</Typography>
           <Typography color="text.secondary">{pro.description}</Typography>
 
           <Divider sx={{ my: 2 }} />
 
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-            <Typography sx={{ fontWeight: 750 }}>Reviews</Typography>
+            <Typography sx={{ fontWeight: 750 }}>{t('reviews')}</Typography>
             {pro.reviews.length > 3 && (
               <Button variant="text" onClick={() => setShowAllReviews((v) => !v)}>
-                {showAllReviews ? 'Show less' : 'View more'}
+                {showAllReviews ? t('showLess') : t('viewMore')}
               </Button>
             )}
           </Stack>
