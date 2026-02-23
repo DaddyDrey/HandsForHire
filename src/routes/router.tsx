@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/main-layout/MainLayout";
 import HomePage from "../pages/home/HomePage";
 import FindAProPage from "../pages/find-a-pro/FindAProPage";
+import BecomeAProPage from "../pages/become-a-pro/BecomeAProPage";
 import paths from "./paths";
 import LoginPage from "../pages/Login-Page/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
@@ -18,6 +19,13 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FindAProPage />
+          </ProtectedRoute>
+        ),
+      },
+      { path: paths.becomeAPro,
+        element: (
+          <ProtectedRoute>
+            <BecomeAProPage />
           </ProtectedRoute>
         ),
       },
