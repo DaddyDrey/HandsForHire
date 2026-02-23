@@ -23,8 +23,11 @@ const TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC',
 export default function BecomeAProPage() {
   const { t } = useLanguage();
 
+  const currentYear = new Date().getFullYear();
+  const minBirthYear = currentYear - 16;
+
   const [fullName, setFullName] = useState('');
-  const [age, setAge] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [trade, setTrade] = useState('');
   const [city, setCity] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
@@ -37,13 +40,13 @@ export default function BecomeAProPage() {
     e.preventDefault();
     setSubmitted(true);
 
-    const isValid = fullName.trim() && age.trim() && trade && city.trim() && hourlyRate.trim();
+    const isValid = fullName.trim() && birthYear && trade && city.trim() && hourlyRate.trim();
     if (!isValid) return;
 
     setSnackOpen(true);
 
     setFullName('');
-    setAge('');
+    setBirthYear('');
     setTrade('');
     setCity('');
     setHourlyRate('');
@@ -80,15 +83,25 @@ export default function BecomeAProPage() {
                       helperText={hasError(fullName) ? t('fieldRequired') : ''}
                     />
 
-                    <TextField
-                      fullWidth
-                      label={t('age')}
-                      type="number"
-                      value={age}
-                      onChange={(e) => setAge(e.target.value)}
-                      error={hasError(age)}
-                      helperText={hasError(age) ? t('fieldRequired') : ''}
-                    />
+                    <FormControl fullWidth error={submitted && !birthYear}>
+                      <InputLabel>{t('birthYear')}</InputLabel>
+                      <Select
+                        value={birthYear}
+                        label={t('birthYear')}
+                        onChange={(e) => setBirthYear(e.target.value)}
+                      >
+                        {Array.from({ length: minBirthYear - 1925 }, (_, i) => minBirthYear - i).map((year) => (
+                          <MenuItem key={year} value={String(year)}>
+                            {year}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {submitted && !birthYear && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                          {t('fieldRequired')}
+                        </Typography>
+                      )}
+                    </FormControl>
                   </Stack>
 
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

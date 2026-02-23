@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login, saveMockUser } from "../../auth/auth.ts";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
 export default function Signup() {
+  const { t } = useLanguage();
   const nav = useNavigate();
   const location = useLocation();
 
@@ -27,9 +29,9 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    if (!isValidEmail(email)) return setError("Introdu un email valid.");
-    if (password.length < 6) return setError("Parola trebuie să aibă minim 6 caractere.");
-    if (password !== confirm) return setError("Parolele nu coincid.");
+    if (!isValidEmail(email)) return setError(t('invalidEmail'));
+    if (password.length < 6) return setError(t('passwordTooShort'));
+    if (password !== confirm) return setError(t('passwordsMismatch'));
 
     try {
       setLoading(true);
@@ -41,7 +43,7 @@ export default function Signup() {
 
       nav(redirectTo, { replace: true });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Nu s-a putut face signup.";
+      const message = err instanceof Error ? err.message : t('signupFailed');
       setError(message);
     } finally {
       setLoading(false);
@@ -51,14 +53,14 @@ export default function Signup() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Create account</h1>
-        <p style={styles.sub}>Mock signup (fără backend).</p>
+        <h1 style={styles.title}>{t('signupTitle')}</h1>
+        <p style={styles.sub}>{t('signupSubtitle')}</p>
 
         {error && <div style={styles.error}>{error}</div>}
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
           <label style={styles.label}>
-            Email
+            {t('email')}
             <input
               style={styles.input}
               value={email}
@@ -70,7 +72,7 @@ export default function Signup() {
           </label>
 
           <label style={styles.label}>
-            Parolă
+            {t('password')}
             <input
               style={styles.input}
               value={password}
@@ -82,7 +84,7 @@ export default function Signup() {
           </label>
 
           <label style={styles.label}>
-            Confirmă parola
+            {t('confirmPassword')}
             <input
               style={styles.input}
               value={confirm}
@@ -99,15 +101,15 @@ export default function Signup() {
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
             />
-            Ține-mă minte
+            {t('rememberMe')}
           </label>
 
           <button disabled={loading} style={styles.button} type="submit">
-            {loading ? "Se creează..." : "Sign up"}
+            {loading ? t('creatingAccount') : t('signupButton')}
           </button>
 
           <div style={{ fontSize: 13, opacity: 0.9 }}>
-            Already have an account?{" "}
+            {t('alreadyHaveAccount')}{" "}
             <button
               type="button"
               onClick={() => nav("/login")}
@@ -121,7 +123,7 @@ export default function Signup() {
                 color: "inherit",
               }}
             >
-              Sign in
+              {t('signInLink')}
             </button>
           </div>
         </form>

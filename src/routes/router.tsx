@@ -15,14 +15,16 @@ const router = createBrowserRouter([
       { path: paths.login, element: <LoginPage /> },
       { path: paths.home, element: <HomePage /> },
       { path: paths.signup, element: <Signup /> },
-      { path: paths.findAPro,
+      {
+        path: paths.findAPro,
         element: (
           <ProtectedRoute>
             <FindAProPage />
           </ProtectedRoute>
         ),
       },
-      { path: paths.becomeAPro,
+      {
+        path: paths.becomeAPro,
         element: (
           <ProtectedRoute>
             <BecomeAProPage />
