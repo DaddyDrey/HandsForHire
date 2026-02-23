@@ -26,6 +26,7 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      
       {
         path: paths.becomeAPro,
         element: (
