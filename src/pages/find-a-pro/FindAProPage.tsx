@@ -29,6 +29,8 @@ import Section from '../../components/common/Section';
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
 import { MOCK_PROS, type Pro } from '../../mock_data/pros';
 
+import MessageDialog from '../../components/findAPro/MessageDialog';
+
 const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
 type TradeOption = (typeof TRADE_OPTIONS)[number];
 
@@ -49,6 +51,18 @@ export default function FindAProPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
 
+  const [messageOpen, setMessageOpen] = useState(false);
+const [messagePro, setMessagePro] = useState<Pro | null>(null);
+
+const openMessage = (p: Pro) => {
+  setMessagePro(p);
+  setMessageOpen(true);
+};
+
+const closeMessage = () => {
+  setMessageOpen(false);
+  setMessagePro(null);
+};
   useEffect(() => {
     setVerifiedOnly(verifiedFromUrl);
   }, [verifiedFromUrl]);
@@ -275,7 +289,7 @@ export default function FindAProPage() {
                     <Button fullWidth variant="outlined" onClick={() => openProfile(p)}>
                       View profile
                     </Button>
-                    <Button fullWidth variant="contained">
+                    <Button fullWidth variant="contained" onClick={() => openMessage(p)}>
                       Message
                     </Button>
                   </Stack>
@@ -296,6 +310,7 @@ export default function FindAProPage() {
           )}
 
           <ViewProfileDialog open={profileOpen} onClose={closeProfile} pro={selectedPro} />
+          <MessageDialog open={messageOpen} onClose={closeMessage} pro={messagePro} />
         </Stack>
       </ContainerMax>
     </Section>

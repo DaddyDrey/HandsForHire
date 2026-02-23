@@ -7,6 +7,7 @@ const MOCK_USERS: Record<string, string> = {
   "demo@handsforhire.com": "demo1234",
   "test@test.com": "test1234",
 };
+
 function loadUsers(): Record<string, string> {
   try {
     const raw = localStorage.getItem(USERS_KEY);
