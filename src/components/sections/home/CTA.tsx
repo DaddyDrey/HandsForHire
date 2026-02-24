@@ -2,6 +2,9 @@ import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import paths from "../../../routes/paths";
+import { Link as RouterLink } from "react-router-dom";
+
 
 export default function CTA() {
   const { t } = useLanguage();
@@ -25,10 +28,14 @@ export default function CTA() {
               </Box>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                <Button variant="contained" size="large">{t('findAPro')}</Button>
-                <Button variant="outlined" size="large">{t('becomeAPro')}</Button>
-              </Stack>
-            </Stack>
+                <Button variant="contained" size="large" component={RouterLink} to={paths.findAPro} color="inherit">
+            {t('findAPro')}
+                </Button>
+                  <Button variant="outlined" size="large" component={RouterLink} to="/become-a-pro" color="inherit">
+              {t("becomeAPro")}
+            </Button>
+                </Stack>
+             </Stack>
           </CardContent>
         </Card>
       </ContainerMax>
