@@ -76,7 +76,7 @@ export default function MainAppBar() {
               {t("findAPro")}
             </Button>
 
-            <Button component={RouterLink} to="#" color="inherit">
+            <Button component={RouterLink} to="/become-a-pro" color="inherit">
               {t("becomeAPro")}
             </Button>
 
