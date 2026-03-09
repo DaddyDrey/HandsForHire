@@ -2,6 +2,8 @@ import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import { Link as RouterLink } from "react-router-dom";
+import paths from "../../../routes/paths";
 
 export default function Hero() {
   const { t } = useLanguage();
@@ -25,13 +27,18 @@ export default function Hero() {
           </Typography>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <Button variant="contained" size="large">
-              {t('findAProfessional')}
+            <Button variant="contained" size="large" sx={{ bgcolor: '#800080' }} component={RouterLink} to={paths.findAPro} color="inherit">
+              {t('findAPro')}
             </Button>
-            <Button variant="outlined" size="large">
+
+            <Button variant="outlined" size="large" component={RouterLink} to="/become-a-pro" color="inherit">
               {t('becomeAProfessional')}
             </Button>
           </Stack>
+
+          {/* <Button component={RouterLink} to="/become-a-pro" color="inherit">
+              {t("becomeAPro")}
+            </Button> */}
 
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', pt: 2 }}>
             <Chip label={t('verifiedProfiles')} variant="outlined" />
