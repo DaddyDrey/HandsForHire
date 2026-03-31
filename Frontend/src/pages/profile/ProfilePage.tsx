@@ -24,6 +24,7 @@ import {
   clearAvatar,
 } from "../../auth/auth";
 import { MOCK_USER } from "../../mock_data/users";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 type Announcement = {
   id: string;
@@ -52,13 +53,15 @@ type Profile = {
 };
 
 export default function ProfilePage() {
+  const { t } = useLanguage();
   const nav = useNavigate();
   const user = getUser();
 
   const [avatar, setAvatar] = useState<string | null>(() => getAvatarDataUrl());
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
-  const [msg, setMsg] = useState<string>("");
+  const [msg, setMsg] = useState("");
+  const [msgSeverity, setMsgSeverity] = useState<"success" | "info" | "error">("info");
 
   const profile: Profile | null = useMemo(() => {
     if (!user) return null;
@@ -69,14 +72,14 @@ export default function ProfilePage() {
 
     return {
       email: user.email,
-      fullName: "New User",
+      fullName: t("newUser"),
       phone: "",
       city: "",
       createdAt: new Date().toISOString().slice(0, 10),
       announcements: [],
       prosCheckedOut: [],
     };
-  }, [user]);
+  }, [user, t]);
 
   if (!user || !profile) return null;
 
@@ -85,7 +88,8 @@ export default function ProfilePage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setMsg("Please select an image file.");
+      setMsgSeverity("error");
+      setMsg(t("selectImageFile"));
       return;
     }
 
@@ -95,7 +99,8 @@ export default function ProfilePage() {
       if (typeof result === "string") {
         setAvatarDataUrl(result);
         setAvatar(result);
-        setMsg("Profile photo updated (mock).");
+        setMsgSeverity("success");
+        setMsg(t("profilePhotoUpdated"));
       }
     };
     reader.readAsDataURL(file);
@@ -108,16 +113,28 @@ export default function ProfilePage() {
 
   const onChangePassword = () => {
     setMsg("");
-    if (pwd.length < 6) return setMsg("Password must be at least 6 characters.");
-    if (pwd !== pwd2) return setMsg("Passwords do not match.");
+
+    if (pwd.length < 6) {
+      setMsgSeverity("error");
+      setMsg(t("passwordTooShort"));
+      return;
+    }
+
+    if (pwd !== pwd2) {
+      setMsgSeverity("error");
+      setMsg(t("passwordsMismatch"));
+      return;
+    }
 
     try {
       changePassword(user.email, pwd);
       setPwd("");
       setPwd2("");
-      setMsg("Password updated (mock).");
+      setMsgSeverity("success");
+      setMsg(t("passwordUpdated"));
     } catch (e: unknown) {
-      setMsg(e instanceof Error ? e.message : "Could not change password.");
+      setMsgSeverity("error");
+      setMsg(e instanceof Error ? e.message : t("couldNotChangePassword"));
     }
   };
 
@@ -127,7 +144,8 @@ export default function ProfilePage() {
       deleteAccount(user.email);
       nav(paths.home, { replace: true });
     } catch (e: unknown) {
-      setMsg(e instanceof Error ? e.message : "Could not delete account.");
+      setMsgSeverity("error");
+      setMsg(e instanceof Error ? e.message : t("couldNotDeleteAccount"));
     }
   };
 
@@ -140,24 +158,20 @@ export default function ProfilePage() {
       <Stack spacing={2.5}>
         <Box sx={{ pl: { xs: 1, sm: 2 } }}>
           <Typography variant="h4" sx={{ fontWeight: 900 }}>
-            My account
+            {t("myAccount")}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Private account information (only you can see this).
+            {t("privateAccountInfo")}
           </Typography>
         </Box>
 
-        {msg && (
-          <Alert severity={msg.includes("updated") ? "success" : "info"}>
-            {msg}
-          </Alert>
-        )}
+        {msg && <Alert severity={msgSeverity}>{msg}</Alert>}
 
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
             <Stack spacing={1.75}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography sx={{ fontWeight: 800 }}>Account</Typography>
+                <Typography sx={{ fontWeight: 800 }}>{t("account")}</Typography>
               </Stack>
 
               <Divider />
@@ -175,7 +189,7 @@ export default function ProfilePage() {
 
                   <Box>
                     <Typography color="text.secondary" variant="body2">
-                      Email
+                      {t("email")}
                     </Typography>
                     <Typography sx={{ fontWeight: 700 }}>{profile.email}</Typography>
                   </Box>
@@ -183,7 +197,7 @@ export default function ProfilePage() {
 
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
                   <Button variant="outlined" component="label">
-                    Upload photo
+                    {t("uploadPhoto")}
                     <input hidden type="file" accept="image/*" onChange={onAvatarChange} />
                   </Button>
 
@@ -193,10 +207,11 @@ export default function ProfilePage() {
                     onClick={() => {
                       clearAvatar();
                       setAvatar(null);
-                      setMsg("Profile photo removed.");
+                      setMsgSeverity("info");
+                      setMsg(t("profilePhotoRemoved"));
                     }}
                   >
-                    Remove photo
+                    {t("removePhoto")}
                   </Button>
                 </Stack>
               </Stack>
@@ -204,26 +219,30 @@ export default function ProfilePage() {
               <Stack direction="row" spacing={2} sx={{ mt: 1, flexWrap: "wrap" }}>
                 <Box>
                   <Typography color="text.secondary" variant="body2">
-                    Full name
+                    {t("fullNameLabel")}
                   </Typography>
                   <Typography sx={{ fontWeight: 700 }}>{profile.fullName}</Typography>
                 </Box>
+
                 <Box>
                   <Typography color="text.secondary" variant="body2">
-                    City
+                    {t("cityLabel")}
                   </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{profile.city || "-"}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>
+                    {profile.city || t("notProvided")}
+                  </Typography>
                 </Box>
+
                 <Box>
                   <Typography color="text.secondary" variant="body2">
-                    Created
+                    {t("createdLabel")}
                   </Typography>
                   <Typography sx={{ fontWeight: 700 }}>{profile.createdAt}</Typography>
                 </Box>
 
                 <Box sx={{ ml: "auto" }}>
                   <Button variant="text" disabled>
-                    Change (mock)
+                    {t("changeMock")}
                   </Button>
                 </Box>
               </Stack>
@@ -241,11 +260,11 @@ export default function ProfilePage() {
         >
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography sx={{ fontWeight: 800 }}>My announcements</Typography>
+              <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
               <Divider sx={{ my: 1.5 }} />
 
               {profile.announcements.length === 0 ? (
-                <Typography color="text.secondary">No announcements yet.</Typography>
+                <Typography color="text.secondary">{t("noAnnouncementsYet")}</Typography>
               ) : (
                 <Stack spacing={1}>
                   {profile.announcements.map((a) => (
@@ -276,11 +295,11 @@ export default function ProfilePage() {
 
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography sx={{ fontWeight: 800 }}>Pros checked out history</Typography>
+              <Typography sx={{ fontWeight: 800 }}>{t("prosCheckedOutHistory")}</Typography>
               <Divider sx={{ my: 1.5 }} />
 
               {profile.prosCheckedOut.length === 0 ? (
-                <Typography color="text.secondary">No history yet.</Typography>
+                <Typography color="text.secondary">{t("noHistoryYet")}</Typography>
               ) : (
                 <Stack spacing={1}>
                   {profile.prosCheckedOut.map((h) => (
@@ -314,18 +333,18 @@ export default function ProfilePage() {
 
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
-            <Typography sx={{ fontWeight: 800 }}>Security</Typography>
+            <Typography sx={{ fontWeight: 800 }}>{t("security")}</Typography>
             <Divider sx={{ my: 1.5 }} />
 
             <Stack spacing={1.5}>
               <TextField
-                label="New password"
+                label={t("newPassword")}
                 type="password"
                 value={pwd}
                 onChange={(e) => setPwd(e.target.value)}
               />
               <TextField
-                label="Confirm password"
+                label={t("confirmPasswordLabel")}
                 type="password"
                 value={pwd2}
                 onChange={(e) => setPwd2(e.target.value)}
@@ -342,11 +361,11 @@ export default function ProfilePage() {
               >
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
                   <Button variant="contained" onClick={onChangePassword}>
-                    Change password
+                    {t("changePasswordButton")}
                   </Button>
 
                   <Button color="error" variant="outlined" onClick={onDeleteAccount}>
-                    Delete account
+                    {t("deleteAccountButton")}
                   </Button>
                 </Stack>
 
@@ -358,11 +377,11 @@ export default function ProfilePage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Help
+                    {t("help")}
                   </Button>
 
                   <Button variant="contained" onClick={onLogout}>
-                    Log out
+                    {t("logoutButton")}
                   </Button>
                 </Stack>
               </Stack>

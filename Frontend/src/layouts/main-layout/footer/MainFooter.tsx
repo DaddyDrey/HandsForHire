@@ -1,10 +1,11 @@
 import { Box, Button, Container, Divider, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import paths from "../../../routes/paths";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 export default function MainFooter() {
+  const { t } = useLanguage();
   const supportEmail = "handsforhiresupp@gmail.com";
- 
 
   const contactSupportHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
     supportEmail
@@ -33,21 +34,21 @@ export default function MainFooter() {
                 HandsForHire
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                © {new Date().getFullYear()} HandsForHire. All rights reserved.
+                © {new Date().getFullYear()} {t("footerRights")}
               </Typography>
             </Box>
 
             <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
               <Button component={RouterLink} to={paths.home} variant="text">
-                Contacts
+                {t("contacts")}
               </Button>
 
-                <Button component={RouterLink} to={paths.about ?? paths.home} variant="text">
-                 About
-                </Button>
+              <Button component={RouterLink} to={paths.about ?? paths.home} variant="text">
+                {t("about")}
+              </Button>
 
               <Button component={RouterLink} to={paths.terms ?? paths.home} variant="text">
-              Terms & Conditions
+                {t("termsAndConditions")}
               </Button>
 
               <Button
@@ -57,7 +58,7 @@ export default function MainFooter() {
                 rel="noreferrer"
                 variant="contained"
               >
-                Contact support
+                {t("contactSupport")}
               </Button>
             </Stack>
           </Stack>
