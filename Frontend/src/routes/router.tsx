@@ -18,6 +18,7 @@ import UsersPage from "../pages/admin/UsersPage";
 import ProsPage from "../pages/admin/ProsPage";
 import JobsPage from "../pages/admin/JobsPage";
 import ReportsPage from "../pages/admin/ReportsPage";
+import ProReviewsPage from "../pages/reviews/ProReviewsPage";
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: paths.proReviews,
+        element: (
+          <ProtectedRoute>
+            <ProReviewsPage />
           </ProtectedRoute>
         ),
       },

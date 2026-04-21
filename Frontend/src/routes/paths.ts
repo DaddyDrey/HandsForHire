@@ -9,6 +9,9 @@ const paths = {
   about: "/about",
   terms: "/terms",
   admin: "/admin",
+  proReviews: "/pros/:id/reviews",
 };
+
+export const proReviewsTo = (id: string) => `/pros/${id}/reviews`;
 
 export default paths;

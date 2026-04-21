@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Avatar,
   Box,
@@ -25,15 +25,7 @@ export default function MessageDialog({ open, onClose, pro, onSend }: Props) {
   const { t } = useLanguage();
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!open) setMessage('');
-  }, [open]);
-
-  const initials = useMemo(() => {
-    if (!pro?.name) return '?';
-    return pro.name.trim()[0].toUpperCase();
-  }, [pro]);
+  const initials = pro?.name ? pro.name.trim()[0].toUpperCase() : '?';
 
   const canSend = !!pro && message.trim().length >= 2;
 
