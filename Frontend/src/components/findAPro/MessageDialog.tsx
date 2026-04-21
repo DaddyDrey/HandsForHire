@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { Pro } from '../../mock_data/pros';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/useLanguage';
 
 type Props = {
   open: boolean;
@@ -26,13 +26,14 @@ export default function MessageDialog({ open, onClose, pro, onSend }: Props) {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) setMessage('');
   }, [open]);
 
   const initials = useMemo(() => {
     if (!pro?.name) return '?';
     return pro.name.trim()[0].toUpperCase();
-  }, [pro?.name]);
+  }, [pro]);
 
   const canSend = !!pro && message.trim().length >= 2;
 

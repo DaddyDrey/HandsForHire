@@ -15,7 +15,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import Logo from "../../../components/base/Logo";
 import paths from "../../../routes/paths";
-import { useLanguage } from "../../../i18n/LanguageContext";
+import { useLanguage } from "../../../i18n/useLanguage";
 import { type Language } from "../../../i18n/translations";
 import { getUser, logout, getAvatarDataUrl, clearAvatar } from "../../../auth/auth";
 
