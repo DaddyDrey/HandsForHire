@@ -11,9 +11,9 @@ export default function Hero() {
   return (
     <Section
       sx={{
-        pt: { xs: 8, md: 12 },
-        pb: { xs: 6, md: 10 },
-        minHeight: { xs: 'auto', md: '88vh' },
+        pt: { xs: 10, md: 14 },
+        pb: { xs: 7, md: 10 },
+        minHeight: { xs: 'auto', md: '100vh' },
         display: 'flex',
         alignItems: 'center',
         position: 'relative',

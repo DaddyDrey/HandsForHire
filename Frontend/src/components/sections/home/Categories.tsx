@@ -42,7 +42,7 @@ export default function Categories() {
   };
 
   return (
-    <Section>
+    <Section sx={{ pt: { xs: 6, md: 10 } }}>
       <ContainerMax>
         <Typography variant="h2" sx={{ mb: 1 }}>
           {t('popularCategories')}
