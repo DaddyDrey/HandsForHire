@@ -1,4 +1,5 @@
 import { Box, Typography, Paper, Chip, useTheme } from "@mui/material";
+import type { ChipProps } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 
@@ -107,28 +108,30 @@ const donutData = [
 function DonutChart() {
   const r = 38;
   const circ = 2 * Math.PI * r;
-  let offset = 0;
+  const segments = donutData.map((d, index) => {
+    const previousPct = donutData.slice(0, index).reduce((total, item) => total + item.pct, 0);
+    return {
+      ...d,
+      dash: (d.pct / 100) * circ,
+      offset: (previousPct / 100) * circ,
+    };
+  });
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 3, p: 2 }}>
       <svg width="100" height="100" viewBox="0 0 100 100">
-        {donutData.map((d) => {
-          const dash = (d.pct / 100) * circ;
-          const el = (
+        {segments.map((d) => (
             <circle
               key={d.label}
               cx="50" cy="50" r={r}
               fill="none"
               stroke={d.color}
               strokeWidth="14"
-              strokeDasharray={`${dash} ${circ}`}
-              strokeDashoffset={-offset}
+              strokeDasharray={`${d.dash} ${circ}`}
+              strokeDashoffset={-d.offset}
               transform="rotate(-90 50 50)"
             />
-          );
-          offset += dash;
-          return el;
-        })}
+        ))}
       </svg>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
         {donutData.map((d) => (
@@ -145,7 +148,13 @@ function DonutChart() {
 }
 
 // ── Recent activity ───────────────────────────────────────────────────────────
-const activity = [
+const activity: Array<{
+  event: string;
+  user: string;
+  time: string;
+  status: string;
+  color: ChipProps["color"];
+}> = [
   { event: "New signup", user: "alex.m@email.com", time: "2 min ago", status: "OK", color: "success" },
   { event: "Job posted", user: "maria.p@email.com", time: "14 min ago", status: "Live", color: "primary" },
   { event: "Report filed", user: "john.d@email.com", time: "31 min ago", status: "Review", color: "warning" },
@@ -228,7 +237,7 @@ export default function DashboardPage() {
                   {row.time}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Chip label={row.status} size="small" color={row.color as any} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
+                  <Chip label={row.status} size="small" color={row.color} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
                 </Box>
               </Box>
             ))}

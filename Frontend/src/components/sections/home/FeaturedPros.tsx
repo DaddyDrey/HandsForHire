@@ -2,7 +2,7 @@ import { Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/ma
 import { Link as RouterLink } from 'react-router-dom';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
-import { useLanguage } from '../../../i18n/LanguageContext';
+import { useLanguage } from '../../../i18n/useLanguage';
 import type { TranslationKey } from '../../../i18n/translations';
 
 const pros: { name: string; roleKey: TranslationKey; rating: string; tagKey: TranslationKey; color: string }[] = [

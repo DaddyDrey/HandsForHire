@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -25,7 +25,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/useLanguage';
 
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
 import { MOCK_PROS, type Pro } from '../../mock_data/pros';
@@ -55,7 +55,10 @@ export default function FindAProPage() {
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
-  const [trade, setTrade] = useState<TradeOption>('All');
+  const initialTrade = tradeFromUrl && TRADE_OPTIONS.includes(tradeFromUrl as TradeOption)
+    ? (tradeFromUrl as TradeOption)
+    : 'All';
+  const [trade, setTrade] = useState<TradeOption>(initialTrade);
   const [minRating, setMinRating] = useState<number>(1);
   const [priceRange, setPriceRange] = useState<number[]>([0, 30]);
   const [sort, setSort] = useState<SortOption>('relevance');
@@ -63,17 +66,6 @@ export default function FindAProPage() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
-
-  useEffect(() => {
-    setVerifiedOnly(verifiedFromUrl);
-  }, [verifiedFromUrl]);
-
-  useEffect(() => {
-    if (!tradeFromUrl) return;
-    if (TRADE_OPTIONS.includes(tradeFromUrl as TradeOption)) {
-      setTrade(tradeFromUrl as TradeOption);
-    }
-  }, [tradeFromUrl]);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;

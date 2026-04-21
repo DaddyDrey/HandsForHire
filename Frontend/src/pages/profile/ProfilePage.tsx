@@ -24,7 +24,7 @@ import {
   clearAvatar,
 } from "../../auth/auth";
 import { MOCK_USER } from "../../mock_data/users";
-import { useLanguage } from "../../i18n/LanguageContext";
+import { useLanguage } from "../../i18n/useLanguage";
 
 type Announcement = {
   id: string;

@@ -19,32 +19,3 @@ export default function AdminRoute({ children }: Props) {
 
   return <>{children}</>;
 }
-//    import AdminLayout   from "../layouts/admin-layout/AdminLayout";
-//    import AdminRoute    from "../auth/AdminRoute";
-//    import DashboardPage from "../pages/admin/DashboardPage";
-//    import UsersPage     from "../pages/admin/UsersPage";
-//    import ProsPage      from "../pages/admin/ProsPage";
-//    import JobsPage      from "../pages/admin/JobsPage";
-//    import ReportsPage   from "../pages/admin/ReportsPage";
-//
-// 2. Add the admin subtree to your router array (outside the MainLayout route):
-//
-//    {
-//      path: "/admin",
-//      element: (
-//        <AdminRoute>
-//          <AdminLayout />
-//        </AdminRoute>
-//      ),
-//      children: [
-//        { index: true,            element: <DashboardPage /> },
-//        { path: "users",          element: <UsersPage /> },
-//        { path: "pros",           element: <ProsPage /> },
-//        { path: "jobs",           element: <JobsPage /> },
-//        { path: "reports",        element: <ReportsPage /> },
-//      ],
-//    },
-//
-// 3. Add the admin path to paths.ts:
-//
-//    admin: "/admin",
