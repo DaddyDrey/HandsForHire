@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import type { Pro } from '../../mock_data/pros';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/useLanguage';
 import MessageDialog from './MessageDialog';
 
 type Props = {
@@ -26,15 +26,17 @@ type Props = {
 export default function ViewProfileDialog({ open, onClose, pro }: Props) {
   const { t } = useLanguage();
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) setShowAllReviews(false);
   }, [open]);
 
   const initials = useMemo(() => {
     if (!pro?.name) return '?';
     return pro.name.trim()[0].toUpperCase();
-  }, [pro?.name]);
+  }, [pro]);
 
   const topReviews = useMemo(() => {
     if (!pro) return [];
@@ -51,9 +53,8 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
     return pro.reviews.filter((r) => !topIds.has(r.id)).slice(0, 7);
   }, [pro, topReviews]);
 
-  const [messageOpen, setMessageOpen] = useState(false);
-
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) setMessageOpen(false);
   }, [open]);
 

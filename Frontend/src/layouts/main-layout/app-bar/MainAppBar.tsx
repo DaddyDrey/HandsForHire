@@ -15,9 +15,9 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import Logo from "../../../components/base/Logo";
 import paths from "../../../routes/paths";
-import { useLanguage } from "../../../i18n/LanguageContext";
+import { useLanguage } from "../../../i18n/useLanguage";
 import { type Language } from "../../../i18n/translations";
-import { getUser, logout, getAvatarDataUrl, clearAvatar } from "../../../auth/auth";
+import { getUser, logout, getAvatarDataUrl, clearAvatar, isAdmin } from "../../../auth/auth";
 
 
 const languages: Language[] = ["en", "ro", "ru"];
@@ -47,7 +47,7 @@ export default function MainAppBar() {
 
   const goProfile = () => {
     closeMenu();
-    nav(paths.account);
+    nav(isAdmin(user) ? paths.admin : paths.account);
   };
 
   const doLogout = () => {

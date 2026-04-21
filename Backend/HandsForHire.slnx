@@ -1,6 +1,6 @@
 <Solution>
-  <Project Path="HandsForHire.API/HandsForHire.API.csproj" />
-  <Project Path="HandsForHire.BusinessLayer/HandsForHire.BusinessLayer.csproj" />
-  <Project Path="HandsForHire.DataAccess/HandsForHire.DataAccess.csproj" />
+  <Project Path="HandsForHire.Api/HandsForHire.Api.csproj" />
+  <Project Path="HandsForHire.BusinessLogic/HandsForHire.BusinessLogic.csproj" />
+  <Project Path="HandsForHire.DataAccesLayer/HandsForHire.DataAccesLayer.csproj" />
   <Project Path="HandsForHire.Domain/HandsForHire.Domain.csproj" />
 </Solution>

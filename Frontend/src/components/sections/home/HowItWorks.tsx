@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
-import { useLanguage } from '../../../i18n/LanguageContext';
+import { useLanguage } from '../../../i18n/useLanguage';
 import type { TranslationKey } from '../../../i18n/translations';
 
 const steps: { titleKey: TranslationKey; descKey: TranslationKey }[] = [

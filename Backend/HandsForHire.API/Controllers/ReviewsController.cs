@@ -1,31 +1,31 @@
-using HandsForHire.BusinessLayer.Interfaces;
-using HandsForHire.Domain.DTOs.Reviews;
+using HandsForHire.BusinessLogic.Interfaces;
+using HandsForHire.Domain.Models.Reviews;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HandsForHire.API.Controllers;
+namespace HandsForHire.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class ReviewsController : ControllerBase
 {
-    private readonly IReviewService _reviewService;
+    private readonly IReviewLogic _ReviewLogic;
 
-    public ReviewsController(IReviewService reviewService)
+    public ReviewsController(IReviewLogic ReviewLogic)
     {
-        _reviewService = reviewService;
+        _ReviewLogic = ReviewLogic;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var reviews = await _reviewService.GetAllAsync();
+        var reviews = await _ReviewLogic.GetAllAsync();
         return Ok(reviews);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var review = await _reviewService.GetByIdAsync(id);
+        var review = await _ReviewLogic.GetByIdAsync(id);
 
         if (review == null)
             return NotFound();
@@ -36,14 +36,14 @@ public class ReviewsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateReviewDto dto)
     {
-        var createdReview = await _reviewService.CreateAsync(dto);
+        var createdReview = await _ReviewLogic.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = createdReview.Id }, createdReview);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateReviewDto dto)
     {
-        var updated = await _reviewService.UpdateAsync(id, dto);
+        var updated = await _ReviewLogic.UpdateAsync(id, dto);
 
         if (!updated)
             return NotFound();
@@ -54,7 +54,7 @@ public class ReviewsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _reviewService.DeleteAsync(id);
+        var deleted = await _ReviewLogic.DeleteAsync(id);
 
         if (!deleted)
             return NotFound();
