@@ -10,6 +10,9 @@ import ProtectedRoute from "../auth/ProtectedRoute";
 import AdminRoute from "../auth/AdminRoute";
 import Signup from "../pages/Login-Page/Signup";
 import ProfilePage from "../pages/profile/ProfilePage";
+import ContactsPage from "../pages/contacts/ContactsPage";
+import AboutPage from "../pages/about/AboutPage";
+import TermsPage from "../pages/terms/TermsPage";
 import DashboardPage from "../pages/admin/DashboardPage";
 import UsersPage from "../pages/admin/UsersPage";
 import ProsPage from "../pages/admin/ProsPage";
@@ -23,6 +26,9 @@ const router = createBrowserRouter([
       { path: paths.login, element: <LoginPage /> },
       { path: paths.home, element: <HomePage /> },
       { path: paths.signup, element: <Signup /> },
+      { path: paths.contacts, element: <ContactsPage /> },
+      { path: paths.about, element: <AboutPage /> },
+      { path: paths.terms, element: <TermsPage /> },
       { path: paths.findAPro, element: <FindAProPage /> },
       {
         path: paths.becomeAPro,
