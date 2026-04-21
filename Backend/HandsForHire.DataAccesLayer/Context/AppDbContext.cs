@@ -1,7 +1,7 @@
 using HandsForHire.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HandsForHire.DataAccess.Context;
+namespace HandsForHire.DataAccesLayer.Context;
 
 public class AppDbContext : DbContext
 {

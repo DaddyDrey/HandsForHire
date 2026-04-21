@@ -1,8 +1,8 @@
-using HandsForHire.Domain.DTOs.Pros;
+using HandsForHire.Domain.Models.Pros;
 
-namespace HandsForHire.BusinessLayer.Interfaces;
+namespace HandsForHire.BusinessLogic.Interfaces;
 
-public interface IProService
+public interface IProLogic
 {
 	Task<IEnumerable<ProDto>> GetAllAsync();
 	Task<ProDto?> GetByIdAsync(int id);

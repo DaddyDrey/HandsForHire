@@ -19,8 +19,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HandsForHire.Domain\HandsForHire.Domain.csproj" />
-    <ProjectReference Include="..\HandsForHire.BusinessLayer\HandsForHire.BusinessLayer.csproj" />
-    <ProjectReference Include="..\HandsForHire.DataAccess\HandsForHire.DataAccess.csproj" />
+    <ProjectReference Include="..\HandsForHire.BusinessLogic\HandsForHire.BusinessLogic.csproj" />
+    <ProjectReference Include="..\HandsForHire.DataAccesLayer\HandsForHire.DataAccesLayer.csproj" />
   </ItemGroup>
 
 </Project>

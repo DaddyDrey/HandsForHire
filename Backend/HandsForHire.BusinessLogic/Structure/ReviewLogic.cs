@@ -1,16 +1,16 @@
-using HandsForHire.BusinessLayer.Interfaces;
-using HandsForHire.DataAccess.Context;
-using HandsForHire.Domain.DTOs.Reviews;
+using HandsForHire.BusinessLogic.Interfaces;
+using HandsForHire.DataAccesLayer.Context;
+using HandsForHire.Domain.Models.Reviews;
 using HandsForHire.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HandsForHire.BusinessLayer.Services;
+namespace HandsForHire.BusinessLogic.Structure;
 
-public class ReviewService : IReviewService
+public class ReviewLogic : IReviewLogic
 {
     private readonly AppDbContext _context;
 
-    public ReviewService(AppDbContext context)
+    public ReviewLogic(AppDbContext context)
     {
         _context = context;
     }

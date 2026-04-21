@@ -1,16 +1,16 @@
-using HandsForHire.BusinessLayer.Interfaces;
-using HandsForHire.DataAccess.Context;
-using HandsForHire.Domain.DTOs.Users;
+using HandsForHire.BusinessLogic.Interfaces;
+using HandsForHire.DataAccesLayer.Context;
+using HandsForHire.Domain.Models.Users;
 using HandsForHire.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HandsForHire.BusinessLayer.Services;
+namespace HandsForHire.BusinessLogic.Structure;
 
-public class UserService : IUserService
+public class UserLogic : IUserLogic
 {
     private readonly AppDbContext _context;
 
-    public UserService(AppDbContext context)
+    public UserLogic(AppDbContext context)
     {
         _context = context;
     }

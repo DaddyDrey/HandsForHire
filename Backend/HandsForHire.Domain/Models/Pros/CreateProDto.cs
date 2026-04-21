@@ -1,6 +1,6 @@
-namespace HandsForHire.Domain.DTOs.Pros;
+namespace HandsForHire.Domain.Models.Pros;
 
-public class UpdateProDto
+public class CreateProDto
 {
     public string FullName { get; set; } = string.Empty;
     public string Trade { get; set; } = string.Empty;

@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\HandsForHire.Domain\HandsForHire.Domain.csproj" />
-    <ProjectReference Include="..\HandsForHire.DataAccess\HandsForHire.DataAccess.csproj" />
+    <ProjectReference Include="..\HandsForHire.DataAccesLayer\HandsForHire.DataAccesLayer.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

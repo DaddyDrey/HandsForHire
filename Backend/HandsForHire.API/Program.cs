@@ -1,7 +1,7 @@
-using HandsForHire.DataAccess.Context;
+using HandsForHire.DataAccesLayer.Context;
 using Microsoft.EntityFrameworkCore;
-using HandsForHire.BusinessLayer.Interfaces;
-using HandsForHire.BusinessLayer.Services;
+using HandsForHire.BusinessLogic.Interfaces;
+using HandsForHire.BusinessLogic.Structure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,9 +22,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IProService, ProService>();
-builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IUserLogic, UserLogic>();
+builder.Services.AddScoped<IProLogic, ProLogic>();
+builder.Services.AddScoped<IReviewLogic, ReviewLogic>();
 
 var app = builder.Build();
 

@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace HandsForHire.DataAccess.Migrations
+namespace HandsForHire.DataAccesLayer.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

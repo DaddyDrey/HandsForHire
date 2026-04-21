@@ -1,6 +1,6 @@
-@HandsForHire.API_HostAddress = http://localhost:5052
+@HandsForHire.Api_HostAddress = http://localhost:5052
 
-GET {{HandsForHire.API_HostAddress}}/weatherforecast/
+GET {{HandsForHire.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
