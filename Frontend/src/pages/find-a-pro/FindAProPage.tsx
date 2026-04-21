@@ -144,21 +144,45 @@ export default function FindAProPage() {
   };
 
   return (
-    <Section sx={{ py: { xs: 4, md: 6 } }}>
+    <Section sx={{ py: { xs: 3, md: 5 } }}>
       <ContainerMax>
-        <Stack spacing={2.5}>
-          <Box>
-            <Typography variant="h1" sx={{ fontSize: { xs: '2.2rem', md: '3rem' } }}>
+        <Stack spacing={3}>
+          <Box
+            sx={{
+              px: { xs: 2.5, md: 4 },
+              py: { xs: 3, md: 4 },
+              borderRadius: 3,
+              border: '1px solid rgba(255,255,255,0.08)',
+              background:
+                'linear-gradient(135deg, rgba(124,92,255,0.14) 0%, rgba(34,197,94,0.07) 55%, rgba(255,255,255,0.03) 100%)',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.22)',
+            }}
+          >
+            <Typography
+              variant="h1"
+              sx={{
+                fontSize: { xs: '2.3rem', md: '3.25rem' },
+                lineHeight: 1.05,
+              }}
+            >
               {t('findAProTitle')}
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
               {t('findAProSubtitle')}
             </Typography>
           </Box>
 
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Stack spacing={2}>
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              borderColor: 'rgba(255,255,255,0.10)',
+              background: 'rgba(14,20,37,0.78)',
+              backdropFilter: 'blur(14px)',
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+              <Stack spacing={2.25}>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                   <TextField
                     fullWidth
