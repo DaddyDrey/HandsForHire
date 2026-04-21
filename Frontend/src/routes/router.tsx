@@ -8,6 +8,7 @@ import LoginPage from "../pages/Login-Page/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import Signup from "../pages/Login-Page/Signup";
 import ProfilePage from "../pages/profile/ProfilePage";
+import ContactsPage from "../pages/contacts/ContactsPage";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
       { path: paths.login, element: <LoginPage /> },
       { path: paths.home, element: <HomePage /> },
       { path: paths.signup, element: <Signup /> },
+      { path: paths.contacts, element: <ContactsPage /> },
       { path: paths.findAPro, element: <FindAProPage /> },
       { path: paths.becomeAPro,
         element: (

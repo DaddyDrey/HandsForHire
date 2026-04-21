@@ -1,9 +1,13 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import MainAppBar from './app-bar/MainAppBar';
 import MainFooter from './footer/MainFooter';
+import paths from '../../routes/paths';
 
 export default function MainLayout() {
+  const location = useLocation();
+  const hideFooter = location.pathname === paths.contacts;
+
   return (
     <Box
       sx={{
@@ -19,7 +23,7 @@ export default function MainLayout() {
       <Box sx={{ pt: 0 }}>
         <Outlet />
       </Box>
-      <MainFooter />
+      {!hideFooter && <MainFooter />}
     </Box>
   );
 }

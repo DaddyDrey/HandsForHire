@@ -39,7 +39,7 @@ export default function MainFooter() {
             </Box>
 
             <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-              <Button component={RouterLink} to={paths.home} variant="text">
+              <Button component={RouterLink} to={paths.contacts} variant="text">
                 {t("contacts")}
               </Button>
 
