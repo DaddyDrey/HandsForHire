@@ -7,6 +7,7 @@ import paths from '../../routes/paths';
 export default function MainLayout() {
   const location = useLocation();
   const hideFooter = [paths.contacts, paths.about, paths.terms].includes(location.pathname);
+  const isHomePage = location.pathname === paths.home;
 
   return (
     <Box
@@ -20,7 +21,7 @@ export default function MainLayout() {
       }}
     >
       <MainAppBar />
-      <Box sx={{ pt: 0 }}>
+      <Box component="main" sx={{ pt: isHomePage ? 0 : { xs: 8, md: 9 } }}>
         <Outlet />
       </Box>
       {!hideFooter && <MainFooter />}
