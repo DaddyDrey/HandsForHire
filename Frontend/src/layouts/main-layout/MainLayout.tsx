@@ -6,7 +6,7 @@ import paths from '../../routes/paths';
 
 export default function MainLayout() {
   const location = useLocation();
-  const hideFooter = [paths.contacts, paths.about].includes(location.pathname);
+  const hideFooter = [paths.contacts, paths.about, paths.terms].includes(location.pathname);
 
   return (
     <Box
