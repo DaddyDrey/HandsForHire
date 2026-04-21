@@ -9,13 +9,16 @@ import './styles/globals.css';
 import theme from './theme';
 import router from './routes/router';
 import { LanguageProvider } from './i18n/LanguageContext';
+import { AxiosProvider } from './api/AxiosProvider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LanguageProvider>
+      <AxiosProvider>
       <RouterProvider router={router} />
+      </AxiosProvider>
       </LanguageProvider>
     </ThemeProvider>
   </React.StrictMode>
