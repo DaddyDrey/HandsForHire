@@ -9,13 +9,14 @@ export default function MainLayout() {
       sx={{
         minHeight: '100vh',
         background:
-          'radial-gradient(1200px 600px at 20% -10%, rgba(124,92,255,0.28), transparent 60%),' +
-          'radial-gradient(900px 500px at 90% 0%, rgba(34,197,94,0.18), transparent 55%),' +
-          'linear-gradient(180deg, #0B0F19 0%, #0B0F19 100%)',
+          'radial-gradient(ellipse 1400px 700px at 15% -5%, rgba(124,92,255,0.22) 0%, transparent 65%),' +
+          'radial-gradient(ellipse 1000px 600px at 85% 5%, rgba(34,197,94,0.13) 0%, transparent 60%),' +
+          'radial-gradient(ellipse 800px 400px at 50% 100%, rgba(124,92,255,0.08) 0%, transparent 70%),' +
+          'linear-gradient(180deg, #080C16 0%, #080C16 100%)',
       }}
     >
       <MainAppBar />
-      <Box sx={{ pt: 10 }}>
+      <Box sx={{ pt: 0 }}>
         <Outlet />
       </Box>
       <MainFooter />
