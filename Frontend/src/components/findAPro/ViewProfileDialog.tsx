@@ -16,8 +16,10 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { useNavigate } from 'react-router-dom';
 import type { Pro } from '../../mock_data/pros';
 import { useLanguage } from '../../i18n/useLanguage';
-import MessageDialog from './MessageDialog';
 import { proReviewsTo } from '../../routes/paths';
+import { useMessagesDrawer } from '../messages/MessagesDrawerContext';
+import { ensureConversation } from '../../mock_data/messagesStore';
+import { getUser } from '../../auth/auth';
 
 type Props = {
   open: boolean;
@@ -28,8 +30,8 @@ type Props = {
 export default function ViewProfileDialog({ open, onClose, pro }: Props) {
   const { t } = useLanguage();
   const nav = useNavigate();
+  const { openDrawer } = useMessagesDrawer();
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [messageOpen, setMessageOpen] = useState(false);
 
   const initials = pro?.name ? pro.name.trim()[0].toUpperCase() : '?';
 
@@ -49,6 +51,19 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
   }, [pro, topReviews]);
 
   if (!pro) return null;
+
+  const openMessageThread = () => {
+    const user = getUser();
+    if (user) {
+      ensureConversation(user.email, pro.id, {
+        name: pro.name,
+        trade: pro.trade,
+        city: pro.city,
+      });
+    }
+    onClose();
+    openDrawer(pro.id);
+  };
 
   return (
     <Dialog
@@ -129,7 +144,7 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 140 }}>
-              <Button fullWidth variant="contained" onClick={() => setMessageOpen(true)}>
+              <Button fullWidth variant="contained" onClick={openMessageThread}>
                 {t('message')}
               </Button>
               <Button fullWidth variant="outlined" onClick={onClose}>
@@ -209,7 +224,6 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
           </Stack>
         </CardContent>
       </Card>
-      <MessageDialog open={messageOpen} onClose={() => setMessageOpen(false)} pro={pro} />
     </Dialog>
   );
 }
