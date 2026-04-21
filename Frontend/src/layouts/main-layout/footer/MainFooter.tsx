@@ -12,42 +12,43 @@ export default function MainFooter() {
   )}&su=${encodeURIComponent("HandsForHire - Contact support")}`;
 
   return (
-    <Box component="footer" sx={{ mt: 6 }}>
+    <Box component="footer" sx={{ mt: 0 }}>
       <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
 
       <Box
         sx={{
-          py: 3,
+          py: { xs: 1.5, md: 1.75 },
           backgroundColor: "rgba(11,15,25,0.55)",
           backdropFilter: "blur(10px)",
         }}
       >
         <Container maxWidth="lg">
           <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems={{ md: "center" }}
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
             justifyContent="space-between"
+            sx={{ flexWrap: "wrap", rowGap: 1 }}
           >
-            <Box>
-              <Typography sx={{ fontWeight: 900, letterSpacing: 0.2 }}>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontSize: "0.95rem", fontWeight: 900, letterSpacing: 0.2, lineHeight: 1.15 }}>
                 HandsForHire
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
                 © {new Date().getFullYear()} {t("footerRights")}
               </Typography>
-            </Box>
+            </Stack>
 
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-              <Button component={RouterLink} to={paths.contacts} variant="text">
+            <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap" }}>
+              <Button component={RouterLink} to={paths.contacts} variant="text" size="small" sx={{ minHeight: 34, px: 1.25, py: 0.5 }}>
                 {t("contacts")}
               </Button>
 
-              <Button component={RouterLink} to={paths.about ?? paths.home} variant="text">
+              <Button component={RouterLink} to={paths.about ?? paths.home} variant="text" size="small" sx={{ minHeight: 34, px: 1.25, py: 0.5 }}>
                 {t("about")}
               </Button>
 
-              <Button component={RouterLink} to={paths.terms ?? paths.home} variant="text">
+              <Button component={RouterLink} to={paths.terms ?? paths.home} variant="text" size="small" sx={{ minHeight: 34, px: 1.25, py: 0.5 }}>
                 {t("termsAndConditions")}
               </Button>
 
@@ -57,6 +58,8 @@ export default function MainFooter() {
                 target="_blank"
                 rel="noreferrer"
                 variant="contained"
+                size="small"
+                sx={{ minHeight: 34, px: 1.75, py: 0.5 }}
               >
                 {t("contactSupport")}
               </Button>
