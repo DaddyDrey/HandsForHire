@@ -19,6 +19,7 @@ import Section from '../../components/common/Section';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 const TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
+const CUSTOM_TRADE = 'Other';
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
@@ -29,6 +30,7 @@ export default function BecomeAProPage() {
   const [fullName, setFullName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [trade, setTrade] = useState('');
+  const [customTrade, setCustomTrade] = useState('');
   const [city, setCity] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
   const [description, setDescription] = useState('');
@@ -40,7 +42,8 @@ export default function BecomeAProPage() {
     e.preventDefault();
     setSubmitted(true);
 
-    const isValid = fullName.trim() && birthYear && trade && city.trim() && hourlyRate.trim();
+    const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
+    const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
     if (!isValid) return;
 
     setSnackOpen(true);
@@ -48,6 +51,7 @@ export default function BecomeAProPage() {
     setFullName('');
     setBirthYear('');
     setTrade('');
+    setCustomTrade('');
     setCity('');
     setHourlyRate('');
     setDescription('');
@@ -55,6 +59,7 @@ export default function BecomeAProPage() {
   };
 
   const hasError = (value: string) => submitted && !value.trim();
+  const isCustomTrade = trade === CUSTOM_TRADE;
 
   const handleHourlyRateChange = (value: string) => {
     if (value === '') {
@@ -172,6 +177,9 @@ export default function BecomeAProPage() {
                               {t(opt.toLowerCase() as 'electrician' | 'plumber' | 'carpenter' | 'painter' | 'hvac' | 'handyman')}
                             </MenuItem>
                           ))}
+                          <MenuItem value={CUSTOM_TRADE}>
+                            Other
+                          </MenuItem>
                         </Select>
                         {submitted && !trade && (
                           <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
@@ -189,6 +197,17 @@ export default function BecomeAProPage() {
                         helperText={hasError(city) ? t('fieldRequired') : ''}
                       />
                     </Stack>
+
+                    {isCustomTrade && (
+                      <TextField
+                        fullWidth
+                        label="Custom trade"
+                        value={customTrade}
+                        onChange={(e) => setCustomTrade(e.target.value)}
+                        error={hasError(customTrade)}
+                        helperText={hasError(customTrade) ? t('fieldRequired') : 'Enter your profession if it is not listed above.'}
+                      />
+                    )}
 
                     <TextField
                       fullWidth
