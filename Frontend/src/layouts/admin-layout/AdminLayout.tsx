@@ -1,11 +1,14 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Chip, useTheme } from "@mui/material";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import adminPaths from "./adminPaths";
+import Logo from "../../components/base/Logo";
+import paths from "../../routes/paths";
 
 const SIDEBAR_WIDTH = 230;
 
@@ -68,12 +71,8 @@ export default function AdminLayout() {
           },
         }}
       >
-        {/* Logo */}
         <Box sx={{ px: 2.5, py: 2.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-          <Typography variant="body1" fontWeight={600} color="text.primary">
-            <Box component="span" sx={{ color: "primary.main" }}>Hands</Box>
-            ForHire
-          </Typography>
+          <Logo />
           <Typography variant="caption" color="text.secondary">
             Admin panel
           </Typography>
@@ -81,6 +80,24 @@ export default function AdminLayout() {
 
         {/* Nav */}
         <Box sx={{ flex: 1, py: 1 }}>
+          <List dense disablePadding sx={{ mb: 1 }}>
+            <ListItemButton
+              onClick={() => navigate(paths.home)}
+              sx={{
+                mx: 1,
+                px: 1.5,
+                py: 0.9,
+                borderRadius: 1.5,
+                "&:hover": { bgcolor: "rgba(255,255,255,0.04)" },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
+                <HomeRoundedIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Home" primaryTypographyProps={{ fontSize: "0.8rem", fontWeight: 400 }} />
+            </ListItemButton>
+          </List>
+
           {navItems.map((group) => (
             <Box key={group.section} sx={{ mb: 1 }}>
               <Typography

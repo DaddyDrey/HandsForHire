@@ -1,8 +1,8 @@
-using HandsForHire.Domain.DTOs.Reviews;
+using HandsForHire.Domain.Models.Reviews;
 
-namespace HandsForHire.BusinessLayer.Interfaces;
+namespace HandsForHire.BusinessLogic.Interfaces;
 
-public interface IReviewService
+public interface IReviewLogic
 {
     Task<IEnumerable<ReviewDto>> GetAllAsync();
     Task<ReviewDto?> GetByIdAsync(int id);

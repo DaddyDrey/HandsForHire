@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace HandsForHire.DataAccess.Context;
+namespace HandsForHire.DataAccesLayer.Context;
 
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {

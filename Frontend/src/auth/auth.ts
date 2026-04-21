@@ -2,6 +2,7 @@ export type User = { email: string };
 
 const STORAGE_KEY = "handsforhire_auth";
 const USERS_KEY = "handsforhire_users";
+const ADMIN_EMAILS = ["demo@handsforhire.com"];
 
 const MOCK_USERS: Record<string, string> = {
   "demo@handsforhire.com": "demo1234",
@@ -63,6 +64,11 @@ export function getUser(): User | null {
     return null;
   }
 }
+
+export function isAdmin(user: User | null): boolean {
+  return !!user && ADMIN_EMAILS.includes(user.email);
+}
+
 export function changePassword(email: string, newPassword: string) {
   const e = email.trim().toLowerCase();
   const users = loadUsers();

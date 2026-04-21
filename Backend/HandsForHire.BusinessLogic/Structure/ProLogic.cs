@@ -1,16 +1,16 @@
-using HandsForHire.BusinessLayer.Interfaces;
-using HandsForHire.DataAccess.Context;
-using HandsForHire.Domain.DTOs.Pros;
+using HandsForHire.BusinessLogic.Interfaces;
+using HandsForHire.DataAccesLayer.Context;
+using HandsForHire.Domain.Models.Pros;
 using HandsForHire.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HandsForHire.BusinessLayer.Services;
+namespace HandsForHire.BusinessLogic.Structure;
 
-public class ProService : IProService
+public class ProLogic : IProLogic
 {
     private readonly AppDbContext _context;
 
-    public ProService(AppDbContext context)
+    public ProLogic(AppDbContext context)
     {
         _context = context;
     }

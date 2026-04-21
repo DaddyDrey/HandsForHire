@@ -1,8 +1,8 @@
-using HandsForHire.Domain.DTOs.Users;
+using HandsForHire.Domain.Models.Users;
 
-namespace HandsForHire.BusinessLayer.Interfaces;
+namespace HandsForHire.BusinessLogic.Interfaces;
 
-public interface IUserService
+public interface IUserLogic
 {
     Task<IEnumerable<UserDto>> GetAllAsync();
     Task<UserDto?> GetByIdAsync(int id);

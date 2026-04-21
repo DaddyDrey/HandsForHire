@@ -1,6 +1,6 @@
-namespace HandsForHire.Domain.DTOs.Users;
+namespace HandsForHire.Domain.Models.Users;
 
-public class CreateUserDto
+public class UpdateUserDto
 {
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

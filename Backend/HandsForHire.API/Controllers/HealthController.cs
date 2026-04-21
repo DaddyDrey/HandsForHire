@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace HandsForHire.API.Controllers;
+namespace HandsForHire.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
