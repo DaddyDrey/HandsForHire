@@ -2,6 +2,8 @@ import { useState, type ReactNode } from 'react';
 import translations, { type Language, type TranslationKey } from './translations';
 import { LanguageContext } from './languageContextCore';
 
+export { useLanguage } from './useLanguage';
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language') as Language | null;
