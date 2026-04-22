@@ -10,14 +10,14 @@ export default function Logo() {
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1,
+        gap: 1.15,
         textDecoration: 'none',
         color: 'inherit',
         cursor: 'pointer',
         transition: '0.2s ease',
 
-        '&:hover .logoOverlay': {
-          opacity: 0.7,
+        '&:hover .logoMark': {
+          transform: 'scale(1.04)',
         },
 
         '&:hover .logoIcon': {
@@ -26,45 +26,32 @@ export default function Logo() {
         },
       }}
     >
-      {/* 🔹 LOGO IMAGE */}
       <Box
+        className="logoMark"
         sx={{
-          width: 34,
-          height: 34,
-          borderRadius: 2,
+          width: 32,
+          height: 32,
+          borderRadius: '10px',
           position: 'relative',
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          transition: 'transform 160ms ease',
         }}
       >
-
         <Box
           component="img"
-          src="/logo.png"   // ← dacă redenumești fișierul, modifici doar aici
+          src="/logo.png"
           alt="HandsForHire Logo"
           sx={{
-            width: '225%',
-            height: '225%',
+            width: '315%',
+            height: '315%',
             objectFit: 'contain',
+            flexShrink: 0,
           }}
         />
 
-        {/* 🔹 Cover alb pe hover */}
-        <Box
-          className="logoOverlay"
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            bgcolor: '#fff',
-            opacity: 0,
-            transition: 'opacity 160ms ease',
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* 🔹 Icon Home pe hover */}
         <Box
           className="logoIcon"
           sx={{
@@ -76,13 +63,14 @@ export default function Logo() {
             transform: 'scale(0.9)',
             transition: 'opacity 160ms ease, transform 160ms ease',
             pointerEvents: 'none',
+            bgcolor: 'rgba(240,244,255,0.92)',
           }}
         >
-          <HomeRoundedIcon sx={{ fontSize: 18, color: 'rgba(0,0,0,0.9)' }} />
+          <HomeRoundedIcon sx={{ fontSize: 18, color: 'rgba(8,12,22,0.92)' }} />
         </Box>
       </Box>
 
-      <Typography sx={{ fontWeight: 850, letterSpacing: '-0.02em' }}>
+      <Typography sx={{ fontWeight: 900, letterSpacing: 0, lineHeight: 1 }}>
         HandsForHire
       </Typography>
     </Box>
