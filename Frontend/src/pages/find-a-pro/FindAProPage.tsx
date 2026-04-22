@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -62,6 +62,13 @@ export default function FindAProPage() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
+  const [pros, setPros] = useState<Pro[]>([]);
+
+  useEffect(() => {
+    void getAll()
+      .then(setPros)
+      .catch((error) => console.error('Could not load professionals', error));
+  }, [getAll]);
 
   useEffect(() => {
     setVerifiedOnly(verifiedFromUrl);
@@ -99,7 +106,7 @@ export default function FindAProPage() {
     const q = query.trim().toLowerCase();
     const c = city.trim().toLowerCase();
 
-    let list = MOCK_PROS.filter((p) => {
+    let list = pros.filter((p) => {
       const matchQ =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -125,7 +132,7 @@ export default function FindAProPage() {
     });
 
     return list;
-  }, [query, city, trade, minRating, priceRange, sort, verifiedOnly]);
+  }, [pros, query, city, trade, minRating, priceRange, sort, verifiedOnly]);
 
   const clearFilters = () => {
     setQuery('');
