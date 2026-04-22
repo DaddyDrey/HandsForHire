@@ -1,4 +1,8 @@
-const STORAGE_KEY = 'handsforhire_messages';
+import {
+  messagesApi,
+  type ConversationApiDto,
+  type MessageApiDto,
+} from '../api/messagesApi';
 
 export type ChatMessage = {
   id: string;
@@ -16,28 +20,19 @@ export type ProMeta = {
 
 export type Conversation = {
   proId: string;
+  backendId?: number;
   proMeta?: ProMeta;
   messages: ChatMessage[];
 };
 
-type ConversationsMap = Record<string, Record<string, Conversation>>;
-
-let tick = 0;
-
-function bumpTick() {
-  tick++;
-}
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('hfh:messages-updated', bumpTick);
-  window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY) bumpTick();
-  });
-}
-
-export function getMessagesTick(): number {
-  return tick;
-}
+export type ConversationSummary = {
+  proId: string;
+  backendId: number;
+  proMeta?: ProMeta;
+  lastMessage: ChatMessage | null;
+  unreadCount: number;
+  total: number;
+};
 
 const CANNED_REPLIES = [
   'Salut! Mulțumesc pentru mesaj, te contactez curând.',
@@ -48,173 +43,209 @@ const CANNED_REPLIES = [
   'Bună! Pot să îți dau o estimare după ce văd problema.',
 ];
 
-function loadMap(): ConversationsMap {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') return parsed as ConversationsMap;
-    return {};
-  } catch {
-    return {};
+const userIdCache = new Map<string, number>();
+const conversationsByEmail = new Map<string, ConversationSummary[]>();
+const conversationByKey = new Map<string, Conversation>();
+
+let tick = 0;
+
+function bumpTick() {
+  tick++;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('hfh:messages-updated'));
   }
 }
 
-function saveMap(map: ConversationsMap) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  window.dispatchEvent(new CustomEvent('hfh:messages-updated'));
+export function getMessagesTick(): number {
+  return tick;
 }
 
 function normalize(email: string) {
   return email.trim().toLowerCase();
 }
 
-function randomId() {
-  return `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+function convoKey(email: string, proId: string) {
+  return `${normalize(email)}|${proId}`;
 }
 
-export type ConversationSummary = {
-  proId: string;
-  proMeta?: ProMeta;
-  lastMessage: ChatMessage | null;
-  unreadCount: number;
-  total: number;
-};
+function convertMessage(m: MessageApiDto): ChatMessage {
+  return {
+    id: String(m.id),
+    from: m.from === 'User' ? 'user' : 'pro',
+    body: m.body,
+    at: m.sentAt,
+    readAt: m.readAt ?? undefined,
+  };
+}
+
+function convertSummary(c: ConversationApiDto): ConversationSummary {
+  const last: ChatMessage | null = c.lastMessageBody
+    ? {
+        id: `last-${c.id}`,
+        from: 'pro',
+        body: c.lastMessageBody,
+        at: c.lastMessageAt,
+      }
+    : null;
+
+  return {
+    proId: String(c.proId),
+    backendId: c.id,
+    proMeta: { name: c.proName, trade: c.proTrade, city: c.proCity },
+    lastMessage: last,
+    unreadCount: c.unreadCount,
+    total: 0,
+  };
+}
+
+async function resolveUserId(email: string): Promise<number | null> {
+  const e = normalize(email);
+  if (userIdCache.has(e)) return userIdCache.get(e)!;
+  const user = await messagesApi.getUserByEmail(e);
+  if (user) {
+    userIdCache.set(e, user.id);
+    return user.id;
+  }
+  return null;
+}
+
+async function resolveBackendConvo(
+  email: string,
+  proId: string
+): Promise<ConversationApiDto | null> {
+  const userId = await resolveUserId(email);
+  if (userId == null) return null;
+  const pid = parseInt(proId, 10);
+  if (Number.isNaN(pid)) return null;
+  try {
+    return await messagesApi.ensureConversation(userId, pid);
+  } catch {
+    return null;
+  }
+}
 
 export function getConversations(email: string): ConversationSummary[] {
-  const e = normalize(email);
-  const map = loadMap();
-  const forUser = map[e] ?? {};
-
-  return Object.values(forUser)
-    .map((c) => {
-      const messages = c.messages;
-      const last = messages.length > 0 ? messages[messages.length - 1] : null;
-      const unreadCount = messages.filter((m) => m.from === 'pro' && !m.readAt).length;
-      return {
-        proId: c.proId,
-        proMeta: c.proMeta,
-        lastMessage: last,
-        unreadCount,
-        total: messages.length,
-      };
-    })
-    .sort((a, b) => {
-      const ta = a.lastMessage?.at ?? '';
-      const tb = b.lastMessage?.at ?? '';
-      return tb.localeCompare(ta);
-    });
+  return conversationsByEmail.get(normalize(email)) ?? [];
 }
 
 export function getConversation(email: string, proId: string): Conversation {
-  const e = normalize(email);
-  const map = loadMap();
-  return map[e]?.[proId] ?? { proId, messages: [] };
+  return (
+    conversationByKey.get(convoKey(email, proId)) ?? {
+      proId,
+      messages: [],
+    }
+  );
 }
 
 export function totalUnread(email: string): number {
   return getConversations(email).reduce((acc, c) => acc + c.unreadCount, 0);
 }
 
-function scheduleAutoReply(email: string, proId: string) {
-  const delay = 1200 + Math.floor(Math.random() * 2000);
-  setTimeout(() => {
-    const e = normalize(email);
-    const map = loadMap();
-    const convo = map[e]?.[proId];
-    if (!convo) return;
-    const reply: ChatMessage = {
-      id: randomId(),
-      from: 'pro',
-      body: CANNED_REPLIES[Math.floor(Math.random() * CANNED_REPLIES.length)],
-      at: new Date().toISOString(),
-    };
-    convo.messages.push(reply);
-    map[e][proId] = convo;
-    saveMap(map);
-  }, delay);
-}
-
-export function ensureConversation(email: string, proId: string, proMeta?: ProMeta) {
-  const e = normalize(email);
-  const map = loadMap();
-  if (!map[e]) map[e] = {};
-  const existing = map[e][proId];
-  if (!existing) {
-    map[e][proId] = { proId, proMeta, messages: [] };
-    saveMap(map);
-  } else if (proMeta && !existing.proMeta) {
-    existing.proMeta = proMeta;
-    map[e][proId] = existing;
-    saveMap(map);
+export async function fetchConversations(email: string): Promise<void> {
+  const userId = await resolveUserId(email);
+  if (userId == null) return;
+  try {
+    const data = await messagesApi.getConversationsForUser(userId);
+    conversationsByEmail.set(normalize(email), data.map(convertSummary));
+    bumpTick();
+  } catch {
+    // silent — offline/backend down
   }
 }
 
-export function sendMessage(
+export async function fetchMessages(email: string, proId: string): Promise<void> {
+  const convo = await resolveBackendConvo(email, proId);
+  if (!convo) return;
+  try {
+    const messages = await messagesApi.getMessages(convo.id);
+    conversationByKey.set(convoKey(email, proId), {
+      proId,
+      backendId: convo.id,
+      proMeta: { name: convo.proName, trade: convo.proTrade, city: convo.proCity },
+      messages: messages.map(convertMessage),
+    });
+    bumpTick();
+  } catch {
+    // silent
+  }
+}
+
+export async function ensureConversation(
+  email: string,
+  proId: string,
+  _proMeta?: ProMeta
+): Promise<void> {
+  void _proMeta;
+  await resolveBackendConvo(email, proId);
+  await fetchConversations(email);
+}
+
+export async function sendMessage(
   email: string,
   proId: string,
   body: string,
-  proMeta?: ProMeta
-): ChatMessage | null {
+  _proMeta?: ProMeta
+): Promise<void> {
+  void _proMeta;
   const text = body.trim();
-  if (!text) return null;
-
-  const e = normalize(email);
-  const map = loadMap();
-  if (!map[e]) map[e] = {};
-  const convo = map[e][proId] ?? { proId, proMeta, messages: [] };
-  if (proMeta && !convo.proMeta) convo.proMeta = proMeta;
-
-  const msg: ChatMessage = {
-    id: randomId(),
-    from: 'user',
-    body: text,
-    at: new Date().toISOString(),
-    readAt: new Date().toISOString(),
-  };
-  convo.messages.push(msg);
-  map[e][proId] = convo;
-  saveMap(map);
-
-  scheduleAutoReply(email, proId);
-  return msg;
-}
-
-export function markRead(email: string, proId: string) {
-  const e = normalize(email);
-  const map = loadMap();
-  const convo = map[e]?.[proId];
+  if (!text) return;
+  const convo = await resolveBackendConvo(email, proId);
   if (!convo) return;
-  let changed = false;
-  const now = new Date().toISOString();
-  for (const m of convo.messages) {
-    if (m.from === 'pro' && !m.readAt) {
-      m.readAt = now;
-      changed = true;
-    }
-  }
-  if (changed) {
-    map[e][proId] = convo;
-    saveMap(map);
+
+  try {
+    await messagesApi.sendMessage(convo.id, 'User', text);
+    await fetchMessages(email, proId);
+    await fetchConversations(email);
+    scheduleAutoReply(email, proId, convo.id);
+  } catch {
+    // silent
   }
 }
 
-export function deleteConversation(email: string, proId: string) {
-  const e = normalize(email);
-  const map = loadMap();
-  if (map[e]?.[proId]) {
-    delete map[e][proId];
-    if (Object.keys(map[e]).length === 0) delete map[e];
-    saveMap(map);
+function scheduleAutoReply(email: string, proId: string, convoId: number) {
+  const delay = 1200 + Math.floor(Math.random() * 2000);
+  setTimeout(async () => {
+    const reply = CANNED_REPLIES[Math.floor(Math.random() * CANNED_REPLIES.length)];
+    try {
+      await messagesApi.sendMessage(convoId, 'Pro', reply);
+      await fetchMessages(email, proId);
+      await fetchConversations(email);
+    } catch {
+      // silent
+    }
+  }, delay);
+}
+
+export async function markRead(email: string, proId: string): Promise<void> {
+  const existing = conversationByKey.get(convoKey(email, proId));
+  const backendId = existing?.backendId;
+  if (!backendId) return;
+  try {
+    await messagesApi.markRead(backendId);
+    await fetchMessages(email, proId);
+    await fetchConversations(email);
+  } catch {
+    // silent
+  }
+}
+
+export async function deleteConversation(email: string, proId: string): Promise<void> {
+  const existing = conversationByKey.get(convoKey(email, proId));
+  const backendId = existing?.backendId;
+  if (!backendId) return;
+  try {
+    await messagesApi.deleteConversation(backendId);
+    conversationByKey.delete(convoKey(email, proId));
+    await fetchConversations(email);
+  } catch {
+    // silent
   }
 }
 
 export function subscribeToMessages(listener: () => void): () => void {
   const handler = () => listener();
   window.addEventListener('hfh:messages-updated', handler);
-  window.addEventListener('storage', handler);
   return () => {
     window.removeEventListener('hfh:messages-updated', handler);
-    window.removeEventListener('storage', handler);
   };
 }

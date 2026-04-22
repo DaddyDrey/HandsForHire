@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   AppBar,
   Avatar,
@@ -20,7 +20,7 @@ import paths from "../../../routes/paths";
 import { useLanguage } from "../../../i18n/useLanguage";
 import { type Language } from "../../../i18n/translations";
 import { getUser, logout, getAvatarDataUrl, clearAvatar, isAdmin } from "../../../auth/auth";
-import { getMessagesTick, subscribeToMessages, totalUnread } from "../../../mock_data/messagesStore";
+import { fetchConversations, getMessagesTick, subscribeToMessages, totalUnread } from "../../../mock_data/messagesStore";
 import { useMessagesDrawer } from "../../../components/messages/MessagesDrawerContext";
 
 
@@ -37,6 +37,10 @@ export default function MainAppBar() {
 
   useSyncExternalStore(subscribeToMessages, getMessagesTick, getMessagesTick);
   const unread = user ? totalUnread(user.email) : 0;
+
+  useEffect(() => {
+    if (user) fetchConversations(user.email);
+  }, [user?.email]);
 
   const { openDrawer } = useMessagesDrawer();
 

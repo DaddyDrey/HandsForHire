@@ -19,6 +19,8 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { getUser } from '../../auth/auth';
 import {
   deleteConversation,
+  fetchConversations,
+  fetchMessages,
   getConversation,
   getConversations,
   getMessagesTick,
@@ -199,6 +201,14 @@ export default function MessagesDrawer() {
   const active = user && activeProId ? getConversation(user.email, activeProId) : null;
   const activePro = active?.proMeta;
   const initial = activePro?.name?.trim()[0]?.toUpperCase() ?? '?';
+
+  useEffect(() => {
+    if (user && isOpen) fetchConversations(user.email);
+  }, [user, isOpen]);
+
+  useEffect(() => {
+    if (user && activeProId && isOpen) fetchMessages(user.email, activeProId);
+  }, [user, activeProId, isOpen]);
 
   useEffect(() => {
     if (user && activeProId && isOpen) markRead(user.email, activeProId);
