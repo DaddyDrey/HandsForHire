@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import MainAppBar from './app-bar/MainAppBar';
 import MainFooter from './footer/MainFooter';
 import paths from '../../routes/paths';
+import ScrollToTop from '../../components/common/ScrollToTop';
 
 export default function MainLayout() {
   const location = useLocation();
@@ -22,6 +23,7 @@ export default function MainLayout() {
           'linear-gradient(180deg, #080C16 0%, #080C16 100%)',
       }}
     >
+      <ScrollToTop />
       <MainAppBar />
       <Box component="main" sx={{ flex: 1, pt: isHomePage ? 0 : { xs: 8, md: 9 } }}>
         <Outlet />
