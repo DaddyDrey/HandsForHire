@@ -25,6 +25,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IUserLogic, UserLogic>();
 builder.Services.AddScoped<IProLogic, ProLogic>();
 builder.Services.AddScoped<IReviewLogic, ReviewLogic>();
+builder.Services.AddScoped<IConversationLogic, ConversationLogic>();
+builder.Services.AddScoped<IMessageLogic, MessageLogic>();
 
 var app = builder.Build();
 

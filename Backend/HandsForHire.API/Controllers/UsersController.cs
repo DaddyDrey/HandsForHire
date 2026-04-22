@@ -33,6 +33,17 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
+    [HttpGet("by-email/{email}")]
+    public async Task<IActionResult> GetByEmail(string email)
+    {
+        var user = await _UserLogic.GetByEmailAsync(email);
+
+        if (user == null)
+            return NotFound();
+
+        return Ok(user);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(CreateUserDto dto)
     {
