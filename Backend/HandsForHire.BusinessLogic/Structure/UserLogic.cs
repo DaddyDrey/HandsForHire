@@ -42,6 +42,23 @@ public class UserLogic : IUserLogic
         };
     }
 
+    public async Task<UserDto?> GetByEmailAsync(string email)
+    {
+        var normalized = email.Trim().ToLower();
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalized);
+
+        if (user == null)
+            return null;
+
+        return new UserDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Email = user.Email
+        };
+    }
+
     public async Task<UserDto> CreateAsync(CreateUserDto dto)
     {
         var user = new User
