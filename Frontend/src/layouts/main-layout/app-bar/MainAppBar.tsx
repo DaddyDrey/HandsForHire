@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   AppBar,
   Avatar,
+  Badge,
   Box,
   Button,
   Fab,
@@ -11,6 +12,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import Logo from "../../../components/base/Logo";
@@ -18,6 +20,8 @@ import paths from "../../../routes/paths";
 import { useLanguage } from "../../../i18n/useLanguage";
 import { type Language } from "../../../i18n/translations";
 import { getUser, logout, getAvatarDataUrl, clearAvatar, isAdmin } from "../../../auth/auth";
+import { fetchConversations, getMessagesTick, subscribeToMessages, totalUnread } from "../../../mock_data/messagesStore";
+import { useMessagesDrawer } from "../../../components/messages/MessagesDrawerContext";
 
 
 const languages: Language[] = ["en", "ro", "ru"];
@@ -29,10 +33,16 @@ export default function MainAppBar() {
   const user = getUser();
   const avatar = getAvatarDataUrl();
 
-  const initials = useMemo(() => {
-    if (!user?.email) return "?";
-    return user.email.trim()[0].toUpperCase();
+  const initials = user?.email ? user.email.trim()[0].toUpperCase() : "?";
+
+  useSyncExternalStore(subscribeToMessages, getMessagesTick, getMessagesTick);
+  const unread = user ? totalUnread(user.email) : 0;
+
+  useEffect(() => {
+    if (user) fetchConversations(user.email);
   }, [user?.email]);
+
+  const { openDrawer } = useMessagesDrawer();
 
   const cycleLanguage = () => {
     const currentIndex = languages.indexOf(language);
@@ -72,6 +82,20 @@ export default function MainAppBar() {
           <Logo />
 
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            {user && (
+              <Button
+                onClick={() => openDrawer()}
+                color="inherit"
+                startIcon={
+                  <Badge color="primary" badgeContent={unread} overlap="circular">
+                    <ChatBubbleOutlineRoundedIcon />
+                  </Badge>
+                }
+              >
+                {t("messagesNav")}
+              </Button>
+            )}
+
             <Button component={RouterLink} to={paths.findAPro} color="inherit">
               {t("findAPro")}
             </Button>

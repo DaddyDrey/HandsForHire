@@ -30,6 +30,8 @@ import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
 import { useProService, type Pro } from '../../mock_data/pros';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
+import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
+import { ensureConversation } from '../../mock_data/messagesStore';
 
 const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
 type TradeOption = (typeof TRADE_OPTIONS)[number];
@@ -53,6 +55,7 @@ export default function FindAProPage() {
   const tradeFromUrl = searchParams.get('trade');
 
   const user = getUser();
+  const { openDrawer } = useMessagesDrawer();
 
   const requireAuth = () => {
     const qs = searchParams.toString();
@@ -332,10 +335,15 @@ export default function FindAProPage() {
                       variant="contained"
                       onClick={() => {
                         if (!user) return requireAuth();
-                        // aici mai târziu: message flow
+                        ensureConversation(user.email, p.id, {
+                          name: p.name,
+                          trade: p.trade,
+                          city: p.city,
+                        });
+                        openDrawer(p.id);
                       }}
                     >
-                      Message
+                      {t('message')}
                     </Button>
                   </Stack>
                 </CardContent>

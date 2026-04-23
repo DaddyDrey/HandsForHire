@@ -1,5 +1,5 @@
 // src/components/findAPro/ViewProfileDialog.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -13,9 +13,13 @@ import {
   Typography,
 } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import { useNavigate } from 'react-router-dom';
 import type { Pro } from '../../mock_data/pros';
 import { useLanguage } from '../../i18n/useLanguage';
-import MessageDialog from './MessageDialog';
+import { proReviewsTo } from '../../routes/paths';
+import { useMessagesDrawer } from '../messages/MessagesDrawerContext';
+import { ensureConversation } from '../../mock_data/messagesStore';
+import { getUser } from '../../auth/auth';
 
 type Props = {
   open: boolean;
@@ -25,18 +29,11 @@ type Props = {
 
 export default function ViewProfileDialog({ open, onClose, pro }: Props) {
   const { t } = useLanguage();
+  const nav = useNavigate();
+  const { openDrawer } = useMessagesDrawer();
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [messageOpen, setMessageOpen] = useState(false);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!open) setShowAllReviews(false);
-  }, [open]);
-
-  const initials = useMemo(() => {
-    if (!pro?.name) return '?';
-    return pro.name.trim()[0].toUpperCase();
-  }, [pro]);
+  const initials = pro?.name ? pro.name.trim()[0].toUpperCase() : '?';
 
   const topReviews = useMemo(() => {
     if (!pro) return [];
@@ -53,12 +50,20 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
     return pro.reviews.filter((r) => !topIds.has(r.id)).slice(0, 7);
   }, [pro, topReviews]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!open) setMessageOpen(false);
-  }, [open]);
-
   if (!pro) return null;
+
+  const openMessageThread = () => {
+    const user = getUser();
+    if (user) {
+      ensureConversation(user.email, pro.id, {
+        name: pro.name,
+        trade: pro.trade,
+        city: pro.city,
+      });
+    }
+    onClose();
+    openDrawer(pro.id);
+  };
 
   return (
     <Dialog
@@ -139,7 +144,7 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 140 }}>
-              <Button fullWidth variant="contained" onClick={() => setMessageOpen(true)}>
+              <Button fullWidth variant="contained" onClick={openMessageThread}>
                 {t('message')}
               </Button>
               <Button fullWidth variant="outlined" onClick={onClose}>
@@ -157,11 +162,22 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
 
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
             <Typography sx={{ fontWeight: 750 }}>{t('reviews')}</Typography>
-            {pro.reviews.length > 3 && (
-              <Button variant="text" onClick={() => setShowAllReviews((v) => !v)}>
-                {showAllReviews ? t('showLess') : t('viewMore')}
+            <Stack direction="row" spacing={0.5}>
+              {pro.reviews.length > 3 && (
+                <Button variant="text" onClick={() => setShowAllReviews((v) => !v)}>
+                  {showAllReviews ? t('showLess') : t('viewMore')}
+                </Button>
+              )}
+              <Button
+                variant="text"
+                onClick={() => {
+                  onClose();
+                  nav(proReviewsTo(pro.id));
+                }}
+              >
+                {t('seeAllReviews')}
               </Button>
-            )}
+            </Stack>
           </Stack>
 
           <Stack spacing={1.25} sx={{ mt: 1.5 }}>
@@ -208,7 +224,6 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
           </Stack>
         </CardContent>
       </Card>
-      <MessageDialog open={messageOpen} onClose={() => setMessageOpen(false)} pro={pro} />
     </Dialog>
   );
 }

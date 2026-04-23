@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -27,6 +27,8 @@ import { MOCK_USER } from "../../mock_data/users";
 import { useLanguage } from "../../i18n/useLanguage";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
+import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
+import { messagesApi } from "../../api/messagesApi";
 
 type Announcement = {
   id: string;
@@ -64,6 +66,31 @@ export default function ProfilePage() {
   const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
   const [msgSeverity, setMsgSeverity] = useState<"success" | "info" | "error">("info");
+
+  const { getForUser } = useAnnouncementService();
+  const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
+
+  const userEmail = user?.email;
+  useEffect(() => {
+    if (!userEmail) return;
+    let cancelled = false;
+    (async () => {
+      const resolved = await messagesApi.getUserByEmail(userEmail);
+      if (!resolved) {
+        if (!cancelled) setAnnouncements([]);
+        return;
+      }
+      try {
+        const data = await getForUser(resolved.id);
+        if (!cancelled) setAnnouncements(data);
+      } catch {
+        if (!cancelled) setAnnouncements([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userEmail, getForUser]);
 
   const profile: Profile | null = useMemo(() => {
     if (!user) return null;
@@ -298,11 +325,13 @@ export default function ProfilePage() {
               <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
               <Divider sx={{ my: 1.5 }} />
 
-              {profile.announcements.length === 0 ? (
+              {announcements === null ? (
+                <Typography color="text.secondary">…</Typography>
+              ) : announcements.length === 0 ? (
                 <Typography color="text.secondary">{t("noAnnouncementsYet")}</Typography>
               ) : (
                 <Stack spacing={1}>
-                  {profile.announcements.map((a) => (
+                  {announcements.map((a) => (
                     <Box
                       key={a.id}
                       sx={{
@@ -318,7 +347,7 @@ export default function ProfilePage() {
                       >
                         <Typography sx={{ fontWeight: 750 }}>{a.title}</Typography>
                         <Typography color="text.secondary" variant="body2">
-                          {a.status} • {a.createdAt}
+                          {a.status} • {a.createdAt.slice(0, 10)}
                         </Typography>
                       </Stack>
                     </Box>
