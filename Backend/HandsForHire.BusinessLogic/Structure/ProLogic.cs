@@ -22,6 +22,7 @@ public class ProLogic : IProLogic
             {
                 Id = pro.Id,
                 FullName = pro.FullName,
+                Email = pro.Email,
                 Trade = pro.Trade,
                 City = pro.City,
                 HourlyRate = pro.HourlyRate
@@ -40,6 +41,26 @@ public class ProLogic : IProLogic
         {
             Id = pro.Id,
             FullName = pro.FullName,
+            Email = pro.Email,
+            Trade = pro.Trade,
+            City = pro.City,
+            HourlyRate = pro.HourlyRate
+        };
+    }
+
+    public async Task<ProDto?> GetByEmailAsync(string email)
+    {
+        var normalized = email.Trim().ToLower();
+        var pro = await _context.Pros.FirstOrDefaultAsync(p => p.Email.ToLower() == normalized);
+
+        if (pro == null)
+            return null;
+
+        return new ProDto
+        {
+            Id = pro.Id,
+            FullName = pro.FullName,
+            Email = pro.Email,
             Trade = pro.Trade,
             City = pro.City,
             HourlyRate = pro.HourlyRate
@@ -51,6 +72,7 @@ public class ProLogic : IProLogic
         var pro = new Pro
         {
             FullName = dto.FullName,
+            Email = dto.Email,
             Trade = dto.Trade,
             City = dto.City,
             HourlyRate = dto.HourlyRate
@@ -63,6 +85,7 @@ public class ProLogic : IProLogic
         {
             Id = pro.Id,
             FullName = pro.FullName,
+            Email = pro.Email,
             Trade = pro.Trade,
             City = pro.City,
             HourlyRate = pro.HourlyRate
