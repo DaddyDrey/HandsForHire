@@ -25,7 +25,8 @@ public class ProLogic : IProLogic
                 Email = pro.Email,
                 Trade = pro.Trade,
                 City = pro.City,
-                HourlyRate = pro.HourlyRate
+                HourlyRate = pro.HourlyRate,
+                Status = pro.Status
             })
             .ToListAsync();
     }
@@ -44,7 +45,8 @@ public class ProLogic : IProLogic
             Email = pro.Email,
             Trade = pro.Trade,
             City = pro.City,
-            HourlyRate = pro.HourlyRate
+            HourlyRate = pro.HourlyRate,
+            Status = pro.Status
         };
     }
 
@@ -63,7 +65,8 @@ public class ProLogic : IProLogic
             Email = pro.Email,
             Trade = pro.Trade,
             City = pro.City,
-            HourlyRate = pro.HourlyRate
+            HourlyRate = pro.HourlyRate,
+            Status = pro.Status
         };
     }
 
@@ -88,7 +91,8 @@ public class ProLogic : IProLogic
             Email = pro.Email,
             Trade = pro.Trade,
             City = pro.City,
-            HourlyRate = pro.HourlyRate
+            HourlyRate = pro.HourlyRate,
+            Status = pro.Status
         };
     }
 
@@ -104,6 +108,18 @@ public class ProLogic : IProLogic
         pro.City = dto.City;
         pro.HourlyRate = dto.HourlyRate;
 
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> SetStatusAsync(int id, ProStatus status)
+    {
+        var pro = await _context.Pros.FindAsync(id);
+
+        if (pro == null)
+            return false;
+
+        pro.Status = status;
         await _context.SaveChangesAsync();
         return true;
     }
