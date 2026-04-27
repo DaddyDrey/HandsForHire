@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Box, Typography, Paper, TextField, Select, MenuItem,
-  Chip, Button, InputAdornment, Avatar, useTheme, FormControl, CircularProgress
+  Chip, Button, InputAdornment, Avatar, useTheme, FormControl, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, Stack, Divider
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -10,8 +11,10 @@ import { prosApi } from "../../api/prosApi";
 interface Pro {
   id: number;
   name: string;
+  email: string;
   category: string;
   city: string;
+  hourlyRate: number;
   rating: number;
   reviews: number;
   status: "Verified" | "Pending review" | "Suspended";
@@ -48,6 +51,7 @@ export default function ProsPage() {
   const [pros, setPros] = useState<Pro[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,8 +61,10 @@ export default function ProsPage() {
         setPros(data.map((p) => ({
           id: p.id,
           name: p.fullName,
+          email: p.email,
           category: p.trade,
           city: p.city,
+          hourlyRate: p.hourlyRate,
           rating: 0,
           reviews: 0,
           status: "Pending review" as const,
@@ -179,6 +185,7 @@ export default function ProsPage() {
               <Button
                 size="small"
                 variant="outlined"
+                onClick={() => setSelectedPro(pro)}
                 sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
               >
                 {pro.status === "Pending review" ? "Review" : "View"}
@@ -205,6 +212,85 @@ export default function ProsPage() {
           </Box>
         ))}
       </Paper>
+
+      <Dialog
+        open={!!selectedPro}
+        onClose={() => setSelectedPro(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        {selectedPro && (
+          <>
+            <DialogTitle sx={{ pb: 1 }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  sx={{
+                    width: 48, height: 48,
+                    bgcolor: "rgba(124,92,255,0.18)",
+                    color: "primary.main",
+                    fontWeight: 700,
+                  }}
+                >
+                  {initials(selectedPro.name)}
+                </Avatar>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>
+                    {selectedPro.name}
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip
+                      label={selectedPro.status}
+                      size="small"
+                      color={statusColor[selectedPro.status]}
+                      variant="outlined"
+                      sx={{ fontSize: "0.65rem", height: 20 }}
+                    />
+                    <RatingStars value={selectedPro.rating} />
+                  </Stack>
+                </Box>
+              </Stack>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Trade</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.category}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">City</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.city}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Hourly rate</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.hourlyRate} €</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Reviews</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.reviews}</Typography>
+                  </Box>
+                </Stack>
+                <Divider />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Contact
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
+                    {selectedPro.email || "—"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Pro ID</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>#{selectedPro.id}</Typography>
+                </Box>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSelectedPro(null)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 }

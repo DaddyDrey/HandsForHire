@@ -24,10 +24,13 @@ export type MessageApiDto = {
   readAt: string | null;
 };
 
+export type UserStatus = 'Active' | 'Suspended';
+
 export type UserApiDto = {
   id: number;
   fullName: string;
   email: string;
+  status: UserStatus;
 };
 
 export const messagesApi = {
@@ -57,6 +60,10 @@ export const messagesApi = {
     } catch {
       return null;
     }
+  },
+
+  async setUserStatus(id: number, status: UserStatus): Promise<void> {
+    await axiosInstance.put(`/Users/${id}/status`, { status });
   },
 
   async getConversationsForUser(userId: number): Promise<ConversationApiDto[]> {
