@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Box, Typography, Paper, TextField, Select, MenuItem,
-  Chip, Button, InputAdornment, useTheme, FormControl
+  Chip, Button, InputAdornment, useTheme, FormControl,
+  Dialog, DialogTitle, DialogContent, DialogActions, Stack, Divider
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useAnnouncementService, type Announcement, type AnnouncementStatus } from "../../mock_data/announcements";
@@ -47,6 +48,7 @@ export default function JobsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<"All" | AnnouncementStatus>("All");
+  const [selectedJob, setSelectedJob] = useState<Announcement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,6 +173,7 @@ export default function JobsPage() {
                   <Button
                     size="small"
                     variant="outlined"
+                    onClick={() => setSelectedJob(job)}
                     sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
                   >
                     View
@@ -181,6 +184,72 @@ export default function JobsPage() {
           </Box>
         </Box>
       </Paper>
+
+      <Dialog
+        open={!!selectedJob}
+        onClose={() => setSelectedJob(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        {selectedJob && (
+          <>
+            <DialogTitle sx={{ pb: 1 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{selectedJob.title}</Typography>
+                <Chip
+                  label={statusLabel[selectedJob.status]}
+                  size="small"
+                  color={statusColor[selectedJob.status]}
+                  variant="outlined"
+                />
+              </Stack>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Description
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
+                    {selectedJob.description || "—"}
+                  </Typography>
+                </Box>
+                <Divider />
+                <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Posted by</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {selectedJob.authorName || selectedJob.authorEmail || `user#${selectedJob.userId}`}
+                    </Typography>
+                    {selectedJob.authorEmail && selectedJob.authorName && (
+                      <Typography variant="caption" color="text.secondary">{selectedJob.authorEmail}</Typography>
+                    )}
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Category</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedJob.category}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">City</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedJob.city || "—"}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Created</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selectedJob.createdAt)}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Updated</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selectedJob.updatedAt)}</Typography>
+                  </Box>
+                </Stack>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSelectedJob(null)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 }
