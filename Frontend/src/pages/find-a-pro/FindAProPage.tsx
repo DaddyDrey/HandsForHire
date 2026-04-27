@@ -27,11 +27,28 @@ import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 import { useLanguage } from '../../i18n/LanguageContext';
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
-import { useProService, type Pro } from '../../mock_data/pros';
+import { type Pro } from '../../mock_data/pros';
+import { prosApi, type ProApiDto } from '../../api/prosApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
 import { ensureConversation } from '../../mock_data/messagesStore';
+
+function mapApiProToPro(p: ProApiDto): Pro {
+  return {
+    id: String(p.id),
+    name: p.fullName,
+    age: 0,
+    trade: p.trade,
+    city: p.city,
+    rating: 0,
+    reviewsCount: 0,
+    hourlyFrom: p.hourlyRate,
+    tags: [],
+    description: '',
+    reviews: [],
+  };
+}
 
 const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
 type TradeOption = (typeof TRADE_OPTIONS)[number];
@@ -48,7 +65,6 @@ const getTradeFromUrl = (value: string | null): TradeOption => {
 export default function FindAProPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
-  const { getAll } = useProService();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const verifiedFromUrl = searchParams.get('verified') === 'true';
@@ -66,8 +82,8 @@ export default function FindAProPage() {
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
   const [trade, setTrade] = useState<TradeOption>(() => getTradeFromUrl(tradeFromUrl));
-  const [minRating, setMinRating] = useState<number>(1);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 30]);
+  const [minRating, setMinRating] = useState<number>(0);
+  const [priceRange, setPriceRange] = useState<number[]>([0, 50]);
   const [sort, setSort] = useState<SortOption>('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(() => verifiedFromUrl);
 
@@ -76,10 +92,15 @@ export default function FindAProPage() {
   const [pros, setPros] = useState<Pro[]>([]);
 
   useEffect(() => {
-    void getAll()
-      .then(setPros)
+    let cancelled = false;
+    prosApi.getAll()
+      .then((data) => {
+        if (cancelled) return;
+        setPros(data.map(mapApiProToPro));
+      })
       .catch((error) => console.error('Could not load professionals', error));
-  }, [getAll]);
+    return () => { cancelled = true; };
+  }, []);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;
@@ -138,8 +159,8 @@ export default function FindAProPage() {
     setQuery('');
     setCity('');
     setTrade('All');
-    setMinRating(1);
-    setPriceRange([0, 30]);
+    setMinRating(0);
+    setPriceRange([0, 50]);
     setSort('relevance');
     setVerifiedOnly(false);
 

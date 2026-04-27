@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Divider,
   Stack,
   TextField,
@@ -25,6 +26,7 @@ import {
 } from "../../auth/auth";
 import { MOCK_USER } from "../../mock_data/users";
 import { useLanguage } from "../../i18n/useLanguage";
+import { prosApi, type ProApiDto } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
 import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
@@ -66,6 +68,34 @@ export default function ProfilePage() {
   const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
   const [msgSeverity, setMsgSeverity] = useState<"success" | "info" | "error">("info");
+
+  const [proProfile, setProProfile] = useState<ProApiDto | null>(null);
+  const [proLoading, setProLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setProLoading(false);
+      return;
+    }
+    let cancelled = false;
+    prosApi.getByEmail(user.email)
+      .then((data) => { if (!cancelled) setProProfile(data); })
+      .finally(() => { if (!cancelled) setProLoading(false); });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const onDeletePro = async () => {
+    if (!proProfile) return;
+    try {
+      await prosApi.delete(proProfile.id);
+      setProProfile(null);
+      setMsgSeverity("success");
+      setMsg("Pro profile deleted.");
+    } catch {
+      setMsgSeverity("error");
+      setMsg("Could not delete pro profile.");
+    }
+  };
 
   const { getForUser } = useAnnouncementService();
   const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
@@ -301,6 +331,54 @@ export default function ProfilePage() {
                 </Box>
               </Stack>
             </Stack>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" sx={{ borderRadius: 3 }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography sx={{ fontWeight: 800 }}>Pro profile</Typography>
+              {proProfile && (
+                <Button color="error" variant="outlined" size="small" onClick={onDeletePro}>
+                  Delete pro profile
+                </Button>
+              )}
+            </Stack>
+            <Divider sx={{ my: 1.5 }} />
+
+            {proLoading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                <CircularProgress size={20} />
+              </Box>
+            ) : proProfile ? (
+              <Stack direction="row" spacing={3} sx={{ flexWrap: "wrap" }}>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">Trade</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{proProfile.trade}</Typography>
+                </Box>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">City</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{proProfile.city}</Typography>
+                </Box>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">Hourly rate</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{proProfile.hourlyRate}</Typography>
+                </Box>
+                <Box>
+                  <Typography color="text.secondary" variant="body2">Display name</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{proProfile.fullName}</Typography>
+                </Box>
+              </Stack>
+            ) : (
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap" }}>
+                <Typography color="text.secondary">
+                  You haven't submitted a pro application yet.
+                </Typography>
+                <Button variant="contained" onClick={() => nav(paths.becomeAPro)}>
+                  Become a Pro
+                </Button>
+              </Stack>
+            )}
           </CardContent>
         </Card>
 

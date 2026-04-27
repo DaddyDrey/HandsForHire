@@ -1,29 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box, Typography, Paper, TextField, Select, MenuItem,
-  Chip, Button, InputAdornment, Avatar, useTheme, FormControl
+  Chip, Button, InputAdornment, Avatar, useTheme, FormControl, CircularProgress
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import { prosApi } from "../../api/prosApi";
 
 interface Pro {
+  id: number;
   name: string;
-  email: string;
   category: string;
   city: string;
   rating: number;
   reviews: number;
   status: "Verified" | "Pending review" | "Suspended";
 }
-
-const MOCK_PROS: Pro[] = [
-  { name: "Stefan Rusu", email: "stefan.r@email.com", category: "Plumbing", city: "Chișinău", rating: 4.9, reviews: 42, status: "Verified" },
-  { name: "Ana Vîntu", email: "ana.v@email.com", category: "Cleaning", city: "Chișinău", rating: 4.3, reviews: 28, status: "Verified" },
-  { name: "Mihai Dinu", email: "mihai.d@email.com", category: "Electrical", city: "Bălți", rating: 3.8, reviews: 11, status: "Pending review" },
-  { name: "Olga Popa", email: "olga.p@email.com", category: "Moving", city: "Chișinău", rating: 4.1, reviews: 19, status: "Pending review" },
-  { name: "Vasile Balan", email: "vasile.b@email.com", category: "Plumbing", city: "Cahul", rating: 2.1, reviews: 7, status: "Suspended" },
-  { name: "Irina Ciobanu", email: "irina.c@email.com", category: "Painting", city: "Chișinău", rating: 4.7, reviews: 33, status: "Verified" },
-];
 
 const statusColor: Record<string, "success" | "warning" | "error"> = {
   Verified: "success",
@@ -53,11 +45,40 @@ export default function ProsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [pros, setPros] = useState<Pro[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const categories = ["All", ...Array.from(new Set(MOCK_PROS.map((p) => p.category)))];
+  useEffect(() => {
+    let cancelled = false;
+    prosApi.getAll()
+      .then((data) => {
+        if (cancelled) return;
+        setPros(data.map((p) => ({
+          id: p.id,
+          name: p.fullName,
+          category: p.trade,
+          city: p.city,
+          rating: 0,
+          reviews: 0,
+          status: "Pending review" as const,
+        })));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError("Could not load pros from the server.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
-  const filtered = MOCK_PROS.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.email.toLowerCase().includes(search.toLowerCase());
+  const categories = ["All", ...Array.from(new Set(pros.map((p) => p.category)))];
+
+  const filtered = pros.filter((p) => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchCat = categoryFilter === "All" || p.category === categoryFilter;
     const matchStatus = statusFilter === "All" || p.status === statusFilter;
     return matchSearch && matchCat && matchStatus;
@@ -96,12 +117,20 @@ export default function ProsPage() {
       </Box>
 
       <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
-        {filtered.length === 0 && (
+        {loading && (
+          <Box sx={{ py: 6, display: "flex", justifyContent: "center" }}>
+            <CircularProgress size={24} />
+          </Box>
+        )}
+        {!loading && loadError && (
+          <Box sx={{ py: 6, textAlign: "center", color: "error.main", fontSize: "0.8rem" }}>{loadError}</Box>
+        )}
+        {!loading && !loadError && filtered.length === 0 && (
           <Box sx={{ py: 6, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>No pros found</Box>
         )}
-        {filtered.map((pro, i) => (
+        {!loading && !loadError && filtered.map((pro, i) => (
           <Box
-            key={pro.email}
+            key={pro.id}
             sx={{
               display: "flex",
               alignItems: "center",

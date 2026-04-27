@@ -22,10 +22,21 @@ public class ProsController : ControllerBase
         return Ok(pros);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var pro = await _ProLogic.GetByIdAsync(id);
+
+        if (pro == null)
+            return NotFound();
+
+        return Ok(pro);
+    }
+
+    [HttpGet("by-email/{email}")]
+    public async Task<IActionResult> GetByEmail(string email)
+    {
+        var pro = await _ProLogic.GetByEmailAsync(email);
 
         if (pro == null)
             return NotFound();

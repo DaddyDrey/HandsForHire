@@ -14,15 +14,21 @@ import {
   Typography,
 } from '@mui/material';
 
+import { useNavigate } from 'react-router-dom';
+
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 import { useLanguage } from '../../i18n/useLanguage';
+import { prosApi } from '../../api/prosApi';
+import { getUser } from '../../auth/auth';
+import paths from '../../routes/paths';
 
 const TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
 const CUSTOM_TRADE = 'Other';
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const currentYear = new Date().getFullYear();
   const minBirthYear = currentYear - 16;
@@ -37,25 +43,51 @@ export default function BecomeAProPage() {
 
   const [submitted, setSubmitted] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+
+    const currentUser = getUser();
+    if (!currentUser) {
+      setErrorMessage('Please log in before submitting your application.');
+      return;
+    }
 
     const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
     const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
     if (!isValid) return;
 
-    setSnackOpen(true);
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await prosApi.create({
+        fullName: fullName.trim(),
+        email: currentUser.email,
+        trade: selectedTrade,
+        city: city.trim(),
+        hourlyRate: Number(hourlyRate),
+      });
 
-    setFullName('');
-    setBirthYear('');
-    setTrade('');
-    setCustomTrade('');
-    setCity('');
-    setHourlyRate('');
-    setDescription('');
-    setSubmitted(false);
+      setSnackOpen(true);
+
+      setFullName('');
+      setBirthYear('');
+      setTrade('');
+      setCustomTrade('');
+      setCity('');
+      setHourlyRate('');
+      setDescription('');
+      setSubmitted(false);
+
+      setTimeout(() => navigate(paths.account), 1200);
+    } catch {
+      setErrorMessage(t('applicationError') ?? 'Could not submit your application. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const hasError = (value: string) => submitted && !value.trim();
@@ -230,7 +262,7 @@ export default function BecomeAProPage() {
                       rows={4}
                     />
 
-                    <Button type="submit" variant="contained" size="large" sx={{ alignSelf: 'flex-start', px: 3 }}>
+                    <Button type="submit" variant="contained" size="large" disabled={submitting} sx={{ alignSelf: 'flex-start', px: 3 }}>
                       {t('submitApplication')}
                     </Button>
                   </Stack>
@@ -245,6 +277,13 @@ export default function BecomeAProPage() {
           autoHideDuration={4000}
           onClose={() => setSnackOpen(false)}
           message={t('applicationSuccess')}
+        />
+
+        <Snackbar
+          open={!!errorMessage}
+          autoHideDuration={5000}
+          onClose={() => setErrorMessage(null)}
+          message={errorMessage ?? ''}
         />
       </ContainerMax>
     </Section>
