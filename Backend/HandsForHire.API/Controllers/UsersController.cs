@@ -62,6 +62,17 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> SetStatus(int id, SetUserStatusDto dto)
+    {
+        var updated = await _UserLogic.SetStatusAsync(id, dto.Status);
+
+        if (!updated)
+            return NotFound();
+
+        return NoContent();
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
