@@ -16,6 +16,7 @@ type Row = {
   fullName: string;
   status: "Active" | "Suspended" | "Pending" | "Demo";
   role: "Admin" | "User";
+  isAdmin: boolean;
 };
 
 const statusColor: Record<string, "success" | "error" | "warning" | "primary" | "default"> = {
@@ -27,12 +28,16 @@ const statusColor: Record<string, "success" | "error" | "warning" | "primary" | 
 
 function mapUser(u: UserApiDto): Row {
   const isAdmin = ADMIN_EMAILS.includes(u.email.toLowerCase());
+  let status: Row["status"];
+  if (isAdmin) status = "Demo";
+  else status = u.status === "Suspended" ? "Suspended" : "Active";
   return {
     id: u.id,
     email: u.email,
     fullName: u.fullName,
-    status: isAdmin ? "Demo" : "Active",
+    status,
     role: isAdmin ? "Admin" : "User",
+    isAdmin,
   };
 }
 
@@ -51,6 +56,21 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<Row | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const toggleStatus = async (user: Row) => {
+    if (user.isAdmin) return;
+    const next = user.status === "Suspended" ? "Active" : "Suspended";
+    setBusyId(user.id);
+    try {
+      await messagesApi.setUserStatus(user.id, next);
+      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, status: next } : u));
+    } catch {
+      setLoadError("Could not update user status.");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -169,11 +189,19 @@ export default function UsersPage() {
                     >
                       View
                     </Button>
-                    {user.status !== "Demo" && (
+                    {!user.isAdmin && (
                       <Button
                         size="small"
                         variant="outlined"
-                        sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "error.main", color: "error.main" } }}
+                        disabled={busyId === user.id}
+                        onClick={() => toggleStatus(user)}
+                        sx={{
+                          fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0,
+                          borderColor: "divider", color: "text.secondary",
+                          "&:hover": user.status === "Suspended"
+                            ? { borderColor: "success.main", color: "success.main" }
+                            : { borderColor: "error.main", color: "error.main" },
+                        }}
                       >
                         {user.status === "Suspended" ? "Restore" : "Suspend"}
                       </Button>
