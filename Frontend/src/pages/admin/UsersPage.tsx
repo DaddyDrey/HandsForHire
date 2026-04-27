@@ -1,27 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box, Typography, Paper, TextField, Select, MenuItem,
-  Chip, Button, InputAdornment, useTheme, FormControl
+  Chip, Button, InputAdornment, useTheme, FormControl, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, Stack, Divider, Avatar
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
-interface User {
+import { messagesApi, type UserApiDto } from "../../api/messagesApi";
+
+const ADMIN_EMAILS = ["demo@handsforhire.com"];
+
+type Row = {
+  id: number;
   email: string;
-  joined: string;
+  fullName: string;
   status: "Active" | "Suspended" | "Pending" | "Demo";
   role: "Admin" | "User";
-}
-
-const MOCK_USERS: User[] = [
-  { email: "demo@handsforhire.com", joined: "Jan 2025", status: "Demo", role: "Admin" },
-  { email: "alex.m@email.com", joined: "Apr 2025", status: "Active", role: "User" },
-  { email: "maria.p@email.com", joined: "Mar 2025", status: "Active", role: "User" },
-  { email: "john.d@email.com", joined: "Feb 2025", status: "Pending", role: "User" },
-  { email: "nina.k@email.com", joined: "Jan 2025", status: "Suspended", role: "User" },
-  { email: "test@test.com", joined: "Dec 2024", status: "Active", role: "User" },
-  { email: "stefan.r@email.com", joined: "Nov 2024", status: "Active", role: "User" },
-  { email: "olga.p@email.com", joined: "Oct 2024", status: "Pending", role: "User" },
-];
+};
 
 const statusColor: Record<string, "success" | "error" | "warning" | "primary" | "default"> = {
   Active: "success",
@@ -30,13 +25,55 @@ const statusColor: Record<string, "success" | "error" | "warning" | "primary" | 
   Demo: "primary",
 };
 
+function mapUser(u: UserApiDto): Row {
+  const isAdmin = ADMIN_EMAILS.includes(u.email.toLowerCase());
+  return {
+    id: u.id,
+    email: u.email,
+    fullName: u.fullName,
+    status: isAdmin ? "Demo" : "Active",
+    role: isAdmin ? "Admin" : "User",
+  };
+}
+
+function initials(name: string, fallback: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return fallback[0]?.toUpperCase() ?? "?";
+  return trimmed.split(" ").filter(Boolean).slice(0, 2).map((s) => s[0].toUpperCase()).join("");
+}
+
 export default function UsersPage() {
   const theme = useTheme();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const filtered = MOCK_USERS.filter((u) => {
-    const matchSearch = u.email.toLowerCase().includes(search.toLowerCase());
+  const [users, setUsers] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<Row | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    messagesApi.getAllUsers()
+      .then((data) => {
+        if (cancelled) return;
+        setUsers(data.map(mapUser));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError("Could not load users from the server.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = users.filter((u) => {
+    const matchSearch =
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      u.fullName.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "All" || u.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -48,11 +85,10 @@ export default function UsersPage() {
         Manage registered accounts
       </Typography>
 
-      {/* Filters */}
       <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
         <TextField
           size="small"
-          placeholder="Search by email…"
+          placeholder="Search by email or name…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
@@ -68,12 +104,11 @@ export default function UsersPage() {
         </FormControl>
       </Box>
 
-      {/* Table */}
       <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
         <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
           <Box component="thead">
             <Box component="tr">
-              {["Email", "Joined", "Status", "Role", ""].map((h) => (
+              {["Email", "Name", "Status", "Role", ""].map((h) => (
                 <Box
                   key={h}
                   component="th"
@@ -85,16 +120,30 @@ export default function UsersPage() {
             </Box>
           </Box>
           <Box component="tbody">
-            {filtered.length === 0 && (
+            {loading && (
+              <Box component="tr">
+                <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center" }}>
+                  <CircularProgress size={20} />
+                </Box>
+              </Box>
+            )}
+            {!loading && loadError && (
+              <Box component="tr">
+                <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center", color: "error.main", fontSize: "0.8rem" }}>
+                  {loadError}
+                </Box>
+              </Box>
+            )}
+            {!loading && !loadError && filtered.length === 0 && (
               <Box component="tr">
                 <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
                   No users found
                 </Box>
               </Box>
             )}
-            {filtered.map((user) => (
+            {!loading && !loadError && filtered.map((user) => (
               <Box
-                key={user.email}
+                key={user.id}
                 component="tr"
                 sx={{ "&:last-child td": { borderBottom: "none" }, "&:hover td": { bgcolor: "rgba(255,255,255,0.02)" } }}
               >
@@ -102,7 +151,7 @@ export default function UsersPage() {
                   {user.email}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {user.joined}
+                  {user.fullName || "—"}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Chip label={user.status} size="small" color={statusColor[user.status]} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
@@ -112,7 +161,12 @@ export default function UsersPage() {
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button size="small" variant="outlined" sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => setSelectedUser(user)}
+                      sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
+                    >
                       View
                     </Button>
                     {user.status !== "Demo" && (
@@ -131,6 +185,79 @@ export default function UsersPage() {
           </Box>
         </Box>
       </Paper>
+
+      <Dialog
+        open={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        {selectedUser && (
+          <>
+            <DialogTitle sx={{ pb: 1 }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar sx={{ width: 48, height: 48, bgcolor: "rgba(124,92,255,0.18)", color: "primary.main", fontWeight: 700 }}>
+                  {initials(selectedUser.fullName, selectedUser.email)}
+                </Avatar>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>
+                    {selectedUser.fullName || selectedUser.email}
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip
+                      label={selectedUser.status}
+                      size="small"
+                      color={statusColor[selectedUser.status]}
+                      variant="outlined"
+                      sx={{ fontSize: "0.65rem", height: 20 }}
+                    />
+                    <Chip
+                      label={selectedUser.role}
+                      size="small"
+                      variant="outlined"
+                      sx={{ fontSize: "0.65rem", height: 20 }}
+                    />
+                  </Stack>
+                </Box>
+              </Stack>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Email
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
+                    {selectedUser.email}
+                  </Typography>
+                </Box>
+                <Divider />
+                <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">User ID</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>#{selectedUser.id}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Full name</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.fullName || "—"}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Status</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.status}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Role</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.role}</Typography>
+                  </Box>
+                </Stack>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSelectedUser(null)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 }
