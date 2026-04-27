@@ -107,14 +107,17 @@ function MessageBubble({ message, proInitial }: { message: ChatMessage; proIniti
       <Box
         sx={{
           maxWidth: '80%',
-          px: 1.25,
-          py: 0.75,
-          borderRadius: 2.5,
-          borderTopLeftRadius: mine ? 16 : 4,
-          borderTopRightRadius: mine ? 4 : 16,
+          px: 1.5,
+          py: 1,
+          borderRadius: '16px',
+          borderBottomRightRadius: mine ? '4px' : '16px',
+          borderBottomLeftRadius: mine ? '16px' : '4px',
           bgcolor: mine ? 'primary.main' : 'rgba(255,255,255,0.06)',
           color: mine ? 'primary.contrastText' : 'text.primary',
           border: mine ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: mine
+            ? '0 2px 8px rgba(124,92,255,0.25)'
+            : '0 1px 4px rgba(0,0,0,0.15)',
         }}
       >
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
