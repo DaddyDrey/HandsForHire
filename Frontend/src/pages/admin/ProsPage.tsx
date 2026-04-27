@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { prosApi } from "../../api/prosApi";
+import { prosApi, type ProStatus } from "../../api/prosApi";
 
 interface Pro {
   id: number;
@@ -17,12 +17,18 @@ interface Pro {
   hourlyRate: number;
   rating: number;
   reviews: number;
-  status: "Verified" | "Pending review" | "Suspended";
+  status: ProStatus;
 }
 
-const statusColor: Record<string, "success" | "warning" | "error"> = {
+const statusLabel: Record<ProStatus, string> = {
+  Pending: "Pending review",
+  Verified: "Verified",
+  Suspended: "Suspended",
+};
+
+const statusColor: Record<ProStatus, "success" | "warning" | "error"> = {
   Verified: "success",
-  "Pending review": "warning",
+  Pending: "warning",
   Suspended: "error",
 };
 
@@ -52,6 +58,19 @@ export default function ProsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const setStatus = async (pro: Pro, next: ProStatus) => {
+    setBusyId(pro.id);
+    try {
+      await prosApi.setStatus(pro.id, next);
+      setPros((prev) => prev.map((p) => p.id === pro.id ? { ...p, status: next } : p));
+    } catch {
+      setLoadError("Could not update pro status.");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +86,7 @@ export default function ProsPage() {
           hourlyRate: p.hourlyRate,
           rating: 0,
           reviews: 0,
-          status: "Pending review" as const,
+          status: p.status,
         })));
       })
       .catch(() => {
@@ -116,7 +135,7 @@ export default function ProsPage() {
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <MenuItem value="All">All statuses</MenuItem>
             <MenuItem value="Verified">Verified</MenuItem>
-            <MenuItem value="Pending review">Pending review</MenuItem>
+            <MenuItem value="Pending">Pending review</MenuItem>
             <MenuItem value="Suspended">Suspended</MenuItem>
           </Select>
         </FormControl>
@@ -174,7 +193,7 @@ export default function ProsPage() {
             </Box>
 
             <Chip
-              label={pro.status}
+              label={statusLabel[pro.status]}
               size="small"
               color={statusColor[pro.status]}
               variant="outlined"
@@ -188,12 +207,25 @@ export default function ProsPage() {
                 onClick={() => setSelectedPro(pro)}
                 sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
               >
-                {pro.status === "Pending review" ? "Review" : "View"}
+                {pro.status === "Pending" ? "Review" : "View"}
               </Button>
+              {pro.status === "Pending" && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={busyId === pro.id}
+                  onClick={() => setStatus(pro, "Verified")}
+                  sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
+                >
+                  Verify
+                </Button>
+              )}
               {pro.status !== "Suspended" && (
                 <Button
                   size="small"
                   variant="outlined"
+                  disabled={busyId === pro.id}
+                  onClick={() => setStatus(pro, "Suspended")}
                   sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "error.main", color: "error.main" } }}
                 >
                   Suspend
@@ -203,6 +235,8 @@ export default function ProsPage() {
                 <Button
                   size="small"
                   variant="outlined"
+                  disabled={busyId === pro.id}
+                  onClick={() => setStatus(pro, "Verified")}
                   sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
                 >
                   Restore
@@ -239,7 +273,7 @@ export default function ProsPage() {
                   </Typography>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Chip
-                      label={selectedPro.status}
+                      label={statusLabel[selectedPro.status]}
                       size="small"
                       color={statusColor[selectedPro.status]}
                       variant="outlined"

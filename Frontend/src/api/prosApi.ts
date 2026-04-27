@@ -1,5 +1,7 @@
 import axiosInstance from './axiosInstance';
 
+export type ProStatus = 'Pending' | 'Verified' | 'Suspended';
+
 export type ProApiDto = {
   id: number;
   fullName: string;
@@ -7,6 +9,7 @@ export type ProApiDto = {
   trade: string;
   city: string;
   hourlyRate: number;
+  status: ProStatus;
 };
 
 export type CreateProRequest = {
@@ -41,5 +44,9 @@ export const prosApi = {
 
   async delete(id: number): Promise<void> {
     await axiosInstance.delete(`/Pros/${id}`);
+  },
+
+  async setStatus(id: number, status: ProStatus): Promise<void> {
+    await axiosInstance.put(`/Pros/${id}/status`, { status });
   },
 };
