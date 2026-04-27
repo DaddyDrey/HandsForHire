@@ -42,6 +42,18 @@ export const messagesApi = {
     }
   },
 
+  async createUser(email: string, fullName: string): Promise<UserApiDto | null> {
+    try {
+      const { data } = await axiosInstance.post<UserApiDto>('/Users', {
+        email,
+        fullName,
+      });
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
   async getConversationsForUser(userId: number): Promise<ConversationApiDto[]> {
     const { data } = await axiosInstance.get<ConversationApiDto[]>(
       `/Conversations/user/${userId}`

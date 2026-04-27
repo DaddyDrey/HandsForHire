@@ -34,15 +34,6 @@ export type ConversationSummary = {
   total: number;
 };
 
-const CANNED_REPLIES = [
-  'Salut! Mulțumesc pentru mesaj, te contactez curând.',
-  'Am primit, revin cu detalii imediat.',
-  'Salut! Da, sunt disponibil. Când ai nevoie?',
-  'Mulțumesc pentru interes. Pot veni și astăzi dacă e urgent.',
-  'Salut! Sigur, trimite-mi adresa și vin să văd.',
-  'Bună! Pot să îți dau o estimare după ce văd problema.',
-];
-
 const userIdCache = new Map<string, number>();
 const conversationsByEmail = new Map<string, ConversationSummary[]>();
 const conversationByKey = new Map<string, Conversation>();
@@ -101,7 +92,10 @@ function convertSummary(c: ConversationApiDto): ConversationSummary {
 async function resolveUserId(email: string): Promise<number | null> {
   const e = normalize(email);
   if (userIdCache.has(e)) return userIdCache.get(e)!;
-  const user = await messagesApi.getUserByEmail(e);
+  let user = await messagesApi.getUserByEmail(e);
+  if (!user) {
+    user = await messagesApi.createUser(e, e);
+  }
   if (user) {
     userIdCache.set(e, user.id);
     return user.id;
@@ -196,24 +190,9 @@ export async function sendMessage(
     await messagesApi.sendMessage(convo.id, 'User', text);
     await fetchMessages(email, proId);
     await fetchConversations(email);
-    scheduleAutoReply(email, proId, convo.id);
   } catch {
     // silent
   }
-}
-
-function scheduleAutoReply(email: string, proId: string, convoId: number) {
-  const delay = 1200 + Math.floor(Math.random() * 2000);
-  setTimeout(async () => {
-    const reply = CANNED_REPLIES[Math.floor(Math.random() * CANNED_REPLIES.length)];
-    try {
-      await messagesApi.sendMessage(convoId, 'Pro', reply);
-      await fetchMessages(email, proId);
-      await fetchConversations(email);
-    } catch {
-      // silent
-    }
-  }, delay);
 }
 
 export async function markRead(email: string, proId: string): Promise<void> {

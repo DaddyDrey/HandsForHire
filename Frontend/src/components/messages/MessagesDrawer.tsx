@@ -107,14 +107,17 @@ function MessageBubble({ message, proInitial }: { message: ChatMessage; proIniti
       <Box
         sx={{
           maxWidth: '80%',
-          px: 1.25,
-          py: 0.75,
-          borderRadius: 2.5,
-          borderTopLeftRadius: mine ? 16 : 4,
-          borderTopRightRadius: mine ? 4 : 16,
+          px: 1.5,
+          py: 1,
+          borderRadius: '16px',
+          borderBottomRightRadius: mine ? '4px' : '16px',
+          borderBottomLeftRadius: mine ? '16px' : '4px',
           bgcolor: mine ? 'primary.main' : 'rgba(255,255,255,0.06)',
           color: mine ? 'primary.contrastText' : 'text.primary',
           border: mine ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: mine
+            ? '0 2px 8px rgba(124,92,255,0.25)'
+            : '0 1px 4px rgba(0,0,0,0.15)',
         }}
       >
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -202,17 +205,19 @@ export default function MessagesDrawer() {
   const activePro = active?.proMeta;
   const initial = activePro?.name?.trim()[0]?.toUpperCase() ?? '?';
 
-  useEffect(() => {
-    if (user && isOpen) fetchConversations(user.email);
-  }, [user, isOpen]);
+  const userEmail = user?.email;
 
   useEffect(() => {
-    if (user && activeProId && isOpen) fetchMessages(user.email, activeProId);
-  }, [user, activeProId, isOpen]);
+    if (userEmail && isOpen) fetchConversations(userEmail);
+  }, [userEmail, isOpen]);
 
   useEffect(() => {
-    if (user && activeProId && isOpen) markRead(user.email, activeProId);
-  }, [user, activeProId, isOpen, active?.messages.length]);
+    if (userEmail && activeProId && isOpen) fetchMessages(userEmail, activeProId);
+  }, [userEmail, activeProId, isOpen]);
+
+  useEffect(() => {
+    if (userEmail && activeProId && isOpen) markRead(userEmail, activeProId);
+  }, [userEmail, activeProId, isOpen, active?.messages.length]);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -231,9 +236,6 @@ export default function MessagesDrawer() {
     deleteConversation(user.email, activeProId);
     setActiveProId(null);
   };
-
-  const lastMessage = active?.messages[active.messages.length - 1];
-  const isTyping = !!lastMessage && lastMessage.from === 'user';
 
   const showThread = !!activeProId;
 
@@ -353,14 +355,6 @@ export default function MessagesDrawer() {
                 active.messages.map((m) => (
                   <MessageBubble key={m.id} message={m} proInitial={initial} />
                 ))
-              )}
-              {isTyping && (
-                <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.5 }}>
-                  <Avatar sx={{ width: 22, height: 22, fontSize: 11 }}>{initial}</Avatar>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    {t('typingReply')}
-                  </Typography>
-                </Stack>
               )}
             </Box>
 
