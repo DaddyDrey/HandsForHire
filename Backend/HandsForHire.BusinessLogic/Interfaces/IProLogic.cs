@@ -1,3 +1,4 @@
+using HandsForHire.Domain.Entities;
 using HandsForHire.Domain.Models.Pros;
 
 namespace HandsForHire.BusinessLogic.Interfaces;
@@ -9,5 +10,6 @@ public interface IProLogic
 	Task<ProDto?> GetByEmailAsync(string email);
 	Task<ProDto> CreateAsync(CreateProDto dto);
 	Task<bool> UpdateAsync(int id, UpdateProDto dto);
+	Task<bool> SetStatusAsync(int id, ProStatus status);
 	Task<bool> DeleteAsync(int id);
 }

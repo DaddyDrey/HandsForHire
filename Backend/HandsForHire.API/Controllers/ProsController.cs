@@ -62,6 +62,17 @@ public class ProsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> SetStatus(int id, SetProStatusDto dto)
+    {
+        var updated = await _ProLogic.SetStatusAsync(id, dto.Status);
+
+        if (!updated)
+            return NotFound();
+
+        return NoContent();
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

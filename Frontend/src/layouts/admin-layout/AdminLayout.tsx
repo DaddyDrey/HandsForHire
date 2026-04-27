@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Chip, useTheme } from "@mui/material";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
@@ -10,6 +11,7 @@ import adminPaths from "./adminPaths";
 import Logo from "../../components/base/Logo";
 import paths from "../../routes/paths";
 import ScrollToTop from "../../components/common/ScrollToTop";
+import { reportsApi } from "../../api/reportsApi";
 
 const SIDEBAR_WIDTH = 230;
 
@@ -25,33 +27,57 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const navItems: NavGroup[] = [
-  {
-    section: "Overview",
-    items: [
-      { label: "Dashboard", icon: <DashboardRoundedIcon fontSize="small" />, path: adminPaths.dashboard },
-    ],
-  },
-  {
-    section: "Management",
-    items: [
-      { label: "Users", icon: <PeopleRoundedIcon fontSize="small" />, path: adminPaths.users },
-      { label: "Pros", icon: <StarRoundedIcon fontSize="small" />, path: adminPaths.pros },
-      { label: "Job listings", icon: <WorkRoundedIcon fontSize="small" />, path: adminPaths.jobs },
-    ],
-  },
-  {
-    section: "Moderation",
-    items: [
-      { label: "Reports & flags", icon: <FlagRoundedIcon fontSize="small" />, path: adminPaths.reports, badge: 4 },
-    ],
-  },
-];
+function buildNavItems(pendingReports: number): NavGroup[] {
+  return [
+    {
+      section: "Overview",
+      items: [
+        { label: "Dashboard", icon: <DashboardRoundedIcon fontSize="small" />, path: adminPaths.dashboard },
+      ],
+    },
+    {
+      section: "Management",
+      items: [
+        { label: "Users", icon: <PeopleRoundedIcon fontSize="small" />, path: adminPaths.users },
+        { label: "Pros", icon: <StarRoundedIcon fontSize="small" />, path: adminPaths.pros },
+        { label: "Job listings", icon: <WorkRoundedIcon fontSize="small" />, path: adminPaths.jobs },
+      ],
+    },
+    {
+      section: "Moderation",
+      items: [
+        {
+          label: "Reports & flags",
+          icon: <FlagRoundedIcon fontSize="small" />,
+          path: adminPaths.reports,
+          badge: pendingReports > 0 ? pendingReports : undefined,
+        },
+      ],
+    },
+  ];
+}
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+  const [pendingReports, setPendingReports] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    reportsApi.getAll()
+      .then((data) => {
+        if (cancelled) return;
+        setPendingReports(data.filter((r) => r.status === "Pending").length);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPendingReports(0);
+      });
+    return () => { cancelled = true; };
+  }, [location.pathname]);
+
+  const navItems = buildNavItems(pendingReports);
 
   const isActive = (path: string) => location.pathname === path;
 

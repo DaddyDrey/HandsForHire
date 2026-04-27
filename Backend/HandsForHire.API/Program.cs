@@ -32,6 +32,7 @@ builder.Services.AddScoped<IReviewLogic, ReviewLogic>();
 builder.Services.AddScoped<IConversationLogic, ConversationLogic>();
 builder.Services.AddScoped<IMessageLogic, MessageLogic>();
 builder.Services.AddScoped<IAnnouncementLogic, AnnouncementLogic>();
+builder.Services.AddScoped<IReportLogic, ReportLogic>();
 
 var app = builder.Build();
 
