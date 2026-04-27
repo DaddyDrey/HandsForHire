@@ -27,6 +27,7 @@ builder.Services.AddScoped<IProLogic, ProLogic>();
 builder.Services.AddScoped<IReviewLogic, ReviewLogic>();
 builder.Services.AddScoped<IConversationLogic, ConversationLogic>();
 builder.Services.AddScoped<IMessageLogic, MessageLogic>();
+builder.Services.AddScoped<IAnnouncementLogic, AnnouncementLogic>();
 
 var app = builder.Build();
 

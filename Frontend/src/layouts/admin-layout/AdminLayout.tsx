@@ -9,6 +9,7 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import adminPaths from "./adminPaths";
 import Logo from "../../components/base/Logo";
 import paths from "../../routes/paths";
+import ScrollToTop from "../../components/common/ScrollToTop";
 
 const SIDEBAR_WIDTH = 230;
 
@@ -56,6 +57,7 @@ export default function AdminLayout() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
+      <ScrollToTop />
       {/* Sidebar */}
       <Drawer
         variant="permanent"

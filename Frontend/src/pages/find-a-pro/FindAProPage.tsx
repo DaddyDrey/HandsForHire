@@ -54,6 +54,14 @@ const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 
 type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
 
+const getTradeFromUrl = (value: string | null): TradeOption => {
+  if (value && TRADE_OPTIONS.includes(value as TradeOption)) {
+    return value as TradeOption;
+  }
+
+  return 'All';
+};
+
 export default function FindAProPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
@@ -73,11 +81,11 @@ export default function FindAProPage() {
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
-  const [trade, setTrade] = useState<TradeOption>('All');
+  const [trade, setTrade] = useState<TradeOption>(() => getTradeFromUrl(tradeFromUrl));
   const [minRating, setMinRating] = useState<number>(0);
   const [priceRange, setPriceRange] = useState<number[]>([0, 50]);
   const [sort, setSort] = useState<SortOption>('relevance');
-  const [verifiedOnly, setVerifiedOnly] = useState<boolean>(verifiedFromUrl);
+  const [verifiedOnly, setVerifiedOnly] = useState<boolean>(() => verifiedFromUrl);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
@@ -93,17 +101,6 @@ export default function FindAProPage() {
       .catch((error) => console.error('Could not load professionals', error));
     return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    setVerifiedOnly(verifiedFromUrl);
-  }, [verifiedFromUrl]);
-
-  useEffect(() => {
-    if (!tradeFromUrl) return;
-    if (TRADE_OPTIONS.includes(tradeFromUrl as TradeOption)) {
-      setTrade(tradeFromUrl as TradeOption);
-    }
-  }, [tradeFromUrl]);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;
@@ -162,8 +159,8 @@ export default function FindAProPage() {
     setQuery('');
     setCity('');
     setTrade('All');
-    setMinRating(1);
-    setPriceRange([0, 30]);
+    setMinRating(0);
+    setPriceRange([0, 50]);
     setSort('relevance');
     setVerifiedOnly(false);
 

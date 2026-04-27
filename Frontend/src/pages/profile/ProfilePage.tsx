@@ -27,6 +27,10 @@ import {
 import { MOCK_USER } from "../../mock_data/users";
 import { useLanguage } from "../../i18n/useLanguage";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
+import ContainerMax from "../../components/common/ContainerMax";
+import Section from "../../components/common/Section";
+import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
+import { messagesApi } from "../../api/messagesApi";
 
 type Announcement = {
   id: string;
@@ -92,6 +96,31 @@ export default function ProfilePage() {
       setMsg("Could not delete pro profile.");
     }
   };
+
+  const { getForUser } = useAnnouncementService();
+  const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
+
+  const userEmail = user?.email;
+  useEffect(() => {
+    if (!userEmail) return;
+    let cancelled = false;
+    (async () => {
+      const resolved = await messagesApi.getUserByEmail(userEmail);
+      if (!resolved) {
+        if (!cancelled) setAnnouncements([]);
+        return;
+      }
+      try {
+        const data = await getForUser(resolved.id);
+        if (!cancelled) setAnnouncements(data);
+      } catch {
+        if (!cancelled) setAnnouncements([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userEmail, getForUser]);
 
   const profile: Profile | null = useMemo(() => {
     if (!user) return null;
@@ -184,21 +213,46 @@ export default function ProfilePage() {
   )}&su=${encodeURIComponent("HandsForHire - Help")}`;
 
   return (
-    <Box sx={{ pt: 2 }}>
-      <Stack spacing={2.5}>
-        <Box sx={{ pl: { xs: 1, sm: 2 } }}>
-          <Typography variant="h4" sx={{ fontWeight: 900 }}>
-            {t("myAccount")}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            {t("privateAccountInfo")}
-          </Typography>
-        </Box>
+    <Section sx={{ py: { xs: 3, md: 5 } }}>
+      <ContainerMax>
+        <Stack spacing={3}>
+          <Box
+            sx={{
+              px: { xs: 2.5, md: 4 },
+              py: { xs: 3, md: 4 },
+              borderRadius: 3,
+              border: "1px solid rgba(255,255,255,0.08)",
+              background:
+                "linear-gradient(135deg, rgba(124,92,255,0.14) 0%, rgba(34,197,94,0.07) 55%, rgba(255,255,255,0.03) 100%)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
+            }}
+          >
+            <Typography
+              variant="h1"
+              sx={{
+                fontSize: { xs: "2.3rem", md: "3.25rem" },
+                lineHeight: 1.05,
+              }}
+            >
+              {t("myAccount")}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
+              {t("privateAccountInfo")}
+            </Typography>
+          </Box>
 
         {msg && <Alert severity={msgSeverity}>{msg}</Alert>}
 
-        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-          <CardContent>
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            borderColor: "rgba(255,255,255,0.10)",
+            background: "rgba(14,20,37,0.78)",
+            backdropFilter: "blur(14px)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
             <Stack spacing={1.75}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography sx={{ fontWeight: 800 }}>{t("account")}</Typography>
@@ -336,16 +390,26 @@ export default function ProfilePage() {
             alignItems: "start",
           }}
         >
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              borderColor: "rgba(255,255,255,0.10)",
+              background: "rgba(14,20,37,0.78)",
+              backdropFilter: "blur(14px)",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
               <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
               <Divider sx={{ my: 1.5 }} />
 
-              {profile.announcements.length === 0 ? (
+              {announcements === null ? (
+                <Typography color="text.secondary">…</Typography>
+              ) : announcements.length === 0 ? (
                 <Typography color="text.secondary">{t("noAnnouncementsYet")}</Typography>
               ) : (
                 <Stack spacing={1}>
-                  {profile.announcements.map((a) => (
+                  {announcements.map((a) => (
                     <Box
                       key={a.id}
                       sx={{
@@ -361,7 +425,7 @@ export default function ProfilePage() {
                       >
                         <Typography sx={{ fontWeight: 750 }}>{a.title}</Typography>
                         <Typography color="text.secondary" variant="body2">
-                          {a.status} • {a.createdAt}
+                          {a.status} • {a.createdAt.slice(0, 10)}
                         </Typography>
                       </Stack>
                     </Box>
@@ -371,8 +435,16 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              borderColor: "rgba(255,255,255,0.10)",
+              background: "rgba(14,20,37,0.78)",
+              backdropFilter: "blur(14px)",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
               <Typography sx={{ fontWeight: 800 }}>{t("prosCheckedOutHistory")}</Typography>
               <Divider sx={{ my: 1.5 }} />
 
@@ -409,8 +481,16 @@ export default function ProfilePage() {
           </Card>
         </Box>
 
-        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-          <CardContent>
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            borderColor: "rgba(255,255,255,0.10)",
+            background: "rgba(14,20,37,0.78)",
+            backdropFilter: "blur(14px)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
             <Typography sx={{ fontWeight: 800 }}>{t("security")}</Typography>
             <Divider sx={{ my: 1.5 }} />
 
@@ -466,7 +546,8 @@ export default function ProfilePage() {
             </Stack>
           </CardContent>
         </Card>
-      </Stack>
-    </Box>
+        </Stack>
+      </ContainerMax>
+    </Section>
   );
 }
