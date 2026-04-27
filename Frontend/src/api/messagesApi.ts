@@ -31,6 +31,11 @@ export type UserApiDto = {
 };
 
 export const messagesApi = {
+  async getAllUsers(): Promise<UserApiDto[]> {
+    const { data } = await axiosInstance.get<UserApiDto[]>('/Users');
+    return data;
+  },
+
   async getUserByEmail(email: string): Promise<UserApiDto | null> {
     try {
       const { data } = await axiosInstance.get<UserApiDto>(

@@ -1,9 +1,13 @@
-import { Box, Typography, Paper, Chip, useTheme } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Typography, Paper, Chip, useTheme, CircularProgress } from "@mui/material";
 import type { ChipProps } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 
-// ── Metric card ──────────────────────────────────────────────────────────────
+import { messagesApi } from "../../api/messagesApi";
+import { prosApi } from "../../api/prosApi";
+import { useAnnouncementService, type Announcement, type AnnouncementStatus } from "../../mock_data/announcements";
+
 interface MetricCardProps {
   label: string;
   value: string;
@@ -51,25 +55,29 @@ function MetricCard({ label, value, delta, deltaType = "up", accent }: MetricCar
   );
 }
 
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-const signupData = [
-  { label: "Feb", value: 28 },
-  { label: "Mar", value: 41 },
-  { label: "Apr", value: 35 },
-  { label: "May", value: 52 },
-  { label: "Jun", value: 48 },
-  { label: "Jul", value: 61 },
-  { label: "Aug", value: 74 },
-  { label: "Sep", value: 89 },
-];
+const STATUS_LABEL: Record<AnnouncementStatus, string> = {
+  Open: "Open",
+  InProgress: "In progress",
+  Completed: "Completed",
+  Cancelled: "Cancelled",
+  Paused: "Paused",
+};
 
-function BarChart() {
+const STATUS_COLOR: Record<AnnouncementStatus, string> = {
+  Open: "#7C5CFF",
+  InProgress: "#22C55E",
+  Completed: "#5A6278",
+  Cancelled: "#F87171",
+  Paused: "#FBBF24",
+};
+
+function BarChart({ data }: { data: { label: string; value: number }[] }) {
   const theme = useTheme();
-  const max = Math.max(...signupData.map((d) => d.value));
+  const max = Math.max(1, ...data.map((d) => d.value));
 
   return (
     <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1, height: 110, px: 1, pt: 1 }}>
-      {signupData.map((d) => (
+      {data.map((d) => (
         <Box
           key={d.label}
           sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}
@@ -97,19 +105,11 @@ function BarChart() {
   );
 }
 
-// ── Donut chart ───────────────────────────────────────────────────────────────
-const donutData = [
-  { label: "Open", pct: 40, color: "#7C5CFF" },
-  { label: "In progress", pct: 35, color: "#22C55E" },
-  { label: "Cancelled", pct: 9, color: "#F87171" },
-  { label: "Completed", pct: 16, color: "#5A6278" },
-];
-
-function DonutChart() {
+function DonutChart({ data }: { data: { label: string; pct: number; color: string }[] }) {
   const r = 38;
   const circ = 2 * Math.PI * r;
-  const segments = donutData.map((d, index) => {
-    const previousPct = donutData.slice(0, index).reduce((total, item) => total + item.pct, 0);
+  const segments = data.map((d, index) => {
+    const previousPct = data.slice(0, index).reduce((total, item) => total + item.pct, 0);
     return {
       ...d,
       dash: (d.pct / 100) * circ,
@@ -120,7 +120,10 @@ function DonutChart() {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 3, p: 2 }}>
       <svg width="100" height="100" viewBox="0 0 100 100">
-        {segments.map((d) => (
+        {data.length === 0 ? (
+          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
+        ) : (
+          segments.map((d) => (
             <circle
               key={d.label}
               cx="50" cy="50" r={r}
@@ -131,40 +134,144 @@ function DonutChart() {
               strokeDashoffset={-d.offset}
               transform="rotate(-90 50 50)"
             />
-        ))}
+          ))
+        )}
       </svg>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-        {donutData.map((d) => (
-          <Box key={d.label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: d.color, flexShrink: 0 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
-              {d.label} — {d.pct}%
-            </Typography>
-          </Box>
-        ))}
+        {data.length === 0 ? (
+          <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.72rem" }}>
+            No jobs yet
+          </Typography>
+        ) : (
+          data.map((d) => (
+            <Box key={d.label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: d.color, flexShrink: 0 }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
+                {d.label} — {d.pct}%
+              </Typography>
+            </Box>
+          ))
+        )}
       </Box>
     </Box>
   );
 }
 
-// ── Recent activity ───────────────────────────────────────────────────────────
-const activity: Array<{
+type ActivityRow = {
   event: string;
   user: string;
   time: string;
   status: string;
   color: ChipProps["color"];
-}> = [
-  { event: "New signup", user: "alex.m@email.com", time: "2 min ago", status: "OK", color: "success" },
-  { event: "Job posted", user: "maria.p@email.com", time: "14 min ago", status: "Live", color: "primary" },
-  { event: "Report filed", user: "john.d@email.com", time: "31 min ago", status: "Review", color: "warning" },
-  { event: "Pro approved", user: "stefan.r@email.com", time: "1 hr ago", status: "Approved", color: "success" },
-  { event: "Account deleted", user: "temp_user_882", time: "2 hr ago", status: "Removed", color: "default" },
-];
+};
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} d ago`;
+  return iso.slice(0, 10);
+}
+
+function statusChip(status: AnnouncementStatus): { status: string; color: ChipProps["color"] } {
+  switch (status) {
+    case "Open": return { status: "Live", color: "primary" };
+    case "InProgress": return { status: "In progress", color: "success" };
+    case "Completed": return { status: "Completed", color: "default" };
+    case "Cancelled": return { status: "Cancelled", color: "error" };
+    case "Paused": return { status: "Paused", color: "warning" };
+  }
+}
+
 export default function DashboardPage() {
   const theme = useTheme();
+  const { getAll: getAllAnnouncements } = useAnnouncementService();
+
+  const [usersCount, setUsersCount] = useState<number | null>(null);
+  const [prosCount, setProsCount] = useState<number | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      messagesApi.getAllUsers().catch(() => []),
+      prosApi.getAll().catch(() => []),
+      getAllAnnouncements().catch(() => []),
+    ]).then(([users, pros, jobs]) => {
+      if (cancelled) return;
+      setUsersCount(users.length);
+      setProsCount(pros.length);
+      setAnnouncements(jobs);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [getAllAnnouncements]);
+
+  const openJobsCount = useMemo(
+    () => (announcements ?? []).filter((a) => a.status === "Open").length,
+    [announcements]
+  );
+
+  const openJobsThisWeek = useMemo(() => {
+    if (!announcements) return 0;
+    const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+    return announcements.filter((a) => a.status === "Open" && new Date(a.createdAt).getTime() > weekAgo).length;
+  }, [announcements]);
+
+  const monthlyJobs = useMemo(() => {
+    if (!announcements) return [];
+    const months: { label: string; key: string; value: number }[] = [];
+    const now = new Date();
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const label = d.toLocaleString(undefined, { month: "short" });
+      months.push({ label, key, value: 0 });
+    }
+    for (const a of announcements) {
+      const d = new Date(a.createdAt);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const m = months.find((x) => x.key === key);
+      if (m) m.value++;
+    }
+    return months.map((m) => ({ label: m.label, value: m.value }));
+  }, [announcements]);
+
+  const donutData = useMemo(() => {
+    if (!announcements || announcements.length === 0) return [];
+    const counts: Record<AnnouncementStatus, number> = {
+      Open: 0, InProgress: 0, Completed: 0, Cancelled: 0, Paused: 0,
+    };
+    for (const a of announcements) counts[a.status]++;
+    const total = announcements.length;
+    return (Object.keys(counts) as AnnouncementStatus[])
+      .filter((k) => counts[k] > 0)
+      .map((k) => ({
+        label: STATUS_LABEL[k],
+        pct: Math.round((counts[k] / total) * 100),
+        color: STATUS_COLOR[k],
+      }));
+  }, [announcements]);
+
+  const activity: ActivityRow[] = useMemo(() => {
+    if (!announcements) return [];
+    const sorted = [...announcements].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return sorted.slice(0, 5).map((a) => {
+      const c = statusChip(a.status);
+      return {
+        event: `Job posted: ${a.title}`,
+        user: a.authorName || a.authorEmail || `user#${a.userId}`,
+        time: relativeTime(a.createdAt),
+        status: c.status,
+        color: c.color,
+      };
+    });
+  }, [announcements]);
 
   return (
     <Box>
@@ -173,77 +280,102 @@ export default function DashboardPage() {
         Overview of platform activity
       </Typography>
 
-      {/* Metrics */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 1.5, mb: 3 }}>
-        {[
-          { label: "Total users", value: "1,284", delta: "+38 this week", deltaType: "up" as const, accent: true },
-          { label: "Active pros", value: "317", delta: "+12 this week", deltaType: "up" as const },
-          { label: "Open jobs", value: "89", delta: "−5 since yesterday", deltaType: "down" as const },
-          { label: "Pending reports", value: "4", delta: "Needs attention", deltaType: "warn" as const },
-        ].map((m) => (
-          <MetricCard key={m.label} {...m} />
-        ))}
-      </Box>
-
-      {/* Charts row */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "7fr 5fr" }, gap: 2, mb: 3 }}>
-        <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-          <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="body2" fontWeight={500}>New signups — last 8 weeks</Typography>
-          </Box>
-          <BarChart />
-        </Paper>
-        <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-          <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="body2" fontWeight={500}>Job listings status</Typography>
-          </Box>
-          <DonutChart />
-        </Paper>
-      </Box>
-
-      {/* Recent activity */}
-      <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
-        <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-          <Typography variant="body2" fontWeight={500}>Recent activity</Typography>
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+          <CircularProgress size={28} />
         </Box>
-        <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
-          <Box component="thead">
-            <Box component="tr">
-              {["Event", "User", "Time", "Status"].map((h) => (
-                <Box
-                  key={h}
-                  component="th"
-                  sx={{ px: 2.5, py: 1.25, textAlign: "left", fontSize: "0.65rem", color: "text.disabled", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 500 }}
-                >
-                  {h}
-                </Box>
-              ))}
-            </Box>
+      ) : (
+        <>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 1.5, mb: 3 }}>
+            <MetricCard
+              label="Total users"
+              value={String(usersCount ?? 0)}
+              accent
+            />
+            <MetricCard
+              label="Active pros"
+              value={String(prosCount ?? 0)}
+            />
+            <MetricCard
+              label="Open jobs"
+              value={String(openJobsCount)}
+              delta={openJobsThisWeek > 0 ? `+${openJobsThisWeek} this week` : undefined}
+              deltaType="up"
+            />
+            <MetricCard
+              label="Pending reports"
+              value="0"
+              delta="Needs attention"
+              deltaType="warn"
+            />
           </Box>
-          <Box component="tbody">
-            {activity.map((row, i) => (
-              <Box
-                key={i}
-                component="tr"
-                sx={{ "&:hover td": { bgcolor: "rgba(255,255,255,0.02)" }, "&:last-child td": { borderBottom: "none" } }}
-              >
-                <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {row.event}
-                </Box>
-                <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.primary", fontWeight: 500, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {row.user}
-                </Box>
-                <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {row.time}
-                </Box>
-                <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Chip label={row.status} size="small" color={row.color} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
+
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "7fr 5fr" }, gap: 2, mb: 3 }}>
+            <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+              <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="body2" fontWeight={500}>Job postings — last 8 months</Typography>
+              </Box>
+              <BarChart data={monthlyJobs} />
+            </Paper>
+            <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+              <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="body2" fontWeight={500}>Job listings status</Typography>
+              </Box>
+              <DonutChart data={donutData} />
+            </Paper>
+          </Box>
+
+          <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
+            <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
+              <Typography variant="body2" fontWeight={500}>Recent activity</Typography>
+            </Box>
+            <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+              <Box component="thead">
+                <Box component="tr">
+                  {["Event", "User", "Time", "Status"].map((h) => (
+                    <Box
+                      key={h}
+                      component="th"
+                      sx={{ px: 2.5, py: 1.25, textAlign: "left", fontSize: "0.65rem", color: "text.disabled", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${theme.palette.divider}`, fontWeight: 500 }}
+                    >
+                      {h}
+                    </Box>
+                  ))}
                 </Box>
               </Box>
-            ))}
-          </Box>
-        </Box>
-      </Paper>
+              <Box component="tbody">
+                {activity.length === 0 && (
+                  <Box component="tr">
+                    <Box component="td" colSpan={4} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
+                      No activity yet
+                    </Box>
+                  </Box>
+                )}
+                {activity.map((row, i) => (
+                  <Box
+                    key={i}
+                    component="tr"
+                    sx={{ "&:hover td": { bgcolor: "rgba(255,255,255,0.02)" }, "&:last-child td": { borderBottom: "none" } }}
+                  >
+                    <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}`, maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {row.event}
+                    </Box>
+                    <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.primary", fontWeight: 500, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                      {row.user}
+                    </Box>
+                    <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
+                      {row.time}
+                    </Box>
+                    <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                      <Chip label={row.status} size="small" color={row.color} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Paper>
+        </>
+      )}
     </Box>
   );
 }

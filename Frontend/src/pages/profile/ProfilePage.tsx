@@ -8,11 +8,25 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControl,
+  IconButton,
+  InputLabel,
+  Menu,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 import paths from "../../routes/paths";
 import {
@@ -31,6 +45,11 @@ import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
 import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
 import { messagesApi } from "../../api/messagesApi";
+
+const ANNOUNCEMENT_CATEGORIES = [
+  "Plumbing", "Electrical", "Cleaning", "Moving", "Painting",
+  "Assembly", "HVAC", "Handyman", "Carpentry", "Other",
+];
 
 type Announcement = {
   id: string;
@@ -97,8 +116,9 @@ export default function ProfilePage() {
     }
   };
 
-  const { getForUser } = useAnnouncementService();
+  const { getForUser, create: createAnnouncement, remove: removeAnnouncement } = useAnnouncementService();
   const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
+  const [backendUserId, setBackendUserId] = useState<number | null>(null);
 
   const userEmail = user?.email;
   useEffect(() => {
@@ -110,6 +130,7 @@ export default function ProfilePage() {
         if (!cancelled) setAnnouncements([]);
         return;
       }
+      if (!cancelled) setBackendUserId(resolved.id);
       try {
         const data = await getForUser(resolved.id);
         if (!cancelled) setAnnouncements(data);
@@ -121,6 +142,89 @@ export default function ProfilePage() {
       cancelled = true;
     };
   }, [userEmail, getForUser]);
+
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [menuAnnouncementId, setMenuAnnouncementId] = useState<number | null>(null);
+  const [viewedAnnouncement, setViewedAnnouncement] = useState<BackendAnnouncement | null>(null);
+
+  const openMenu = (e: React.MouseEvent<HTMLElement>, id: number) => {
+    setMenuAnchor(e.currentTarget);
+    setMenuAnnouncementId(id);
+  };
+  const closeMenu = () => {
+    setMenuAnchor(null);
+    setMenuAnnouncementId(null);
+  };
+
+  const onView = () => {
+    const a = announcements?.find((x) => x.id === menuAnnouncementId) ?? null;
+    setViewedAnnouncement(a);
+    closeMenu();
+  };
+  const onDelete = () => {
+    const id = menuAnnouncementId;
+    closeMenu();
+    if (id != null) handleDeleteAnnouncement(id);
+  };
+
+  const [postOpen, setPostOpen] = useState(false);
+  const [postTitle, setPostTitle] = useState("");
+  const [postDescription, setPostDescription] = useState("");
+  const [postCategory, setPostCategory] = useState("");
+  const [postCity, setPostCity] = useState("");
+  const [postSubmitting, setPostSubmitting] = useState(false);
+  const [postTouched, setPostTouched] = useState(false);
+
+  const resetPostForm = () => {
+    setPostTitle("");
+    setPostDescription("");
+    setPostCategory("");
+    setPostCity("");
+    setPostTouched(false);
+  };
+
+  const handleDeleteAnnouncement = async (id: number) => {
+    if (!window.confirm("Delete this announcement?")) return;
+    try {
+      await removeAnnouncement(id);
+      setAnnouncements((prev) => (prev ? prev.filter((a) => a.id !== id) : prev));
+      setMsgSeverity("success");
+      setMsg("Announcement deleted.");
+    } catch {
+      setMsgSeverity("error");
+      setMsg("Could not delete announcement.");
+    }
+  };
+
+  const handlePostSubmit = async () => {
+    setPostTouched(true);
+    if (!postTitle.trim() || !postDescription.trim() || !postCategory || !postCity.trim()) return;
+    if (!backendUserId) {
+      setMsgSeverity("error");
+      setMsg("Could not identify your account. Please reload the page.");
+      return;
+    }
+    setPostSubmitting(true);
+    try {
+      const created = await createAnnouncement({
+        userId: backendUserId,
+        title: postTitle.trim(),
+        description: postDescription.trim(),
+        category: postCategory,
+        city: postCity.trim(),
+      });
+      setAnnouncements((prev) => (prev ? [created, ...prev] : [created]));
+      setPostOpen(false);
+      resetPostForm();
+      setMsgSeverity("success");
+      setMsg("Announcement posted.");
+    } catch {
+      setMsgSeverity("error");
+      setMsg("Could not post announcement. Please try again.");
+    } finally {
+      setPostSubmitting(false);
+    }
+  };
 
   const profile: Profile | null = useMemo(() => {
     if (!user) return null;
@@ -400,7 +504,17 @@ export default function ProfilePage() {
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-              <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setPostOpen(true)}
+                  disabled={!backendUserId}
+                >
+                  + New
+                </Button>
+              </Stack>
               <Divider sx={{ my: 1.5 }} />
 
               {announcements === null ? (
@@ -421,12 +535,22 @@ export default function ProfilePage() {
                       <Stack
                         direction="row"
                         justifyContent="space-between"
-                        alignItems="baseline"
+                        alignItems="center"
+                        spacing={1}
                       >
-                        <Typography sx={{ fontWeight: 750 }}>{a.title}</Typography>
-                        <Typography color="text.secondary" variant="body2">
-                          {a.status} • {a.createdAt.slice(0, 10)}
-                        </Typography>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography sx={{ fontWeight: 750 }} noWrap>{a.title}</Typography>
+                          <Typography color="text.secondary" variant="body2">
+                            {a.status} • {a.createdAt.slice(0, 10)}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => openMenu(e, a.id)}
+                          sx={{ flexShrink: 0 }}
+                        >
+                          <MenuRoundedIcon fontSize="small" />
+                        </IconButton>
                       </Stack>
                     </Box>
                   ))}
@@ -547,6 +671,137 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
         </Stack>
+
+        <Menu
+          anchorEl={menuAnchor}
+          open={!!menuAnchor}
+          onClose={closeMenu}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          slotProps={{ paper: { sx: { minWidth: 140 } } }}
+        >
+          <MenuItem onClick={onView}>
+            <VisibilityOutlinedIcon fontSize="small" sx={{ mr: 1.5 }} />
+            View
+          </MenuItem>
+          <MenuItem onClick={onDelete} sx={{ color: "error.main" }}>
+            <DeleteOutlineRoundedIcon fontSize="small" sx={{ mr: 1.5 }} />
+            Delete
+          </MenuItem>
+        </Menu>
+
+        <Dialog
+          open={!!viewedAnnouncement}
+          onClose={() => setViewedAnnouncement(null)}
+          fullWidth
+          maxWidth="sm"
+        >
+          {viewedAnnouncement && (
+            <>
+              <DialogTitle sx={{ pb: 1 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>{viewedAnnouncement.title}</Typography>
+                  <Chip label={viewedAnnouncement.status} size="small" variant="outlined" />
+                </Stack>
+              </DialogTitle>
+              <DialogContent dividers>
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Description
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
+                      {viewedAnnouncement.description || "—"}
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Category</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.category}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">City</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.city || "—"}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Created</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.createdAt.slice(0, 10)}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Updated</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.updatedAt.slice(0, 10)}</Typography>
+                    </Box>
+                  </Stack>
+                </Stack>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setViewedAnnouncement(null)}>Close</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
+
+        <Dialog
+          open={postOpen}
+          onClose={() => { if (!postSubmitting) { setPostOpen(false); resetPostForm(); } }}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>Post a new announcement</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={2} sx={{ mt: 0.5 }}>
+              <TextField
+                label="Title"
+                value={postTitle}
+                onChange={(e) => setPostTitle(e.target.value)}
+                error={postTouched && !postTitle.trim()}
+                helperText={postTouched && !postTitle.trim() ? "Required" : ""}
+                fullWidth
+              />
+              <TextField
+                label="Description"
+                value={postDescription}
+                onChange={(e) => setPostDescription(e.target.value)}
+                error={postTouched && !postDescription.trim()}
+                helperText={postTouched && !postDescription.trim() ? "Required" : ""}
+                multiline
+                rows={4}
+                fullWidth
+              />
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <FormControl fullWidth error={postTouched && !postCategory}>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={postCategory}
+                    label="Category"
+                    onChange={(e) => setPostCategory(e.target.value)}
+                  >
+                    {ANNOUNCEMENT_CATEGORIES.map((c) => (
+                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="City"
+                  value={postCity}
+                  onChange={(e) => setPostCity(e.target.value)}
+                  error={postTouched && !postCity.trim()}
+                  helperText={postTouched && !postCity.trim() ? "Required" : ""}
+                  fullWidth
+                />
+              </Stack>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setPostOpen(false); resetPostForm(); }} disabled={postSubmitting}>
+              Cancel
+            </Button>
+            <Button onClick={handlePostSubmit} variant="contained" disabled={postSubmitting}>
+              {postSubmitting ? "Posting…" : "Post"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </ContainerMax>
     </Section>
   );
