@@ -1,8 +1,8 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
-import { useLanguage } from '../../../i18n/useLanguage';
-import type { TranslationKey } from '../../../i18n/translations';
+import { useLanguage } from '../../../translations/useLanguage';
+import type { TranslationKey } from '../../../translations/translations';
 
 const quotes: { textKey: TranslationKey; author: string; role: string }[] = [
   { textKey: 'testimonial1', author: 'Dana', role: 'Homeowner' },

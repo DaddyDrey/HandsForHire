@@ -4,8 +4,8 @@ import Popper from '@mui/material/Popper';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
 import IconifyIcon from '../../base/IconifyIcon';
-import { useLanguage } from '../../../i18n/useLanguage';
-import type { TranslationKey } from '../../../i18n/translations';
+import { useLanguage } from '../../../translations/useLanguage';
+import type { TranslationKey } from '../../../translations/translations';
 import { Link as RouterLink } from 'react-router-dom';
 import paths from '../../../routes/paths';
 

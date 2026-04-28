@@ -6,14 +6,18 @@ import {
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useAnnouncementService, type Announcement, type AnnouncementStatus } from "../../mock_data/announcements";
+import { useLanguage } from "../../translations/useLanguage";
 
-const statusLabel: Record<AnnouncementStatus, string> = {
-  Open: "Open",
-  InProgress: "In progress",
-  Completed: "Completed",
-  Cancelled: "Cancelled",
-  Paused: "Paused",
-};
+function useStatusLabel(): Record<AnnouncementStatus, string> {
+  const { t } = useLanguage();
+  return {
+    Open: t("statusOpen"),
+    InProgress: t("statusInProgress"),
+    Completed: t("statusCompleted"),
+    Cancelled: t("statusCancelled"),
+    Paused: t("statusPaused"),
+  };
+}
 
 const statusColor: Record<AnnouncementStatus, "primary" | "success" | "default" | "error" | "warning"> = {
   Open: "primary",
@@ -29,9 +33,11 @@ const STATUS_OPTIONS: ("All" | AnnouncementStatus)[] = [
 
 const categories = ["All", "Plumbing", "Moving", "Cleaning", "Electrical", "Painting", "Assembly", "HVAC", "Handyman", "Other"];
 
-function formatDate(iso: string): string {
+const LANG_TO_LOCALE: Record<string, string> = { en: "en-US", ro: "ro-RO", ru: "ru-RU" };
+
+function formatDate(iso: string, locale: string): string {
   try {
-    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return new Date(iso).toLocaleDateString(locale, { month: "short", day: "numeric" });
   } catch {
     return iso.slice(0, 10);
   }
@@ -39,6 +45,9 @@ function formatDate(iso: string): string {
 
 export default function JobsPage() {
   const theme = useTheme();
+  const { t, language } = useLanguage();
+  const locale = LANG_TO_LOCALE[language] ?? "en-US";
+  const statusLabel = useStatusLabel();
   const { getAll } = useAnnouncementService();
 
   const [jobs, setJobs] = useState<Announcement[]>([]);
@@ -61,7 +70,7 @@ export default function JobsPage() {
       })
       .catch(() => {
         if (cancelled) return;
-        setError("Failed to load jobs.");
+        setError(t("failedToLoadJobs"));
         setLoading(false);
       });
     return () => {
@@ -81,15 +90,15 @@ export default function JobsPage() {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={500} gutterBottom>Job listings</Typography>
+      <Typography variant="h5" fontWeight={500} gutterBottom>{t("jobsPageTitle")}</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        All posted jobs and their current state
+        {t("jobsPageSubtitle")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
         <TextField
           size="small"
-          placeholder="Search by title or user…"
+          placeholder={t("searchByTitleUser")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
@@ -97,14 +106,14 @@ export default function JobsPage() {
         />
         <FormControl size="small" sx={{ minWidth: 140 }}>
           <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            {categories.map((c) => <MenuItem key={c} value={c}>{c === "All" ? "All categories" : c}</MenuItem>)}
+            {categories.map((c) => <MenuItem key={c} value={c}>{c === "All" ? t("allCategoriesFilter") : c}</MenuItem>)}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 140 }}>
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as "All" | AnnouncementStatus)}>
             {STATUS_OPTIONS.map((s) => (
               <MenuItem key={s} value={s}>
-                {s === "All" ? "All statuses" : statusLabel[s]}
+                {s === "All" ? t("allStatuses") : statusLabel[s]}
               </MenuItem>
             ))}
           </Select>
@@ -115,7 +124,7 @@ export default function JobsPage() {
         <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
           <Box component="thead">
             <Box component="tr">
-              {["Title", "Posted by", "Category", "Date", "Status", ""].map((h) => (
+              {[t("titleField"), t("postedByField"), t("categoryField"), t("dateField"), t("statusField"), ""].map((h) => (
                 <Box
                   key={h}
                   component="th"
@@ -130,7 +139,7 @@ export default function JobsPage() {
             {loading && (
               <Box component="tr">
                 <Box component="td" colSpan={6} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
-                  Loading…
+                  …
                 </Box>
               </Box>
             )}
@@ -144,7 +153,7 @@ export default function JobsPage() {
             {!loading && !error && filtered.length === 0 && (
               <Box component="tr">
                 <Box component="td" colSpan={6} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
-                  No jobs found
+                  {t("noJobsFoundAdm")}
                 </Box>
               </Box>
             )}
@@ -164,7 +173,7 @@ export default function JobsPage() {
                   {job.category}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {formatDate(job.createdAt)}
+                  {formatDate(job.createdAt, locale)}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Chip label={statusLabel[job.status]} size="small" color={statusColor[job.status]} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
@@ -176,7 +185,7 @@ export default function JobsPage() {
                     onClick={() => setSelectedJob(job)}
                     sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
                   >
-                    View
+                    {t("viewBtn")}
                   </Button>
                 </Box>
               </Box>
@@ -208,7 +217,7 @@ export default function JobsPage() {
               <Stack spacing={2}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Description
+                    {t("descriptionField")}
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
                     {selectedJob.description || "—"}
@@ -217,7 +226,7 @@ export default function JobsPage() {
                 <Divider />
                 <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Posted by</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("postedByField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {selectedJob.authorName || selectedJob.authorEmail || `user#${selectedJob.userId}`}
                     </Typography>
@@ -226,26 +235,26 @@ export default function JobsPage() {
                     )}
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Category</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("categoryField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedJob.category}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">City</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("cityField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedJob.city || "—"}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Created</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selectedJob.createdAt)}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("createdAtField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selectedJob.createdAt, locale)}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Updated</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selectedJob.updatedAt)}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("updatedAtField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selectedJob.updatedAt, locale)}</Typography>
                   </Box>
                 </Stack>
               </Stack>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setSelectedJob(null)}>Close</Button>
+              <Button onClick={() => setSelectedJob(null)}>{t("closeBtn")}</Button>
             </DialogActions>
           </>
         )}

@@ -17,8 +17,8 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import Logo from "../../../components/base/Logo";
 import paths from "../../../routes/paths";
-import { useLanguage } from "../../../i18n/useLanguage";
-import { type Language } from "../../../i18n/translations";
+import { useLanguage } from "../../../translations/useLanguage";
+import { type Language } from "../../../translations/translations";
 import { getUser, logout, getAvatarDataUrl, clearAvatar, isAdmin } from "../../../auth/auth";
 import { fetchConversations, getMessagesTick, subscribeToMessages, totalUnread } from "../../../mock_data/messagesStore";
 import { useMessagesDrawer } from "../../../components/messages/MessagesDrawerContext";
@@ -106,7 +106,7 @@ export default function MainAppBar() {
 
             {!user ? (
               <Button variant="contained" component={RouterLink} to={paths.login}>
-                Log In
+                {t('signIn')}
               </Button>
             ) : (
               <>
@@ -132,7 +132,7 @@ export default function MainAppBar() {
                 >
                   <MenuItem onClick={goProfile}>
                     <Box sx={{ display: "grid" }}>
-                      <Typography sx={{ fontWeight: 750 }}>Profile</Typography>
+                      <Typography sx={{ fontWeight: 750 }}>{t('profileLabel')}</Typography>
                       <Typography variant="body2" color="text.secondary">
                         {user.email}
                       </Typography>
@@ -140,10 +140,10 @@ export default function MainAppBar() {
                   </MenuItem>
 
                   <MenuItem onClick={() => { closeMenu(); nav(paths.account); }}>
-                    Settings
+                    {t('settingsLabel')}
                   </MenuItem>
 
-                  <MenuItem onClick={doLogout}>Log out</MenuItem>
+                  <MenuItem onClick={doLogout}>{t('logoutButton')}</MenuItem>
                 </Menu>
               </>
             )}

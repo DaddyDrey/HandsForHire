@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Chip, useTheme } from "@mui/material";
+import { Box, Drawer, Fab, List, ListItemButton, ListItemIcon, ListItemText, Typography, Chip, useTheme } from "@mui/material";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -12,6 +12,10 @@ import Logo from "../../components/base/Logo";
 import paths from "../../routes/paths";
 import ScrollToTop from "../../components/common/ScrollToTop";
 import { reportsApi } from "../../api/reportsApi";
+import { useLanguage } from "../../translations/useLanguage";
+import type { Language, TranslationKey } from "../../translations/translations";
+
+const languages: Language[] = ["en", "ro", "ru"];
 
 const SIDEBAR_WIDTH = 230;
 
@@ -27,27 +31,27 @@ interface NavGroup {
   items: NavItem[];
 }
 
-function buildNavItems(pendingReports: number): NavGroup[] {
+function buildNavItems(pendingReports: number, t: (k: TranslationKey) => string): NavGroup[] {
   return [
     {
-      section: "Overview",
+      section: t("sectionOverview"),
       items: [
-        { label: "Dashboard", icon: <DashboardRoundedIcon fontSize="small" />, path: adminPaths.dashboard },
+        { label: t("navDashboard"), icon: <DashboardRoundedIcon fontSize="small" />, path: adminPaths.dashboard },
       ],
     },
     {
-      section: "Management",
+      section: t("sectionManagement"),
       items: [
-        { label: "Users", icon: <PeopleRoundedIcon fontSize="small" />, path: adminPaths.users },
-        { label: "Pros", icon: <StarRoundedIcon fontSize="small" />, path: adminPaths.pros },
-        { label: "Job listings", icon: <WorkRoundedIcon fontSize="small" />, path: adminPaths.jobs },
+        { label: t("navUsers"), icon: <PeopleRoundedIcon fontSize="small" />, path: adminPaths.users },
+        { label: t("navPros"), icon: <StarRoundedIcon fontSize="small" />, path: adminPaths.pros },
+        { label: t("navJobListings"), icon: <WorkRoundedIcon fontSize="small" />, path: adminPaths.jobs },
       ],
     },
     {
-      section: "Moderation",
+      section: t("sectionModeration"),
       items: [
         {
-          label: "Reports & flags",
+          label: t("navReports"),
           icon: <FlagRoundedIcon fontSize="small" />,
           path: adminPaths.reports,
           badge: pendingReports > 0 ? pendingReports : undefined,
@@ -61,7 +65,14 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+  const { t, language, setLanguage } = useLanguage();
   const [pendingReports, setPendingReports] = useState(0);
+
+  const cycleLanguage = () => {
+    const currentIndex = languages.indexOf(language);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    setLanguage(languages[nextIndex]);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +88,7 @@ export default function AdminLayout() {
     return () => { cancelled = true; };
   }, [location.pathname]);
 
-  const navItems = buildNavItems(pendingReports);
+  const navItems = buildNavItems(pendingReports, t);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -102,7 +113,7 @@ export default function AdminLayout() {
         <Box sx={{ px: 2.5, py: 2.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
           <Logo />
           <Typography variant="caption" color="text.secondary">
-            Admin panel
+            {t("adminPanel")}
           </Typography>
         </Box>
 
@@ -122,7 +133,7 @@ export default function AdminLayout() {
               <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
                 <HomeRoundedIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="Home" primaryTypographyProps={{ fontSize: "0.8rem", fontWeight: 400 }} />
+              <ListItemText primary={t("navHome")} primaryTypographyProps={{ fontSize: "0.8rem", fontWeight: 400 }} />
             </ListItemButton>
           </List>
 
@@ -205,6 +216,24 @@ export default function AdminLayout() {
       >
         <Outlet />
       </Box>
+
+      <Fab
+        onClick={cycleLanguage}
+        size="small"
+        sx={{
+          position: "fixed",
+          left: 16,
+          bottom: 16,
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          borderRadius: "999px",
+          minWidth: 0,
+          px: 2,
+          fontWeight: 800,
+          letterSpacing: "0.04em",
+        }}
+      >
+        {language.toUpperCase()}
+      </Fab>
     </Box>
   );
 }

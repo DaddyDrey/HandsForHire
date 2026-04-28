@@ -7,6 +7,7 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import { messagesApi } from "../../api/messagesApi";
 import { prosApi } from "../../api/prosApi";
 import { useAnnouncementService, type Announcement, type AnnouncementStatus } from "../../mock_data/announcements";
+import { useLanguage } from "../../translations/useLanguage";
 
 interface MetricCardProps {
   label: string;
@@ -55,13 +56,16 @@ function MetricCard({ label, value, delta, deltaType = "up", accent }: MetricCar
   );
 }
 
-const STATUS_LABEL: Record<AnnouncementStatus, string> = {
-  Open: "Open",
-  InProgress: "In progress",
-  Completed: "Completed",
-  Cancelled: "Cancelled",
-  Paused: "Paused",
-};
+function useStatusLabel(): Record<AnnouncementStatus, string> {
+  const { t } = useLanguage();
+  return {
+    Open: t("statusOpen"),
+    InProgress: t("statusInProgress"),
+    Completed: t("statusCompleted"),
+    Cancelled: t("statusCancelled"),
+    Paused: t("statusPaused"),
+  };
+}
 
 const STATUS_COLOR: Record<AnnouncementStatus, string> = {
   Open: "#7C5CFF",
@@ -105,7 +109,7 @@ function BarChart({ data }: { data: { label: string; value: number }[] }) {
   );
 }
 
-function DonutChart({ data }: { data: { label: string; pct: number; color: string }[] }) {
+function DonutChart({ data, emptyDonutLabel }: { data: { label: string; pct: number; color: string }[]; emptyDonutLabel: string }) {
   const r = 38;
   const circ = 2 * Math.PI * r;
   const segments = data.map((d, index) => {
@@ -140,7 +144,7 @@ function DonutChart({ data }: { data: { label: string; pct: number; color: strin
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
         {data.length === 0 ? (
           <Typography variant="caption" color="text.disabled" sx={{ fontSize: "0.72rem" }}>
-            No jobs yet
+            {emptyDonutLabel}
           </Typography>
         ) : (
           data.map((d) => (
@@ -177,18 +181,27 @@ function relativeTime(iso: string): string {
   return iso.slice(0, 10);
 }
 
-function statusChip(status: AnnouncementStatus): { status: string; color: ChipProps["color"] } {
-  switch (status) {
-    case "Open": return { status: "Live", color: "primary" };
-    case "InProgress": return { status: "In progress", color: "success" };
-    case "Completed": return { status: "Completed", color: "default" };
-    case "Cancelled": return { status: "Cancelled", color: "error" };
-    case "Paused": return { status: "Paused", color: "warning" };
-  }
+function useStatusChip() {
+  const { t } = useLanguage();
+  return (status: AnnouncementStatus): { status: string; color: ChipProps["color"] } => {
+    switch (status) {
+      case "Open": return { status: t("statusLive"), color: "primary" };
+      case "InProgress": return { status: t("statusInProgress"), color: "success" };
+      case "Completed": return { status: t("statusCompleted"), color: "default" };
+      case "Cancelled": return { status: t("statusCancelled"), color: "error" };
+      case "Paused": return { status: t("statusPaused"), color: "warning" };
+    }
+  };
 }
+
+const LANG_TO_LOCALE: Record<string, string> = { en: "en-US", ro: "ro-RO", ru: "ru-RU" };
 
 export default function DashboardPage() {
   const theme = useTheme();
+  const { t, language } = useLanguage();
+  const locale = LANG_TO_LOCALE[language] ?? "en-US";
+  const STATUS_LABEL = useStatusLabel();
+  const statusChip = useStatusChip();
   const { getAll: getAllAnnouncements } = useAnnouncementService();
 
   const [usersCount, setUsersCount] = useState<number | null>(null);
@@ -230,7 +243,7 @@ export default function DashboardPage() {
     for (let i = 7; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const label = d.toLocaleString(undefined, { month: "short" });
+      const label = d.toLocaleString(locale, { month: "short" });
       months.push({ label, key, value: 0 });
     }
     for (const a of announcements) {
@@ -240,7 +253,7 @@ export default function DashboardPage() {
       if (m) m.value++;
     }
     return months.map((m) => ({ label: m.label, value: m.value }));
-  }, [announcements]);
+  }, [announcements, locale]);
 
   const donutData = useMemo(() => {
     if (!announcements || announcements.length === 0) return [];
@@ -264,20 +277,20 @@ export default function DashboardPage() {
     return sorted.slice(0, 5).map((a) => {
       const c = statusChip(a.status);
       return {
-        event: `Job posted: ${a.title}`,
+        event: t("jobPostedActivity").replace("{title}", a.title),
         user: a.authorName || a.authorEmail || `user#${a.userId}`,
         time: relativeTime(a.createdAt),
         status: c.status,
         color: c.color,
       };
     });
-  }, [announcements]);
+  }, [announcements, statusChip, t]);
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={500} gutterBottom>Dashboard</Typography>
+      <Typography variant="h5" fontWeight={500} gutterBottom>{t("dashboardTitle")}</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Overview of platform activity
+        {t("dashboardSubtitle")}
       </Typography>
 
       {loading ? (
@@ -288,24 +301,24 @@ export default function DashboardPage() {
         <>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 1.5, mb: 3 }}>
             <MetricCard
-              label="Total users"
+              label={t("totalUsers")}
               value={String(usersCount ?? 0)}
               accent
             />
             <MetricCard
-              label="Active pros"
+              label={t("activePros")}
               value={String(prosCount ?? 0)}
             />
             <MetricCard
-              label="Open jobs"
+              label={t("openJobsCard")}
               value={String(openJobsCount)}
-              delta={openJobsThisWeek > 0 ? `+${openJobsThisWeek} this week` : undefined}
+              delta={openJobsThisWeek > 0 ? t("thisWeekDelta").replace("{n}", String(openJobsThisWeek)) : undefined}
               deltaType="up"
             />
             <MetricCard
-              label="Pending reports"
+              label={t("pendingReportsCard")}
               value="0"
-              delta="Needs attention"
+              delta={t("needsAttention")}
               deltaType="warn"
             />
           </Box>
@@ -313,26 +326,26 @@ export default function DashboardPage() {
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "7fr 5fr" }, gap: 2, mb: 3 }}>
             <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
               <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                <Typography variant="body2" fontWeight={500}>Job postings — last 8 months</Typography>
+                <Typography variant="body2" fontWeight={500}>{t("jobPostingsLast8")}</Typography>
               </Box>
               <BarChart data={monthlyJobs} />
             </Paper>
             <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
               <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                <Typography variant="body2" fontWeight={500}>Job listings status</Typography>
+                <Typography variant="body2" fontWeight={500}>{t("jobListingsStatus")}</Typography>
               </Box>
-              <DonutChart data={donutData} />
+              <DonutChart data={donutData} emptyDonutLabel={t("noJobsYet")} />
             </Paper>
           </Box>
 
           <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
             <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-              <Typography variant="body2" fontWeight={500}>Recent activity</Typography>
+              <Typography variant="body2" fontWeight={500}>{t("recentActivity")}</Typography>
             </Box>
             <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
               <Box component="thead">
                 <Box component="tr">
-                  {["Event", "User", "Time", "Status"].map((h) => (
+                  {[t("eventField"), t("userField"), t("timeField"), t("statusField")].map((h) => (
                     <Box
                       key={h}
                       component="th"
@@ -347,7 +360,7 @@ export default function DashboardPage() {
                 {activity.length === 0 && (
                   <Box component="tr">
                     <Box component="td" colSpan={4} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
-                      No activity yet
+                      {t("noActivity")}
                     </Box>
                   </Box>
                 )}

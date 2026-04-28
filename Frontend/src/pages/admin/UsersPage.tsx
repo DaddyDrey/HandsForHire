@@ -7,6 +7,7 @@ import {
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
 import { messagesApi, type UserApiDto } from "../../api/messagesApi";
+import { useLanguage } from "../../translations/useLanguage";
 
 const ADMIN_EMAILS = ["demo@handsforhire.com"];
 
@@ -49,6 +50,13 @@ function initials(name: string, fallback: string): string {
 
 export default function UsersPage() {
   const theme = useTheme();
+  const { t } = useLanguage();
+  const statusLabel: Record<string, string> = {
+    Active: t("statusActive"),
+    Suspended: t("statusSuspended"),
+    Pending: t("statusPending"),
+    Demo: t("statusDemo"),
+  };
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -66,7 +74,7 @@ export default function UsersPage() {
       await messagesApi.setUserStatus(user.id, next);
       setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, status: next } : u));
     } catch {
-      setLoadError("Could not update user status.");
+      setLoadError(t("couldNotUpdateUserStatus"));
     } finally {
       setBusyId(null);
     }
@@ -81,7 +89,7 @@ export default function UsersPage() {
       })
       .catch(() => {
         if (cancelled) return;
-        setLoadError("Could not load users from the server.");
+        setLoadError(t("couldNotLoadUsers"));
       })
       .finally(() => {
         if (cancelled) return;
@@ -100,15 +108,15 @@ export default function UsersPage() {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={500} gutterBottom>Users</Typography>
+      <Typography variant="h5" fontWeight={500} gutterBottom>{t("usersPageTitle")}</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Manage registered accounts
+        {t("usersPageSubtitle")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
         <TextField
           size="small"
-          placeholder="Search by email or name…"
+          placeholder={t("searchByEmailName")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
@@ -116,10 +124,10 @@ export default function UsersPage() {
         />
         <FormControl size="small" sx={{ minWidth: 140 }}>
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <MenuItem value="All">All statuses</MenuItem>
-            <MenuItem value="Active">Active</MenuItem>
-            <MenuItem value="Suspended">Suspended</MenuItem>
-            <MenuItem value="Pending">Pending</MenuItem>
+            <MenuItem value="All">{t("allStatuses")}</MenuItem>
+            <MenuItem value="Active">{t("statusActive")}</MenuItem>
+            <MenuItem value="Suspended">{t("statusSuspended")}</MenuItem>
+            <MenuItem value="Pending">{t("statusPending")}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -128,7 +136,7 @@ export default function UsersPage() {
         <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
           <Box component="thead">
             <Box component="tr">
-              {["Email", "Name", "Status", "Role", ""].map((h) => (
+              {[t("email"), t("nameField"), t("statusField"), t("roleField"), ""].map((h) => (
                 <Box
                   key={h}
                   component="th"
@@ -157,7 +165,7 @@ export default function UsersPage() {
             {!loading && !loadError && filtered.length === 0 && (
               <Box component="tr">
                 <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
-                  No users found
+                  {t("noUsersFound")}
                 </Box>
               </Box>
             )}
@@ -174,10 +182,10 @@ export default function UsersPage() {
                   {user.fullName || "—"}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  <Chip label={user.status} size="small" color={statusColor[user.status]} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
+                  <Chip label={statusLabel[user.status] ?? user.status} size="small" color={statusColor[user.status]} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {user.role}
+                  {user.role === "Admin" ? t("roleAdmin") : t("roleUser")}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Box sx={{ display: "flex", gap: 1 }}>
@@ -187,7 +195,7 @@ export default function UsersPage() {
                       onClick={() => setSelectedUser(user)}
                       sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
                     >
-                      View
+                      {t("viewBtn")}
                     </Button>
                     {!user.isAdmin && (
                       <Button
@@ -203,7 +211,7 @@ export default function UsersPage() {
                             : { borderColor: "error.main", color: "error.main" },
                         }}
                       >
-                        {user.status === "Suspended" ? "Restore" : "Suspend"}
+                        {user.status === "Suspended" ? t("restoreBtn") : t("suspendBtn")}
                       </Button>
                     )}
                   </Box>
@@ -233,14 +241,14 @@ export default function UsersPage() {
                   </Typography>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Chip
-                      label={selectedUser.status}
+                      label={statusLabel[selectedUser.status] ?? selectedUser.status}
                       size="small"
                       color={statusColor[selectedUser.status]}
                       variant="outlined"
                       sx={{ fontSize: "0.65rem", height: 20 }}
                     />
                     <Chip
-                      label={selectedUser.role}
+                      label={selectedUser.role === "Admin" ? t("roleAdmin") : t("roleUser")}
                       size="small"
                       variant="outlined"
                       sx={{ fontSize: "0.65rem", height: 20 }}
@@ -253,7 +261,7 @@ export default function UsersPage() {
               <Stack spacing={2}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Email
+                    {t("email")}
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
                     {selectedUser.email}
@@ -262,26 +270,26 @@ export default function UsersPage() {
                 <Divider />
                 <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">User ID</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("userIdField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>#{selectedUser.id}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Full name</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("fullNameField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.fullName || "—"}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Status</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.status}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("statusField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{statusLabel[selectedUser.status] ?? selectedUser.status}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Role</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.role}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("roleField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.role === "Admin" ? t("roleAdmin") : t("roleUser")}</Typography>
                   </Box>
                 </Stack>
               </Stack>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setSelectedUser(null)}>Close</Button>
+              <Button onClick={() => setSelectedUser(null)}>{t("closeBtn")}</Button>
             </DialogActions>
           </>
         )}

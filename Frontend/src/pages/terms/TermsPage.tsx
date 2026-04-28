@@ -1,7 +1,9 @@
 import { Box, Typography } from "@mui/material";
 import ContainerMax from "../../components/common/ContainerMax";
+import { useLanguage } from "../../translations/useLanguage";
 
 export default function TermsPage() {
+  const { t } = useLanguage();
   return (
     <Box
       component="section"
@@ -25,7 +27,7 @@ export default function TermsPage() {
               color: "text.primary",
             }}
           >
-            Terms & Conditions page is in progress
+            {t('termsPageInProgress')}
           </Typography>
 
           <Typography
@@ -36,7 +38,7 @@ export default function TermsPage() {
               color: "text.secondary",
             }}
           >
-            This section will open soon.
+            {t('sectionWillOpenSoon')}
           </Typography>
         </Box>
       </ContainerMax>

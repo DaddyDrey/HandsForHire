@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "../../auth/auth.ts";
-import { useLanguage } from "../../i18n/useLanguage";
+import { useLanguage } from "../../translations/useLanguage";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());

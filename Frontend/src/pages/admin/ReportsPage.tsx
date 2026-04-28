@@ -6,27 +6,36 @@ import {
 } from "@mui/material";
 
 import { reportsApi, type ReportApiDto, type ReportAction } from "../../api/reportsApi";
+import { useLanguage } from "../../translations/useLanguage";
 
-const categoryLabel: Record<string, string> = {
-  Conduct: "Conduct",
-  Reliability: "Reliability",
-  Payment: "Payment",
-  Fraud: "Fraud",
-  Spam: "Spam",
-  Other: "Other",
-};
+function useCategoryLabel(): Record<string, string> {
+  const { t } = useLanguage();
+  return {
+    Conduct: t("catConduct"),
+    Reliability: t("catReliability"),
+    Payment: t("catPayment"),
+    Fraud: t("catFraud"),
+    Spam: t("catSpam"),
+    Other: t("catOther"),
+  };
+}
 
-const actionLabel: Record<ReportAction, string> = {
-  None: "—",
-  Reviewed: "Reviewed",
-  Suspended: "Suspended",
-  Escalated: "Escalated",
-  Warned: "Warned",
-};
+function useActionLabel(): Record<ReportAction, string> {
+  const { t } = useLanguage();
+  return {
+    None: "—",
+    Reviewed: t("actReviewed"),
+    Suspended: t("actSuspended"),
+    Escalated: t("actEscalated"),
+    Warned: t("actWarned"),
+  };
+}
 
-function formatDate(iso: string): string {
+const LANG_TO_LOCALE: Record<string, string> = { en: "en-US", ro: "ro-RO", ru: "ru-RU" };
+
+function formatDate(iso: string, locale: string): string {
   try {
-    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    return new Date(iso).toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" });
   } catch {
     return iso.slice(0, 10);
   }
@@ -34,6 +43,10 @@ function formatDate(iso: string): string {
 
 export default function ReportsPage() {
   const theme = useTheme();
+  const { t, language } = useLanguage();
+  const locale = LANG_TO_LOCALE[language] ?? "en-US";
+  const categoryLabel = useCategoryLabel();
+  const actionLabel = useActionLabel();
   const [tab, setTab] = useState(0);
   const [reports, setReports] = useState<ReportApiDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +58,7 @@ export default function ReportsPage() {
     let cancelled = false;
     reportsApi.getAll()
       .then((data) => { if (!cancelled) setReports(data); })
-      .catch(() => { if (!cancelled) setLoadError("Could not load reports."); })
+      .catch(() => { if (!cancelled) setLoadError(t("couldNotLoadReports")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
@@ -54,7 +67,7 @@ export default function ReportsPage() {
   const resolved = useMemo(() => reports.filter((r) => r.status === "Resolved"), [reports]);
 
   const resolveWith = async (r: ReportApiDto, action: ReportAction) => {
-    if (!window.confirm(`${action} this report?`)) return;
+    if (!window.confirm(t("confirmActionPhrase").replace("{action}", action))) return;
     setBusyId(r.id);
     try {
       await reportsApi.update(r.id, {
@@ -70,7 +83,7 @@ export default function ReportsPage() {
         : x
       ));
     } catch {
-      setLoadError("Could not update report.");
+      setLoadError(t("couldNotUpdateReport"));
     } finally {
       setBusyId(null);
     }
@@ -91,8 +104,8 @@ export default function ReportsPage() {
   const categoryStats = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const r of reports) counts[r.category] = (counts[r.category] ?? 0) + 1;
-    return Object.entries(counts).map(([label, count]) => ({ label, count }));
-  }, [reports]);
+    return Object.entries(counts).map(([label, count]) => ({ label: categoryLabel[label] ?? label, count }));
+  }, [reports, categoryLabel]);
 
   const resolutionStats = useMemo(() => {
     const now = new Date();
@@ -108,22 +121,23 @@ export default function ReportsPage() {
         const ended = new Date(r.resolvedAt!).getTime();
         return sum + Math.max(0, ended - created);
       }, 0);
-      avgDays = (totalMs / resolvedAll.length / (1000 * 60 * 60 * 24)).toFixed(1) + " days";
+      const days = (totalMs / resolvedAll.length / (1000 * 60 * 60 * 24)).toFixed(1);
+      avgDays = t("nDaysSuffix").replace("{n}", days);
     }
     const suspensions = reports.filter((r) => r.actionTaken === "Suspended").length;
     return [
-      { label: "Avg resolution time", value: avgDays },
-      { label: "Resolved this month", value: String(resolvedThisMonth.length) },
-      { label: "Pending", value: String(pending.length), warn: pending.length > 0 },
-      { label: "Actions taken", value: `${suspensions} suspensions` },
+      { label: t("avgResolutionTime"), value: avgDays },
+      { label: t("resolvedThisMonth"), value: String(resolvedThisMonth.length) },
+      { label: t("statusPending"), value: String(pending.length), warn: pending.length > 0 },
+      { label: t("actionsTaken"), value: t("suspensionsCount").replace("{n}", String(suspensions)) },
     ];
-  }, [reports, pending.length]);
+  }, [reports, pending.length, t]);
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={500} gutterBottom>Reports &amp; flags</Typography>
+      <Typography variant="h5" fontWeight={500} gutterBottom>{t("reportsPageTitle")}</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        User-submitted reports that need moderation
+        {t("reportsPageSubtitle")}
       </Typography>
 
       <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden", mb: 2.5 }}>
@@ -138,8 +152,8 @@ export default function ReportsPage() {
             "& .MuiTabs-indicator": { bgcolor: "primary.main" },
           }}
         >
-          <Tab label={`Pending (${pending.length})`} />
-          <Tab label={`Resolved (${resolved.length})`} />
+          <Tab label={t("pendingTab").replace("{n}", String(pending.length))} />
+          <Tab label={t("resolvedTab").replace("{n}", String(resolved.length))} />
         </Tabs>
 
         {loading && (
@@ -152,7 +166,7 @@ export default function ReportsPage() {
         )}
         {!loading && !loadError && reportList.length === 0 && (
           <Box sx={{ py: 6, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
-            No {tab === 0 ? "pending" : "resolved"} reports
+            {tab === 0 ? t("noPendingReports") : t("noResolvedReports")}
           </Box>
         )}
         {!loading && !loadError && reportList.map((r, i) => {
@@ -180,13 +194,13 @@ export default function ReportsPage() {
                   {r.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
-                  Reported by {r.reporterEmail} · {formatDate(r.createdAt)} · {categoryLabel[r.category]}
+                  {t("reportedByPhrase")} {r.reporterEmail} · {formatDate(r.createdAt, locale)} · {categoryLabel[r.category]}
                   {isResolved && r.actionTaken !== "None" && ` · ${actionLabel[r.actionTaken]}`}
                 </Typography>
               </Box>
 
               {isResolved ? (
-                <Chip label="Resolved" size="small" color="success" variant="outlined" sx={{ fontSize: "0.65rem", height: 20, flexShrink: 0 }} />
+                <Chip label={t("statusResolved")} size="small" color="success" variant="outlined" sx={{ fontSize: "0.65rem", height: 20, flexShrink: 0 }} />
               ) : (
                 <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                   <Button
@@ -195,7 +209,7 @@ export default function ReportsPage() {
                     onClick={() => setSelected(r)}
                     sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
                   >
-                    Review
+                    {t("reviewBtn")}
                   </Button>
                   {(r.category === "Reliability" || r.category === "Fraud") && (
                     <Button
@@ -205,7 +219,7 @@ export default function ReportsPage() {
                       onClick={() => resolveWith(r, "Suspended")}
                       sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "error.main", color: "error.main" } }}
                     >
-                      Suspend
+                      {t("suspendBtn")}
                     </Button>
                   )}
                   {r.category === "Payment" && (
@@ -216,7 +230,7 @@ export default function ReportsPage() {
                       onClick={() => resolveWith(r, "Escalated")}
                       sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "warning.main", color: "warning.main" } }}
                     >
-                      Escalate
+                      {t("escalateBtn")}
                     </Button>
                   )}
                   {r.category !== "Reliability" && r.category !== "Fraud" && r.category !== "Payment" && (
@@ -227,7 +241,7 @@ export default function ReportsPage() {
                       onClick={() => resolveWith(r, "Warned")}
                       sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "warning.main", color: "warning.main" } }}
                     >
-                      Warn user
+                      {t("warnUserBtn")}
                     </Button>
                   )}
                 </Box>
@@ -240,10 +254,10 @@ export default function ReportsPage() {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
         <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
           <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="body2" fontWeight={500}>Reports by category</Typography>
+            <Typography variant="body2" fontWeight={500}>{t("reportsByCategory")}</Typography>
           </Box>
           {categoryStats.length === 0 && (
-            <Box sx={{ py: 4, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>No data</Box>
+            <Box sx={{ py: 4, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>{t("noDataLabel")}</Box>
           )}
           {categoryStats.map((s, i) => (
             <Box
@@ -265,7 +279,7 @@ export default function ReportsPage() {
 
         <Paper elevation={0} sx={{ bgcolor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2, overflow: "hidden" }}>
           <Box sx={{ px: 2.5, py: 1.75, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="body2" fontWeight={500}>Resolution stats</Typography>
+            <Typography variant="body2" fontWeight={500}>{t("resolutionStats")}</Typography>
           </Box>
           {resolutionStats.map((s, i) => (
             <Box
@@ -298,7 +312,7 @@ export default function ReportsPage() {
               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>{selected.title}</Typography>
                 <Chip
-                  label={selected.severity}
+                  label={selected.severity === "High" ? t("sevHigh") : t("sevMedium")}
                   size="small"
                   color={selected.severity === "High" ? "error" : "warning"}
                   variant="outlined"
@@ -309,7 +323,7 @@ export default function ReportsPage() {
               <Stack spacing={2}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Description
+                    {t("descriptionField")}
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
                     {selected.description || "—"}
@@ -318,26 +332,26 @@ export default function ReportsPage() {
                 <Divider />
                 <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Reporter</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("reporterField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selected.reporterEmail}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Category</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("categoryField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{categoryLabel[selected.category]}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Created</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selected.createdAt)}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("createdAtField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selected.createdAt, locale)}</Typography>
                   </Box>
                   {selected.resolvedAt && (
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Resolved</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selected.resolvedAt)}</Typography>
+                      <Typography variant="caption" color="text.secondary">{t("resolvedAtField")}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(selected.resolvedAt, locale)}</Typography>
                     </Box>
                   )}
                   {selected.actionTaken !== "None" && (
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Action</Typography>
+                      <Typography variant="caption" color="text.secondary">{t("actionField")}</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{actionLabel[selected.actionTaken]}</Typography>
                     </Box>
                   )}
@@ -345,7 +359,7 @@ export default function ReportsPage() {
               </Stack>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setSelected(null)}>Close</Button>
+              <Button onClick={() => setSelected(null)}>{t("closeBtn")}</Button>
             </DialogActions>
           </>
         )}

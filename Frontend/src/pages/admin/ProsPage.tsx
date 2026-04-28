@@ -7,6 +7,7 @@ import {
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { prosApi, type ProStatus } from "../../api/prosApi";
+import { useLanguage } from "../../translations/useLanguage";
 
 interface Pro {
   id: number;
@@ -20,11 +21,14 @@ interface Pro {
   status: ProStatus;
 }
 
-const statusLabel: Record<ProStatus, string> = {
-  Pending: "Pending review",
-  Verified: "Verified",
-  Suspended: "Suspended",
-};
+function useStatusLabels(): Record<ProStatus, string> {
+  const { t } = useLanguage();
+  return {
+    Pending: t("statusPendingReview"),
+    Verified: t("statusVerified"),
+    Suspended: t("statusSuspended"),
+  };
+}
 
 const statusColor: Record<ProStatus, "success" | "warning" | "error"> = {
   Verified: "success",
@@ -51,6 +55,8 @@ function RatingStars({ value }: { value: number }) {
 
 export default function ProsPage() {
   const theme = useTheme();
+  const { t } = useLanguage();
+  const statusLabel = useStatusLabels();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -66,7 +72,7 @@ export default function ProsPage() {
       await prosApi.setStatus(pro.id, next);
       setPros((prev) => prev.map((p) => p.id === pro.id ? { ...p, status: next } : p));
     } catch {
-      setLoadError("Could not update pro status.");
+      setLoadError(t("couldNotUpdatePro"));
     } finally {
       setBusyId(null);
     }
@@ -91,7 +97,7 @@ export default function ProsPage() {
       })
       .catch(() => {
         if (cancelled) return;
-        setLoadError("Could not load pros from the server.");
+        setLoadError(t("couldNotLoadPros"));
       })
       .finally(() => {
         if (cancelled) return;
@@ -111,16 +117,16 @@ export default function ProsPage() {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={500} gutterBottom>Service providers</Typography>
+      <Typography variant="h5" fontWeight={500} gutterBottom>{t("prosPageTitle")}</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Manage pro accounts and verifications
+        {t("prosPageSubtitle")}
       </Typography>
 
       {/* Filters */}
       <Box sx={{ display: "flex", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
         <TextField
           size="small"
-          placeholder="Search pros…"
+          placeholder={t("searchProsPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
@@ -128,15 +134,15 @@ export default function ProsPage() {
         />
         <FormControl size="small" sx={{ minWidth: 140 }}>
           <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            {categories.map((c) => <MenuItem key={c} value={c}>{c === "All" ? "All categories" : c}</MenuItem>)}
+            {categories.map((c) => <MenuItem key={c} value={c}>{c === "All" ? t("allCategoriesFilter") : c}</MenuItem>)}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <MenuItem value="All">All statuses</MenuItem>
-            <MenuItem value="Verified">Verified</MenuItem>
-            <MenuItem value="Pending">Pending review</MenuItem>
-            <MenuItem value="Suspended">Suspended</MenuItem>
+            <MenuItem value="All">{t("allStatuses")}</MenuItem>
+            <MenuItem value="Verified">{t("statusVerified")}</MenuItem>
+            <MenuItem value="Pending">{t("statusPendingReview")}</MenuItem>
+            <MenuItem value="Suspended">{t("statusSuspended")}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -151,7 +157,7 @@ export default function ProsPage() {
           <Box sx={{ py: 6, textAlign: "center", color: "error.main", fontSize: "0.8rem" }}>{loadError}</Box>
         )}
         {!loading && !loadError && filtered.length === 0 && (
-          <Box sx={{ py: 6, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>No pros found</Box>
+          <Box sx={{ py: 6, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>{t("noProsFound")}</Box>
         )}
         {!loading && !loadError && filtered.map((pro, i) => (
           <Box
@@ -185,7 +191,7 @@ export default function ProsPage() {
                 {pro.name}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
-                {pro.category} · {pro.city} · {pro.reviews} reviews
+                {pro.category} · {pro.city} · {pro.reviews} {t("reviewsField").toLowerCase()}
               </Typography>
               <Box mt={0.25}>
                 <RatingStars value={pro.rating} />
@@ -207,7 +213,7 @@ export default function ProsPage() {
                 onClick={() => setSelectedPro(pro)}
                 sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
               >
-                {pro.status === "Pending" ? "Review" : "View"}
+                {pro.status === "Pending" ? t("reviewBtn") : t("viewBtn")}
               </Button>
               {pro.status === "Pending" && (
                 <Button
@@ -217,7 +223,7 @@ export default function ProsPage() {
                   onClick={() => setStatus(pro, "Verified")}
                   sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
                 >
-                  Verify
+                  {t("verifyBtn")}
                 </Button>
               )}
               {pro.status !== "Suspended" && (
@@ -228,7 +234,7 @@ export default function ProsPage() {
                   onClick={() => setStatus(pro, "Suspended")}
                   sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "error.main", color: "error.main" } }}
                 >
-                  Suspend
+                  {t("suspendBtn")}
                 </Button>
               )}
               {pro.status === "Suspended" && (
@@ -239,7 +245,7 @@ export default function ProsPage() {
                   onClick={() => setStatus(pro, "Verified")}
                   sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
                 >
-                  Restore
+                  {t("restoreBtn")}
                 </Button>
               )}
             </Box>
@@ -288,39 +294,39 @@ export default function ProsPage() {
               <Stack spacing={2}>
                 <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Trade</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("tradeField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.category}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">City</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("cityField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.city}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Hourly rate</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("hourlyRateField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.hourlyRate} €</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Reviews</Typography>
+                    <Typography variant="caption" color="text.secondary">{t("reviewsField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedPro.reviews}</Typography>
                   </Box>
                 </Stack>
                 <Divider />
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    Contact
+                    {t("contactField")}
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
                     {selectedPro.email || "—"}
                   </Typography>
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary">Pro ID</Typography>
+                  <Typography variant="caption" color="text.secondary">{t("proIdField")}</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>#{selectedPro.id}</Typography>
                 </Box>
               </Stack>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setSelectedPro(null)}>Close</Button>
+              <Button onClick={() => setSelectedPro(null)}>{t("closeBtn")}</Button>
             </DialogActions>
           </>
         )}
