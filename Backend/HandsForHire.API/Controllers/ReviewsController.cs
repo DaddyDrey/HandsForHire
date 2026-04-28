@@ -22,7 +22,14 @@ public class ReviewsController : ControllerBase
         return Ok(reviews);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("pro/{proId:int}")]
+    public async Task<IActionResult> GetForPro(int proId)
+    {
+        var reviews = await _ReviewLogic.GetForProAsync(proId);
+        return Ok(reviews);
+    }
+
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var review = await _ReviewLogic.GetByIdAsync(id);

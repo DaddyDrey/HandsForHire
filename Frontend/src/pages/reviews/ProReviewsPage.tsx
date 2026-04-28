@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Divider,
   FormControl,
   InputLabel,
@@ -24,25 +25,13 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../translations/LanguageContext';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
-import { MOCK_USER } from '../../mock_data/users';
-import { useProService, type Pro } from '../../mock_data/pros';
-import {
-  deleteMyReview,
-  getAllReviewsForPro,
-  getMyReview,
-  getProAggregate,
-  getReviewsTick,
-  subscribeToReviews,
-  upsertMyReview,
-  type DisplayReview,
-  type UserReviewEntry,
-} from '../../mock_data/reviewsStore';
+import { prosApi, type ProApiDto } from '../../api/prosApi';
+import { reviewsApi, type ReviewApiDto } from '../../api/reviewsApi';
 
 type SortOption = 'recent' | 'highest' | 'lowest';
-
 type FeedbackMsg = { severity: 'success' | 'info' | 'error'; text: string } | null;
 
 type WriteReviewFormProps = {
@@ -50,6 +39,7 @@ type WriteReviewFormProps = {
   initialText: string;
   isUpdate: boolean;
   feedback: FeedbackMsg;
+  submitting: boolean;
   onSubmit: (rating: number | null, text: string) => void;
   onDelete?: () => void;
   scrollTargetRef: React.RefObject<HTMLDivElement | null>;
@@ -60,6 +50,7 @@ function WriteReviewForm({
   initialText,
   isUpdate,
   feedback,
+  submitting,
   onSubmit,
   onDelete,
   scrollTargetRef,
@@ -94,11 +85,11 @@ function WriteReviewForm({
           />
 
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-            <Button variant="contained" onClick={() => onSubmit(rating, text)}>
+            <Button variant="contained" disabled={submitting} onClick={() => onSubmit(rating, text)}>
               {isUpdate ? t('updateReview') : t('publishReview')}
             </Button>
             {isUpdate && onDelete && (
-              <Button variant="outlined" color="error" onClick={onDelete}>
+              <Button variant="outlined" color="error" disabled={submitting} onClick={onDelete}>
                 {t('deleteReview')}
               </Button>
             )}
@@ -113,80 +104,92 @@ export default function ProReviewsPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
+  const proIdNum = parseInt(id, 10);
 
   const user = getUser();
 
-  const { getById } = useProService();
-  const [pro, setPro] = useState<Pro | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getById(id)
-      .then((data) => {
-        if (!cancelled) setPro(data);
-      })
-      .catch(() => {
-        if (!cancelled) setPro(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, getById]);
-
-  useSyncExternalStore(subscribeToReviews, getReviewsTick, getReviewsTick);
-
-  const baseReviews = useMemo(() => pro?.reviews ?? [], [pro]);
-
-  const allReviews: DisplayReview[] = useMemo(
-    () => getAllReviewsForPro(id, baseReviews),
-    [id, baseReviews]
-  );
-  const aggregate = useMemo(
-    () => getProAggregate(id, baseReviews),
-    [id, baseReviews]
-  );
-  const myReview: UserReviewEntry | null = useMemo(
-    () => (user ? getMyReview(id, user.email) : null),
-    [id, user]
-  );
-
+  const [pro, setPro] = useState<ProApiDto | null>(null);
+  const [reviews, setReviews] = useState<ReviewApiDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackMsg>(null);
   const [sort, setSort] = useState<SortOption>('recent');
-
+  const [editing, setEditing] = useState(false);
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  const authorName = useMemo(() => {
-    if (!user) return '';
-    if (user.email.toLowerCase() === MOCK_USER.email.toLowerCase()) return MOCK_USER.fullName;
-    const local = user.email.split('@')[0] ?? user.email;
-    return local.charAt(0).toUpperCase() + local.slice(1);
-  }, [user]);
+  useEffect(() => {
+    if (Number.isNaN(proIdNum)) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([
+      prosApi.getById(proIdNum),
+      reviewsApi.getForPro(proIdNum).catch(() => [] as ReviewApiDto[]),
+    ]).then(([proData, reviewsData]) => {
+      if (cancelled) return;
+      setPro(proData);
+      setReviews(reviewsData);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [proIdNum]);
+
+  const myReview = useMemo(() => {
+    if (!user) return null;
+    const email = user.email.toLowerCase();
+    return reviews.find((r) => r.reviewerEmail.toLowerCase() === email) ?? null;
+  }, [reviews, user]);
+
+  const aggregate = useMemo(() => {
+    if (reviews.length === 0) return { rating: 0, count: 0 };
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return { rating: sum / reviews.length, count: reviews.length };
+  }, [reviews]);
 
   const breakdown = useMemo(() => {
     const buckets: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    allReviews.forEach((r) => {
+    reviews.forEach((r) => {
       const b = Math.max(1, Math.min(5, Math.round(r.rating))) as 1 | 2 | 3 | 4 | 5;
       buckets[b] += 1;
     });
     return buckets;
-  }, [allReviews]);
+  }, [reviews]);
 
-  const sortedReviews = useMemo<DisplayReview[]>(() => {
-    const list = [...allReviews];
-    if (sort === 'highest') list.sort((a, b) => b.rating - a.rating || b.date.localeCompare(a.date));
-    else if (sort === 'lowest') list.sort((a, b) => a.rating - b.rating || b.date.localeCompare(a.date));
-    else list.sort((a, b) => b.date.localeCompare(a.date));
+  const sortedReviews = useMemo<ReviewApiDto[]>(() => {
+    const list = [...reviews];
+    if (sort === 'highest') list.sort((a, b) => b.rating - a.rating || b.createdAt.localeCompare(a.createdAt));
+    else if (sort === 'lowest') list.sort((a, b) => a.rating - b.rating || b.createdAt.localeCompare(a.createdAt));
+    else list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
     if (user) {
       const email = user.email.toLowerCase();
-      const mineIdx = list.findIndex((r) => r.ownedByEmail === email);
+      const mineIdx = list.findIndex((r) => r.reviewerEmail.toLowerCase() === email);
       if (mineIdx > -1) {
         const [mine] = list.splice(mineIdx, 1);
         list.unshift(mine);
       }
     }
     return list;
-  }, [allReviews, sort, user]);
+  }, [reviews, sort, user]);
+
+  const authorName = useMemo(() => {
+    if (!user) return '';
+    const local = user.email.split('@')[0] ?? user.email;
+    return local.charAt(0).toUpperCase() + local.slice(1);
+  }, [user]);
+
+  if (loading) {
+    return (
+      <Section sx={{ py: { xs: 4, md: 6 } }}>
+        <ContainerMax>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress />
+          </Box>
+        </ContainerMax>
+      </Section>
+    );
+  }
 
   if (!pro) {
     return (
@@ -205,9 +208,9 @@ export default function ProReviewsPage() {
     );
   }
 
-  const initial = pro.name.trim()[0]?.toUpperCase() ?? '?';
+  const initial = pro.fullName.trim()[0]?.toUpperCase() ?? '?';
 
-  const handleSubmit = (rating: number | null, text: string) => {
+  const handleSubmit = async (rating: number | null, text: string) => {
     if (!user) {
       nav(paths.login, { replace: true, state: { from: `/pros/${pro.id}/reviews` } });
       return;
@@ -217,31 +220,59 @@ export default function ProReviewsPage() {
       return;
     }
     const trimmed = text.trim();
-    if (trimmed.length < 10) {
-      setFeedback({ severity: 'error', text: t('reviewTooShort') });
-      return;
+    setSubmitting(true);
+    try {
+      if (myReview) {
+        await reviewsApi.update(myReview.id, {
+          proId: pro.id,
+          reviewerName: authorName,
+          rating,
+          comment: trimmed,
+        });
+        const fresh = await reviewsApi.getForPro(pro.id);
+        setReviews(fresh);
+        setFeedback({ severity: 'success', text: t('reviewUpdated') });
+      } else {
+        const created = await reviewsApi.create({
+          proId: pro.id,
+          reviewerName: authorName,
+          reviewerEmail: user.email,
+          rating,
+          comment: trimmed,
+        });
+        setReviews((prev) => [created, ...prev]);
+        setFeedback({ severity: 'success', text: t('reviewPublished') });
+      }
+      setEditing(false);
+    } catch {
+      setFeedback({ severity: 'error', text: t('couldNotSaveReview') });
+    } finally {
+      setSubmitting(false);
     }
-    const wasUpdate = !!myReview;
-    upsertMyReview(pro.id, user.email, { rating, text: trimmed, author: authorName });
-    setFeedback({
-      severity: 'success',
-      text: wasUpdate ? t('reviewUpdated') : t('reviewPublished'),
-    });
   };
 
-  const handleDelete = () => {
-    if (!user) return;
-    deleteMyReview(pro.id, user.email);
-    setFeedback({ severity: 'info', text: t('reviewDeleted') });
+  const handleDelete = async () => {
+    if (!user || !myReview) return;
+    setSubmitting(true);
+    try {
+      await reviewsApi.delete(myReview.id);
+      setReviews((prev) => prev.filter((r) => r.id !== myReview.id));
+      setFeedback({ severity: 'info', text: t('reviewDeleted') });
+    } catch {
+      setFeedback({ severity: 'error', text: t('couldNotDeleteReviewMsg') });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setEditing(true);
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   };
 
   const basedOn = t('basedOnReviews').replace('{count}', String(aggregate.count));
 
-  const formKey = myReview ? `mine-${myReview.date}-${myReview.rating}` : 'new';
+  const formKey = myReview ? `mine-${myReview.id}-${myReview.rating}` : 'new';
 
   return (
     <Section sx={{ py: { xs: 4, md: 6 } }}>
@@ -268,10 +299,10 @@ export default function ProReviewsPage() {
 
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography sx={{ fontWeight: 850, fontSize: 22 }} noWrap>
-                    {pro.name}
+                    {pro.fullName}
                   </Typography>
                   <Typography color="text.secondary" noWrap>
-                    {pro.trade} • {pro.city} • {pro.age} {t('years')}
+                    {pro.trade} • {pro.city}
                   </Typography>
 
                   <Stack
@@ -292,10 +323,7 @@ export default function ProReviewsPage() {
                         </Stack>
                       }
                     />
-                    <Chip size="small" variant="outlined" label={`${pro.hourlyFrom}€/h`} />
-                    {pro.tags.slice(0, 3).map((tag) => (
-                      <Chip key={tag} size="small" variant="outlined" label={tag} />
-                    ))}
+                    <Chip size="small" variant="outlined" label={`${pro.hourlyRate}€/h`} />
                   </Stack>
                 </Box>
               </Stack>
@@ -403,18 +431,19 @@ export default function ProReviewsPage() {
                 </Stack>
               </CardContent>
             </Card>
-          ) : (
+          ) : (!myReview || editing) ? (
             <WriteReviewForm
               key={formKey}
               initialRating={myReview?.rating ?? null}
-              initialText={myReview?.text ?? ''}
+              initialText={myReview?.comment ?? ''}
               isUpdate={!!myReview}
               feedback={feedback}
+              submitting={submitting}
               onSubmit={handleSubmit}
               onDelete={myReview ? handleDelete : undefined}
               scrollTargetRef={formRef}
             />
-          )}
+          ) : null}
 
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
@@ -449,7 +478,7 @@ export default function ProReviewsPage() {
               ) : (
                 <Stack spacing={1.25}>
                   {sortedReviews.map((r) => {
-                    const isMine = !!user && r.ownedByEmail === user.email.toLowerCase();
+                    const isMine = !!user && r.reviewerEmail.toLowerCase() === user.email.toLowerCase();
                     return (
                       <Card key={r.id} variant="outlined" sx={{ borderRadius: 2 }}>
                         <CardContent sx={{ py: 1.5 }}>
@@ -460,7 +489,7 @@ export default function ProReviewsPage() {
                             sx={{ flexWrap: 'wrap', gap: 1 }}
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography sx={{ fontWeight: 750 }}>{r.author}</Typography>
+                              <Typography sx={{ fontWeight: 750 }}>{r.reviewerName}</Typography>
                               {isMine && (
                                 <Chip
                                   size="small"
@@ -471,7 +500,7 @@ export default function ProReviewsPage() {
                               )}
                             </Stack>
                             <Typography variant="body2" color="text.secondary">
-                              {r.date}
+                              {r.createdAt.slice(0, 10)}
                             </Typography>
                           </Stack>
 
@@ -488,7 +517,7 @@ export default function ProReviewsPage() {
                           </Stack>
 
                           <Typography color="text.secondary" sx={{ mt: 0.75 }}>
-                            {r.text}
+                            {r.comment}
                           </Typography>
 
                           {isMine && (
@@ -519,3 +548,4 @@ export default function ProReviewsPage() {
     </Section>
   );
 }
+

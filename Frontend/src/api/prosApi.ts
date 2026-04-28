@@ -26,6 +26,15 @@ export const prosApi = {
     return data;
   },
 
+  async getById(id: number): Promise<ProApiDto | null> {
+    try {
+      const { data } = await axiosInstance.get<ProApiDto>(`/Pros/${id}`);
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
   async getByEmail(email: string): Promise<ProApiDto | null> {
     try {
       const { data } = await axiosInstance.get<ProApiDto>(

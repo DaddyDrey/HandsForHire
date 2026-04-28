@@ -15,7 +15,7 @@ import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../translations/LanguageContext';
 import { getUser } from '../../auth/auth';
 import {
   deleteConversation,

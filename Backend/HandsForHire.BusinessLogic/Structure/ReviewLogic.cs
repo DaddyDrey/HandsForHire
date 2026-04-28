@@ -18,13 +18,34 @@ public class ReviewLogic : IReviewLogic
     public async Task<IEnumerable<ReviewDto>> GetAllAsync()
     {
         return await _context.Reviews
+            .OrderByDescending(r => r.CreatedAt)
             .Select(review => new ReviewDto
             {
                 Id = review.Id,
                 ProId = review.ProId,
                 ReviewerName = review.ReviewerName,
+                ReviewerEmail = review.ReviewerEmail,
                 Rating = review.Rating,
-                Comment = review.Comment
+                Comment = review.Comment,
+                CreatedAt = review.CreatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<ReviewDto>> GetForProAsync(int proId)
+    {
+        return await _context.Reviews
+            .Where(r => r.ProId == proId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(review => new ReviewDto
+            {
+                Id = review.Id,
+                ProId = review.ProId,
+                ReviewerName = review.ReviewerName,
+                ReviewerEmail = review.ReviewerEmail,
+                Rating = review.Rating,
+                Comment = review.Comment,
+                CreatedAt = review.CreatedAt
             })
             .ToListAsync();
     }
@@ -41,8 +62,10 @@ public class ReviewLogic : IReviewLogic
             Id = review.Id,
             ProId = review.ProId,
             ReviewerName = review.ReviewerName,
+            ReviewerEmail = review.ReviewerEmail,
             Rating = review.Rating,
-            Comment = review.Comment
+            Comment = review.Comment,
+            CreatedAt = review.CreatedAt
         };
     }
 
@@ -52,8 +75,10 @@ public class ReviewLogic : IReviewLogic
         {
             ProId = dto.ProId,
             ReviewerName = dto.ReviewerName,
+            ReviewerEmail = dto.ReviewerEmail,
             Rating = dto.Rating,
-            Comment = dto.Comment
+            Comment = dto.Comment,
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.Reviews.Add(review);
@@ -64,8 +89,10 @@ public class ReviewLogic : IReviewLogic
             Id = review.Id,
             ProId = review.ProId,
             ReviewerName = review.ReviewerName,
+            ReviewerEmail = review.ReviewerEmail,
             Rating = review.Rating,
-            Comment = review.Comment
+            Comment = review.Comment,
+            CreatedAt = review.CreatedAt
         };
     }
 

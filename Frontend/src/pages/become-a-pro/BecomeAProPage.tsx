@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../i18n/useLanguage';
+import { useLanguage } from '../../translations/useLanguage';
 import { prosApi } from '../../api/prosApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
@@ -52,7 +52,7 @@ export default function BecomeAProPage() {
 
     const currentUser = getUser();
     if (!currentUser) {
-      setErrorMessage('Please log in before submitting your application.');
+      setErrorMessage(t('pleaseLogInFirst'));
       return;
     }
 
@@ -153,10 +153,10 @@ export default function BecomeAProPage() {
                   }}
                 >
                   <Typography sx={{ fontWeight: 850, fontSize: '1.15rem' }}>
-                    Professional profile
+                    {t('professionalProfileSection')}
                   </Typography>
                   <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
-                    Add your trade, city, and hourly rate so customers can find and compare your services.
+                    {t('professionalProfileSubtitle')}
                   </Typography>
                 </Box>
 
@@ -210,7 +210,7 @@ export default function BecomeAProPage() {
                             </MenuItem>
                           ))}
                           <MenuItem value={CUSTOM_TRADE}>
-                            Other
+                            {t('otherTrade')}
                           </MenuItem>
                         </Select>
                         {submitted && !trade && (
@@ -233,11 +233,11 @@ export default function BecomeAProPage() {
                     {isCustomTrade && (
                       <TextField
                         fullWidth
-                        label="Custom trade"
+                        label={t('customTradeLabel')}
                         value={customTrade}
                         onChange={(e) => setCustomTrade(e.target.value)}
                         error={hasError(customTrade)}
-                        helperText={hasError(customTrade) ? t('fieldRequired') : 'Enter your profession if it is not listed above.'}
+                        helperText={hasError(customTrade) ? t('fieldRequired') : t('customTradeHint')}
                       />
                     )}
 

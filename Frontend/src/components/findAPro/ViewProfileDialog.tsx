@@ -15,7 +15,7 @@ import {
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { useNavigate } from 'react-router-dom';
 import type { Pro } from '../../mock_data/pros';
-import { useLanguage } from '../../i18n/useLanguage';
+import { useLanguage } from '../../translations/useLanguage';
 import { proReviewsTo } from '../../routes/paths';
 import { useMessagesDrawer } from '../messages/MessagesDrawerContext';
 import { ensureConversation } from '../../mock_data/messagesStore';

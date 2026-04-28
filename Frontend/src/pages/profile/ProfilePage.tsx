@@ -39,7 +39,7 @@ import {
   clearAvatar,
 } from "../../auth/auth";
 import { MOCK_USER } from "../../mock_data/users";
-import { useLanguage } from "../../i18n/useLanguage";
+import { useLanguage } from "../../translations/useLanguage";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
@@ -109,10 +109,10 @@ export default function ProfilePage() {
       await prosApi.delete(proProfile.id);
       setProProfile(null);
       setMsgSeverity("success");
-      setMsg("Pro profile deleted.");
+      setMsg(t("proProfileDeletedToast"));
     } catch {
       setMsgSeverity("error");
-      setMsg("Could not delete pro profile.");
+      setMsg(t("couldNotDeleteProProfile"));
     }
   };
 
@@ -184,15 +184,15 @@ export default function ProfilePage() {
   };
 
   const handleDeleteAnnouncement = async (id: number) => {
-    if (!window.confirm("Delete this announcement?")) return;
+    if (!window.confirm(t("deleteAnnouncementConfirm"))) return;
     try {
       await removeAnnouncement(id);
       setAnnouncements((prev) => (prev ? prev.filter((a) => a.id !== id) : prev));
       setMsgSeverity("success");
-      setMsg("Announcement deleted.");
+      setMsg(t("announcementDeletedToast"));
     } catch {
       setMsgSeverity("error");
-      setMsg("Could not delete announcement.");
+      setMsg(t("couldNotDeleteAnnouncement"));
     }
   };
 
@@ -201,7 +201,7 @@ export default function ProfilePage() {
     if (!postTitle.trim() || !postDescription.trim() || !postCategory || !postCity.trim()) return;
     if (!backendUserId) {
       setMsgSeverity("error");
-      setMsg("Could not identify your account. Please reload the page.");
+      setMsg(t("couldNotIdentifyAccount"));
       return;
     }
     setPostSubmitting(true);
@@ -217,10 +217,10 @@ export default function ProfilePage() {
       setPostOpen(false);
       resetPostForm();
       setMsgSeverity("success");
-      setMsg("Announcement posted.");
+      setMsg(t("announcementPostedToast"));
     } catch {
       setMsgSeverity("error");
-      setMsg("Could not post announcement. Please try again.");
+      setMsg(t("couldNotPostAnnouncement"));
     } finally {
       setPostSubmitting(false);
     }
@@ -428,11 +428,6 @@ export default function ProfilePage() {
                   <Typography sx={{ fontWeight: 700 }}>{profile.createdAt}</Typography>
                 </Box>
 
-                <Box sx={{ ml: "auto" }}>
-                  <Button variant="text" disabled>
-                    {t("changeMock")}
-                  </Button>
-                </Box>
               </Stack>
             </Stack>
           </CardContent>
@@ -441,10 +436,10 @@ export default function ProfilePage() {
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography sx={{ fontWeight: 800 }}>Pro profile</Typography>
+              <Typography sx={{ fontWeight: 800 }}>{t("proProfileSection")}</Typography>
               {proProfile && (
                 <Button color="error" variant="outlined" size="small" onClick={onDeletePro}>
-                  Delete pro profile
+                  {t("deleteProProfileBtn")}
                 </Button>
               )}
             </Stack>
@@ -457,29 +452,29 @@ export default function ProfilePage() {
             ) : proProfile ? (
               <Stack direction="row" spacing={3} sx={{ flexWrap: "wrap" }}>
                 <Box>
-                  <Typography color="text.secondary" variant="body2">Trade</Typography>
+                  <Typography color="text.secondary" variant="body2">{t("tradeField")}</Typography>
                   <Typography sx={{ fontWeight: 700 }}>{proProfile.trade}</Typography>
                 </Box>
                 <Box>
-                  <Typography color="text.secondary" variant="body2">City</Typography>
+                  <Typography color="text.secondary" variant="body2">{t("cityField")}</Typography>
                   <Typography sx={{ fontWeight: 700 }}>{proProfile.city}</Typography>
                 </Box>
                 <Box>
-                  <Typography color="text.secondary" variant="body2">Hourly rate</Typography>
+                  <Typography color="text.secondary" variant="body2">{t("hourlyRateField")}</Typography>
                   <Typography sx={{ fontWeight: 700 }}>{proProfile.hourlyRate}</Typography>
                 </Box>
                 <Box>
-                  <Typography color="text.secondary" variant="body2">Display name</Typography>
+                  <Typography color="text.secondary" variant="body2">{t("displayNameField")}</Typography>
                   <Typography sx={{ fontWeight: 700 }}>{proProfile.fullName}</Typography>
                 </Box>
               </Stack>
             ) : (
               <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap" }}>
                 <Typography color="text.secondary">
-                  You haven't submitted a pro application yet.
+                  {t("noApplicationYet")}
                 </Typography>
                 <Button variant="contained" onClick={() => nav(paths.becomeAPro)}>
-                  Become a Pro
+                  {t("becomeProBtn")}
                 </Button>
               </Stack>
             )}
@@ -512,7 +507,7 @@ export default function ProfilePage() {
                   onClick={() => setPostOpen(true)}
                   disabled={!backendUserId}
                 >
-                  + New
+                  {t("addNewBtn")}
                 </Button>
               </Stack>
               <Divider sx={{ my: 1.5 }} />
@@ -682,11 +677,11 @@ export default function ProfilePage() {
         >
           <MenuItem onClick={onView}>
             <VisibilityOutlinedIcon fontSize="small" sx={{ mr: 1.5 }} />
-            View
+            {t("viewMenuItem")}
           </MenuItem>
           <MenuItem onClick={onDelete} sx={{ color: "error.main" }}>
             <DeleteOutlineRoundedIcon fontSize="small" sx={{ mr: 1.5 }} />
-            Delete
+            {t("deleteMenuItem")}
           </MenuItem>
         </Menu>
 
@@ -708,7 +703,7 @@ export default function ProfilePage() {
                 <Stack spacing={2}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                      Description
+                      {t("descriptionField")}
                     </Typography>
                     <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
                       {viewedAnnouncement.description || "—"}
@@ -717,26 +712,26 @@ export default function ProfilePage() {
                   <Divider />
                   <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Category</Typography>
+                      <Typography variant="caption" color="text.secondary">{t("categoryField")}</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.category}</Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">City</Typography>
+                      <Typography variant="caption" color="text.secondary">{t("cityField")}</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.city || "—"}</Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Created</Typography>
+                      <Typography variant="caption" color="text.secondary">{t("createdAtField")}</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.createdAt.slice(0, 10)}</Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Updated</Typography>
+                      <Typography variant="caption" color="text.secondary">{t("updatedAtField")}</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.updatedAt.slice(0, 10)}</Typography>
                     </Box>
                   </Stack>
                 </Stack>
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => setViewedAnnouncement(null)}>Close</Button>
+                <Button onClick={() => setViewedAnnouncement(null)}>{t("closeBtn")}</Button>
               </DialogActions>
             </>
           )}
@@ -748,33 +743,33 @@ export default function ProfilePage() {
           fullWidth
           maxWidth="sm"
         >
-          <DialogTitle>Post a new announcement</DialogTitle>
+          <DialogTitle>{t("postNewAnnouncement")}</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={2} sx={{ mt: 0.5 }}>
               <TextField
-                label="Title"
+                label={t("titleField")}
                 value={postTitle}
                 onChange={(e) => setPostTitle(e.target.value)}
                 error={postTouched && !postTitle.trim()}
-                helperText={postTouched && !postTitle.trim() ? "Required" : ""}
+                helperText={postTouched && !postTitle.trim() ? t("fieldRequiredShort") : ""}
                 fullWidth
               />
               <TextField
-                label="Description"
+                label={t("descriptionField")}
                 value={postDescription}
                 onChange={(e) => setPostDescription(e.target.value)}
                 error={postTouched && !postDescription.trim()}
-                helperText={postTouched && !postDescription.trim() ? "Required" : ""}
+                helperText={postTouched && !postDescription.trim() ? t("fieldRequiredShort") : ""}
                 multiline
                 rows={4}
                 fullWidth
               />
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <FormControl fullWidth error={postTouched && !postCategory}>
-                  <InputLabel>Category</InputLabel>
+                  <InputLabel>{t("categoryField")}</InputLabel>
                   <Select
                     value={postCategory}
-                    label="Category"
+                    label={t("categoryField")}
                     onChange={(e) => setPostCategory(e.target.value)}
                   >
                     {ANNOUNCEMENT_CATEGORIES.map((c) => (
@@ -783,11 +778,11 @@ export default function ProfilePage() {
                   </Select>
                 </FormControl>
                 <TextField
-                  label="City"
+                  label={t("cityField")}
                   value={postCity}
                   onChange={(e) => setPostCity(e.target.value)}
                   error={postTouched && !postCity.trim()}
-                  helperText={postTouched && !postCity.trim() ? "Required" : ""}
+                  helperText={postTouched && !postCity.trim() ? t("fieldRequiredShort") : ""}
                   fullWidth
                 />
               </Stack>
@@ -795,10 +790,10 @@ export default function ProfilePage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => { setPostOpen(false); resetPostForm(); }} disabled={postSubmitting}>
-              Cancel
+              {t("cancelBtn")}
             </Button>
             <Button onClick={handlePostSubmit} variant="contained" disabled={postSubmitting}>
-              {postSubmitting ? "Posting…" : "Post"}
+              {postSubmitting ? t("postingBtn") : t("postBtn")}
             </Button>
           </DialogActions>
         </Dialog>

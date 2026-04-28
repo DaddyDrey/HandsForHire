@@ -25,28 +25,39 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../translations/LanguageContext';
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
 import { type Pro } from '../../mock_data/pros';
 import { prosApi, type ProApiDto } from '../../api/prosApi';
+import { reviewsApi, type ReviewApiDto } from '../../api/reviewsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
 import { ensureConversation } from '../../mock_data/messagesStore';
 
-function mapApiProToPro(p: ProApiDto): Pro {
+function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): Pro {
+  const proReviews = reviews.filter((r) => r.proId === p.id);
+  const avgRating = proReviews.length > 0
+    ? proReviews.reduce((acc, r) => acc + r.rating, 0) / proReviews.length
+    : 0;
   return {
     id: String(p.id),
     name: p.fullName,
     age: 0,
     trade: p.trade,
     city: p.city,
-    rating: 0,
-    reviewsCount: 0,
+    rating: avgRating,
+    reviewsCount: proReviews.length,
     hourlyFrom: p.hourlyRate,
     tags: [],
     description: '',
-    reviews: [],
+    reviews: proReviews.map((r) => ({
+      id: String(r.id),
+      author: r.reviewerName,
+      rating: r.rating,
+      date: r.createdAt.slice(0, 10),
+      text: r.comment,
+    })),
   };
 }
 
@@ -93,12 +104,13 @@ export default function FindAProPage() {
 
   useEffect(() => {
     let cancelled = false;
-    prosApi.getAll()
-      .then((data) => {
-        if (cancelled) return;
-        setPros(data.map(mapApiProToPro));
-      })
-      .catch((error) => console.error('Could not load professionals', error));
+    Promise.all([
+      prosApi.getAll(),
+      reviewsApi.getAll().catch(() => [] as ReviewApiDto[]),
+    ]).then(([prosData, reviewsData]) => {
+      if (cancelled) return;
+      setPros(prosData.map((p) => mapApiProToPro(p, reviewsData)));
+    }).catch((error) => console.error('Could not load professionals', error));
     return () => { cancelled = true; };
   }, []);
 
