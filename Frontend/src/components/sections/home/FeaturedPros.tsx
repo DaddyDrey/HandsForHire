@@ -56,6 +56,7 @@ export default function FeaturedPros() {
       };
     });
     return enriched
+      .filter((p) => p.reviewsCount > 0)
       .sort((a, b) => b.rating - a.rating || b.reviewsCount - a.reviewsCount)
       .slice(0, 3);
   }, [pros, reviews]);
