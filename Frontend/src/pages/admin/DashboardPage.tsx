@@ -169,15 +169,15 @@ type ActivityRow = {
   color: ChipProps["color"];
 };
 
-function relativeTime(iso: string): string {
+function relativeTime(iso: string, t: (k: "justNow" | "minutesAgo" | "hoursAgo" | "daysAgo") => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1) return t("justNow");
+  if (mins < 60) return t("minutesAgo").replace("{n}", String(mins));
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hr ago`;
+  if (hours < 24) return t("hoursAgo").replace("{n}", String(hours));
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} d ago`;
+  if (days < 7) return t("daysAgo").replace("{n}", String(days));
   return iso.slice(0, 10);
 }
 
@@ -279,7 +279,7 @@ export default function DashboardPage() {
       return {
         event: t("jobPostedActivity").replace("{title}", a.title),
         user: a.authorName || a.authorEmail || `user#${a.userId}`,
-        time: relativeTime(a.createdAt),
+        time: relativeTime(a.createdAt, t),
         status: c.status,
         color: c.color,
       };
