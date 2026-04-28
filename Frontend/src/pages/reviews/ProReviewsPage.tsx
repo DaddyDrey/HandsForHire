@@ -126,14 +126,22 @@ export default function ProReviewsPage() {
     Promise.all([
       prosApi.getById(proIdNum),
       reviewsApi.getForPro(proIdNum).catch(() => [] as ReviewApiDto[]),
-    ]).then(([proData, reviewsData]) => {
-      if (cancelled) return;
-      setPro(proData);
-      setReviews(reviewsData);
-      setLoading(false);
-    });
+    ])
+      .then(([proData, reviewsData]) => {
+        if (cancelled) return;
+        setPro(proData);
+        setReviews(reviewsData);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFeedback({ severity: 'error', text: t('couldNotLoadPros') });
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
     return () => { cancelled = true; };
-  }, [proIdNum]);
+  }, [proIdNum, t]);
 
   const myReview = useMemo(() => {
     if (!user) return null;

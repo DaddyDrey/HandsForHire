@@ -38,7 +38,6 @@ import {
   getAvatarDataUrl,
   clearAvatar,
 } from "../../auth/auth";
-import { MOCK_USER } from "../../mock_data/users";
 import { useLanguage } from "../../translations/useLanguage";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
@@ -46,9 +45,17 @@ import Section from "../../components/common/Section";
 import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
 import { messagesApi } from "../../api/messagesApi";
 
-const ANNOUNCEMENT_CATEGORIES = [
-  "Plumbing", "Electrical", "Cleaning", "Moving", "Painting",
-  "Assembly", "HVAC", "Handyman", "Carpentry", "Other",
+const ANNOUNCEMENT_CATEGORIES: Array<{ value: string; key: 'catPlumbing' | 'catElectrical' | 'catCleaning' | 'catMoving' | 'catPainting' | 'catAssembly' | 'catHvac' | 'catHandyman' | 'catCarpentry' | 'catOther' }> = [
+  { value: "Plumbing", key: "catPlumbing" },
+  { value: "Electrical", key: "catElectrical" },
+  { value: "Cleaning", key: "catCleaning" },
+  { value: "Moving", key: "catMoving" },
+  { value: "Painting", key: "catPainting" },
+  { value: "Assembly", key: "catAssembly" },
+  { value: "HVAC", key: "catHvac" },
+  { value: "Handyman", key: "catHandyman" },
+  { value: "Carpentry", key: "catCarpentry" },
+  { value: "Other", key: "catOther" },
 ];
 
 type Announcement = {
@@ -228,10 +235,6 @@ export default function ProfilePage() {
 
   const profile: Profile | null = useMemo(() => {
     if (!user) return null;
-
-    if (user.email.toLowerCase() === MOCK_USER.email.toLowerCase()) {
-      return MOCK_USER as Profile;
-    }
 
     return {
       email: user.email,
@@ -773,7 +776,7 @@ export default function ProfilePage() {
                     onChange={(e) => setPostCategory(e.target.value)}
                   >
                     {ANNOUNCEMENT_CATEGORIES.map((c) => (
-                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                      <MenuItem key={c.value} value={c.value}>{t(c.key)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>

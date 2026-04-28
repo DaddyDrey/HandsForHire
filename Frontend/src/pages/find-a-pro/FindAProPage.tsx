@@ -101,6 +101,7 @@ export default function FindAProPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
   const [pros, setPros] = useState<Pro[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,9 +111,13 @@ export default function FindAProPage() {
     ]).then(([prosData, reviewsData]) => {
       if (cancelled) return;
       setPros(prosData.map((p) => mapApiProToPro(p, reviewsData)));
-    }).catch((error) => console.error('Could not load professionals', error));
+      setLoadError(null);
+    }).catch(() => {
+      if (cancelled) return;
+      setLoadError(t('couldNotLoadPros'));
+    });
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;
@@ -321,6 +326,14 @@ export default function FindAProPage() {
               </Stack>
             </CardContent>
           </Card>
+
+          {loadError && (
+            <Card variant="outlined" sx={{ borderRadius: 3, borderColor: 'error.main' }}>
+              <CardContent>
+                <Typography color="error.main">{loadError}</Typography>
+              </CardContent>
+            </Card>
+          )}
 
           <Stack direction="row" justifyContent="space-between" alignItems="baseline">
             <Typography color="text.secondary">
