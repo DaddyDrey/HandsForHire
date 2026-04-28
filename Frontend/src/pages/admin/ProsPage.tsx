@@ -7,6 +7,7 @@ import {
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { prosApi, type ProStatus } from "../../api/prosApi";
+import { reviewsApi, type ReviewApiDto } from "../../api/reviewsApi";
 import { useLanguage } from "../../translations/useLanguage";
 
 interface Pro {
@@ -80,20 +81,29 @@ export default function ProsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    prosApi.getAll()
-      .then((data) => {
+    Promise.all([
+      prosApi.getAll(),
+      reviewsApi.getAll().catch(() => [] as ReviewApiDto[]),
+    ])
+      .then(([prosData, reviewsData]) => {
         if (cancelled) return;
-        setPros(data.map((p) => ({
-          id: p.id,
-          name: p.fullName,
-          email: p.email,
-          category: p.trade,
-          city: p.city,
-          hourlyRate: p.hourlyRate,
-          rating: 0,
-          reviews: 0,
-          status: p.status,
-        })));
+        setPros(prosData.map((p) => {
+          const proReviews = reviewsData.filter((r) => r.proId === p.id);
+          const avgRating = proReviews.length > 0
+            ? proReviews.reduce((acc, r) => acc + r.rating, 0) / proReviews.length
+            : 0;
+          return {
+            id: p.id,
+            name: p.fullName,
+            email: p.email,
+            category: p.trade,
+            city: p.city,
+            hourlyRate: p.hourlyRate,
+            rating: avgRating,
+            reviews: proReviews.length,
+            status: p.status,
+          };
+        }));
       })
       .catch(() => {
         if (cancelled) return;
