@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login, saveMockUser } from "../../auth/auth.ts";
 import { useLanguage } from "../../i18n/useLanguage";
+import axiosInstance from "../../api/axiosInstance";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -35,8 +36,10 @@ export default function Signup() {
 
     try {
       setLoading(true);
-
-      
+      await axiosInstance.post("/Users", {
+        fullName: email.split("@")[0],
+        email: email.trim().toLowerCase(),
+      });
       saveMockUser(email, password);
 
       await login(email, password, remember);

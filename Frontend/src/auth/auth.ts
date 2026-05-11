@@ -1,4 +1,7 @@
+import axiosInstance from "../api/axiosInstance";
+
 export type User = { email: string };
+type BackendUser = { id: number; fullName: string; email: string };
 
 const STORAGE_KEY = "handsforhire_auth";
 const USERS_KEY = "handsforhire_users";
@@ -28,26 +31,39 @@ export function saveMockUser(email: string, password: string) {
 }
 
 export async function login(email: string, password: string, remember: boolean) {
-  await new Promise((r) => setTimeout(r, 200));
-
   const e = email.trim().toLowerCase();
-const expected = loadUsers()[e];
+  try {
+    const { data } = await axiosInstance.get<BackendUser>(`/Users/by-email/${encodeURIComponent(e)}`);
+    const user: User = { email: data.email };
 
-  if (!expected || expected !== password) {
-    throw new Error("Email sau parola incorectă.");
+    if (remember) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      sessionStorage.removeItem(STORAGE_KEY);
+    } else {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    return user;
+  } catch {
+    const expected = loadUsers()[e];
+
+    if (!expected || expected !== password) {
+      throw new Error("Email sau parola incorectă.");
+    }
+
+    const user: User = { email: e };
+
+    if (remember) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      sessionStorage.removeItem(STORAGE_KEY);
+    } else {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    return user;
   }
-
-  const user: User = { email: e };
-
-  if (remember) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    sessionStorage.removeItem(STORAGE_KEY);
-  } else {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  return user;
 }
 
 export function logout() {
