@@ -32,18 +32,10 @@ import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
 import { ensureConversation } from '../../mock_data/messagesStore';
+import { professionsApi } from '../../api/professionsApi';
 
-const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
-type TradeOption = (typeof TRADE_OPTIONS)[number];
+const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
-
-const getTradeFromUrl = (value: string | null): TradeOption => {
-  if (value && TRADE_OPTIONS.includes(value as TradeOption)) {
-    return value as TradeOption;
-  }
-
-  return 'All';
-};
 
 export default function FindAProPage() {
   const { t } = useLanguage();
@@ -65,7 +57,7 @@ export default function FindAProPage() {
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
-  const [trade, setTrade] = useState<TradeOption>(() => getTradeFromUrl(tradeFromUrl));
+  const [trade, setTrade] = useState(() => tradeFromUrl || 'All');
   const [minRating, setMinRating] = useState<number>(1);
   const [priceRange, setPriceRange] = useState<number[]>([0, 30]);
   const [sort, setSort] = useState<SortOption>('relevance');
@@ -74,12 +66,19 @@ export default function FindAProPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
   const [pros, setPros] = useState<Pro[]>([]);
+  const [tradeOptions, setTradeOptions] = useState<string[]>(DEFAULT_TRADE_OPTIONS);
 
   useEffect(() => {
     void getAll()
       .then(setPros)
       .catch((error) => console.error('Could not load professionals', error));
   }, [getAll]);
+
+  useEffect(() => {
+    void professionsApi.getAll()
+      .then((items) => setTradeOptions(items.map((item) => item.name)))
+      .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
+  }, []);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;
@@ -222,10 +221,10 @@ export default function FindAProPage() {
 
                   <FormControl fullWidth>
                     <InputLabel>{t('trade')}</InputLabel>
-                    <Select value={trade} label={t('trade')} onChange={(e) => setTrade(e.target.value as TradeOption)}>
-                      {TRADE_OPTIONS.map((opt) => (
+                    <Select value={trade} label={t('trade')} onChange={(e) => setTrade(e.target.value)}>
+                      {['All', ...tradeOptions].map((opt) => (
                         <MenuItem key={opt} value={opt}>
-                          {opt === 'All' ? t('all') : t(opt.toLowerCase() as 'electrician' | 'plumber' | 'carpenter' | 'painter' | 'hvac' | 'handyman')}
+                          {opt === 'All' ? t('all') : opt}
                         </MenuItem>
                       ))}
                     </Select>

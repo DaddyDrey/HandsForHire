@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   Box,
   Button,
@@ -17,9 +17,9 @@ import {
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 import { useLanguage } from '../../i18n/useLanguage';
+import { professionsApi } from '../../api/professionsApi';
 
-const TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
-const CUSTOM_TRADE = 'Other';
+const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
@@ -30,20 +30,25 @@ export default function BecomeAProPage() {
   const [fullName, setFullName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [trade, setTrade] = useState('');
-  const [customTrade, setCustomTrade] = useState('');
   const [city, setCity] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
   const [description, setDescription] = useState('');
+  const [tradeOptions, setTradeOptions] = useState<string[]>(DEFAULT_TRADE_OPTIONS);
 
   const [submitted, setSubmitted] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
+
+  useEffect(() => {
+    void professionsApi.getAll()
+      .then((items) => setTradeOptions(items.map((item) => item.name)))
+      .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
 
-    const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
-    const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
+    const isValid = fullName.trim() && birthYear && trade && city.trim() && hourlyRate.trim();
     if (!isValid) return;
 
     setSnackOpen(true);
@@ -51,7 +56,6 @@ export default function BecomeAProPage() {
     setFullName('');
     setBirthYear('');
     setTrade('');
-    setCustomTrade('');
     setCity('');
     setHourlyRate('');
     setDescription('');
@@ -59,7 +63,6 @@ export default function BecomeAProPage() {
   };
 
   const hasError = (value: string) => submitted && !value.trim();
-  const isCustomTrade = trade === CUSTOM_TRADE;
 
   const handleHourlyRateChange = (value: string) => {
     if (value === '') {
@@ -172,14 +175,11 @@ export default function BecomeAProPage() {
                           <MenuItem value="" disabled>
                             {t('selectTrade')}
                           </MenuItem>
-                          {TRADE_OPTIONS.map((opt) => (
+                          {tradeOptions.map((opt) => (
                             <MenuItem key={opt} value={opt}>
-                              {t(opt.toLowerCase() as 'electrician' | 'plumber' | 'carpenter' | 'painter' | 'hvac' | 'handyman')}
+                              {opt}
                             </MenuItem>
                           ))}
-                          <MenuItem value={CUSTOM_TRADE}>
-                            Other
-                          </MenuItem>
                         </Select>
                         {submitted && !trade && (
                           <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
@@ -197,17 +197,6 @@ export default function BecomeAProPage() {
                         helperText={hasError(city) ? t('fieldRequired') : ''}
                       />
                     </Stack>
-
-                    {isCustomTrade && (
-                      <TextField
-                        fullWidth
-                        label="Custom trade"
-                        value={customTrade}
-                        onChange={(e) => setCustomTrade(e.target.value)}
-                        error={hasError(customTrade)}
-                        helperText={hasError(customTrade) ? t('fieldRequired') : 'Enter your profession if it is not listed above.'}
-                      />
-                    )}
 
                     <TextField
                       fullWidth
