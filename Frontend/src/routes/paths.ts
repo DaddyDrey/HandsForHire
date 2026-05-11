@@ -1,6 +1,7 @@
 const paths = {
   home: "/",
   findAPro: "/pros",
+  postJob: "/post-job",
   becomeAPro: "/become-a-pro",
   login: "/login",
   signup: "/signup",

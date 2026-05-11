@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAxios } from '../api/AxiosContext';
 
 export type AnnouncementStatus = 'Open' | 'InProgress' | 'Completed' | 'Cancelled' | 'Paused';
@@ -35,33 +36,33 @@ export type UpdateAnnouncementPayload = {
 export const useAnnouncementService = () => {
   const axios = useAxios();
 
-  const getAll = async (): Promise<Announcement[]> => {
+  const getAll = useCallback(async (): Promise<Announcement[]> => {
     const { data } = await axios.get<Announcement[]>('/Announcements');
     return data;
-  };
+  }, [axios]);
 
-  const getForUser = async (userId: number): Promise<Announcement[]> => {
+  const getForUser = useCallback(async (userId: number): Promise<Announcement[]> => {
     const { data } = await axios.get<Announcement[]>(`/Announcements/user/${userId}`);
     return data;
-  };
+  }, [axios]);
 
-  const getById = async (id: number): Promise<Announcement> => {
+  const getById = useCallback(async (id: number): Promise<Announcement> => {
     const { data } = await axios.get<Announcement>(`/Announcements/${id}`);
     return data;
-  };
+  }, [axios]);
 
-  const create = async (payload: CreateAnnouncementPayload): Promise<Announcement> => {
+  const create = useCallback(async (payload: CreateAnnouncementPayload): Promise<Announcement> => {
     const { data } = await axios.post<Announcement>('/Announcements', payload);
     return data;
-  };
+  }, [axios]);
 
-  const update = async (id: number, payload: UpdateAnnouncementPayload): Promise<void> => {
+  const update = useCallback(async (id: number, payload: UpdateAnnouncementPayload): Promise<void> => {
     await axios.put(`/Announcements/${id}`, payload);
-  };
+  }, [axios]);
 
-  const remove = async (id: number): Promise<void> => {
+  const remove = useCallback(async (id: number): Promise<void> => {
     await axios.delete(`/Announcements/${id}`);
-  };
+  }, [axios]);
 
   return { getAll, getForUser, getById, create, update, remove };
 };

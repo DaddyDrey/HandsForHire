@@ -4,6 +4,7 @@ import AdminLayout from "../layouts/admin-layout/AdminLayout";
 import HomePage from "../pages/home/HomePage";
 import FindAProPage from "../pages/find-a-pro/FindAProPage";
 import BecomeAProPage from "../pages/become-a-pro/BecomeAProPage";
+import PostJobPage from "../pages/post-job/PostJobPage";
 import paths from "./paths";
 import LoginPage from "../pages/Login-Page/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
@@ -16,6 +17,7 @@ import TermsPage from "../pages/terms/TermsPage";
 import DashboardPage from "../pages/admin/DashboardPage";
 import UsersPage from "../pages/admin/UsersPage";
 import ProsPage from "../pages/admin/ProsPage";
+import ProfessionsPage from "../pages/admin/ProfessionsPage";
 import JobsPage from "../pages/admin/JobsPage";
 import ReportsPage from "../pages/admin/ReportsPage";
 import ProReviewsPage from "../pages/reviews/ProReviewsPage";
@@ -31,6 +33,14 @@ const router = createBrowserRouter([
       { path: paths.about, element: <AboutPage /> },
       { path: paths.terms, element: <TermsPage /> },
       { path: paths.findAPro, element: <FindAProPage /> },
+      {
+        path: paths.postJob,
+        element: (
+          <ProtectedRoute>
+            <PostJobPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: paths.becomeAPro,
         element: (
@@ -68,6 +78,7 @@ const router = createBrowserRouter([
       { index: true,          element: <DashboardPage /> },
       { path: "users",        element: <UsersPage /> },
       { path: "pros",         element: <ProsPage /> },
+      { path: "professions",  element: <ProfessionsPage /> },
       { path: "jobs",         element: <JobsPage /> },
       { path: "reports",      element: <ReportsPage /> },
     ],

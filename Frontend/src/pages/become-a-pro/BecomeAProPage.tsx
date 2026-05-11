@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   Box,
   Button,
@@ -18,13 +18,12 @@ import { useNavigate } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../translations/useLanguage';
-import { prosApi } from '../../api/prosApi';
+import { useLanguage } from '../../i18n/useLanguage';
+import { professionsApi } from '../../api/professionsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 
-const TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
-const CUSTOM_TRADE = 'Other';
+const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
@@ -36,28 +35,35 @@ export default function BecomeAProPage() {
   const [fullName, setFullName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [trade, setTrade] = useState('');
-  const [customTrade, setCustomTrade] = useState('');
   const [city, setCity] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
   const [description, setDescription] = useState('');
+  const [tradeOptions, setTradeOptions] = useState<string[]>(DEFAULT_TRADE_OPTIONS);
 
   const [submitted, setSubmitted] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
+useEffect(() => {
+  void professionsApi.getAll()
+    .then((items) => setTradeOptions(items.map((item) => item.name)))
+    .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
+}, []);
 
-    const currentUser = getUser();
-    if (!currentUser) {
-      setErrorMessage(t('pleaseLogInFirst'));
-      return;
-    }
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+  setSubmitted(true);
 
-    const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
-    const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
+  const currentUser = getUser();
+  if (!currentUser) {
+    setErrorMessage(t('pleaseLogInFirst'));
+    return;
+  }
+
+  const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
+  const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
+
     if (!isValid) return;
 
     setSubmitting(true);
@@ -73,25 +79,16 @@ export default function BecomeAProPage() {
 
       setSnackOpen(true);
 
-      setFullName('');
-      setBirthYear('');
-      setTrade('');
-      setCustomTrade('');
-      setCity('');
-      setHourlyRate('');
-      setDescription('');
-      setSubmitted(false);
-
-      setTimeout(() => navigate(paths.account), 1200);
-    } catch {
-      setErrorMessage(t('applicationError') ?? 'Could not submit your application. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+    setFullName('');
+    setBirthYear('');
+    setTrade('');
+    setCity('');
+    setHourlyRate('');
+    setDescription('');
+    setSubmitted(false);
   };
 
   const hasError = (value: string) => submitted && !value.trim();
-  const isCustomTrade = trade === CUSTOM_TRADE;
 
   const handleHourlyRateChange = (value: string) => {
     if (value === '') {
@@ -204,9 +201,9 @@ export default function BecomeAProPage() {
                           <MenuItem value="" disabled>
                             {t('selectTrade')}
                           </MenuItem>
-                          {TRADE_OPTIONS.map((opt) => (
+                          {tradeOptions.map((opt) => (
                             <MenuItem key={opt} value={opt}>
-                              {t(opt.toLowerCase() as 'electrician' | 'plumber' | 'carpenter' | 'painter' | 'hvac' | 'handyman')}
+                              {opt}
                             </MenuItem>
                           ))}
                           <MenuItem value={CUSTOM_TRADE}>

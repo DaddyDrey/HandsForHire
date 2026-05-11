@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAxios } from '../api/AxiosContext';
 
 export type Announcement = {
@@ -45,10 +46,10 @@ export const MOCK_USER: UserProfile = {
 export const useUserService = () => {
   const axios = useAxios();
 
-  const getCurrentUser = async (): Promise<UserProfile> => {
+  const getCurrentUser = useCallback(async (): Promise<UserProfile> => {
     const { data } = await axios.get<UserProfile>('/user/me');
     return data;
-  };
+  }, [axios]);
 
   return { getCurrentUser };
 };

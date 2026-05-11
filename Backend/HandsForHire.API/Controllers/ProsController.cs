@@ -47,14 +47,29 @@ public class ProsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateProDto dto)
     {
-        var createdPro = await _ProLogic.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = createdPro.Id }, createdPro);
+        try
+        {
+            var createdPro = await _ProLogic.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdPro.Id }, createdPro);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateProDto dto)
     {
-        var updated = await _ProLogic.UpdateAsync(id, dto);
+        bool updated;
+        try
+        {
+            updated = await _ProLogic.UpdateAsync(id, dto);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
         if (!updated)
             return NotFound();

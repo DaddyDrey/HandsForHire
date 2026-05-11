@@ -144,12 +144,14 @@ namespace HandsForHire.DataAccesLayer.Migrations
                     b.ToTable("Pros");
                 });
 
+            modelBuilder.Entity("HandsForHire.Domain.Entities.Profession", b =>
             modelBuilder.Entity("HandsForHire.Domain.Entities.Report", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Name")
                     b.Property<int>("ActionTaken")
                         .HasColumnType("INTEGER");
 
@@ -182,7 +184,42 @@ namespace HandsForHire.DataAccesLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Reports");
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Professions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Electrician"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Plumber"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Carpenter"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Painter"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "HVAC"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Handyman"
+                        });
                 });
 
             modelBuilder.Entity("HandsForHire.Domain.Entities.Review", b =>

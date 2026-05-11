@@ -34,7 +34,9 @@ import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
 import { ensureConversation } from '../../mock_data/messagesStore';
+import { professionsApi } from '../../api/professionsApi';
 
+const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): Pro {
   const proReviews = reviews.filter((r) => r.proId === p.id);
   const avgRating = proReviews.length > 0
@@ -65,14 +67,6 @@ const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 
 type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
 
-const getTradeFromUrl = (value: string | null): TradeOption => {
-  if (value && TRADE_OPTIONS.includes(value as TradeOption)) {
-    return value as TradeOption;
-  }
-
-  return 'All';
-};
-
 export default function FindAProPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
@@ -101,6 +95,7 @@ export default function FindAProPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
   const [pros, setPros] = useState<Pro[]>([]);
+  const [tradeOptions, setTradeOptions] = useState<string[]>(DEFAULT_TRADE_OPTIONS);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,6 +113,12 @@ export default function FindAProPage() {
     });
     return () => { cancelled = true; };
   }, [t]);
+
+  useEffect(() => {
+    void professionsApi.getAll()
+      .then((items) => setTradeOptions(items.map((item) => item.name)))
+      .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
+  }, []);
 
   const toggleVerified = () => {
     const next = !verifiedOnly;
@@ -260,10 +261,10 @@ export default function FindAProPage() {
 
                   <FormControl fullWidth>
                     <InputLabel>{t('trade')}</InputLabel>
-                    <Select value={trade} label={t('trade')} onChange={(e) => setTrade(e.target.value as TradeOption)}>
-                      {TRADE_OPTIONS.map((opt) => (
+                    <Select value={trade} label={t('trade')} onChange={(e) => setTrade(e.target.value)}>
+                      {['All', ...tradeOptions].map((opt) => (
                         <MenuItem key={opt} value={opt}>
-                          {opt === 'All' ? t('all') : t(opt.toLowerCase() as 'electrician' | 'plumber' | 'carpenter' | 'painter' | 'hvac' | 'handyman')}
+                          {opt === 'All' ? t('all') : opt}
                         </MenuItem>
                       ))}
                     </Select>

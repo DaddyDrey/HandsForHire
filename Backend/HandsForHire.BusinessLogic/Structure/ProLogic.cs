@@ -72,6 +72,8 @@ public class ProLogic : IProLogic
 
     public async Task<ProDto> CreateAsync(CreateProDto dto)
     {
+        await EnsureProfessionExistsAsync(dto.Trade);
+
         var pro = new Pro
         {
             FullName = dto.FullName,
@@ -98,6 +100,8 @@ public class ProLogic : IProLogic
 
     public async Task<bool> UpdateAsync(int id, UpdateProDto dto)
     {
+        await EnsureProfessionExistsAsync(dto.Trade);
+
         var pro = await _context.Pros.FindAsync(id);
 
         if (pro == null)
@@ -134,5 +138,14 @@ public class ProLogic : IProLogic
         _context.Pros.Remove(pro);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private async Task EnsureProfessionExistsAsync(string trade)
+    {
+        var normalized = trade.Trim().ToLower();
+        var exists = await _context.Professions.AnyAsync(p => p.Name.ToLower() == normalized);
+
+        if (!exists)
+            throw new InvalidOperationException("Profession is not approved.");
     }
 }

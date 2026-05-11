@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<Profession> Professions => Set<Profession>();
     public DbSet<Report> Reports => Set<Report>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,5 +31,18 @@ public class AppDbContext : DbContext
             .WithMany(c => c.Messages)
             .HasForeignKey(m => m.ConversationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Profession>()
+            .HasIndex(p => p.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<Profession>().HasData(
+            new Profession { Id = 1, Name = "Electrician" },
+            new Profession { Id = 2, Name = "Plumber" },
+            new Profession { Id = 3, Name = "Carpenter" },
+            new Profession { Id = 4, Name = "Painter" },
+            new Profession { Id = 5, Name = "HVAC" },
+            new Profession { Id = 6, Name = "Handyman" }
+        );
     }
 }

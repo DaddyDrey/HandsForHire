@@ -40,7 +40,7 @@ export default function CTA() {
                   variant="contained"
                   size="large"
                   component={RouterLink}
-                  to={paths.findAPro}
+                  to={paths.postJob}
                   sx={{
                     background: 'linear-gradient(135deg, #7C5CFF 0%, #9B82FF 100%)',
                     px: 3,
@@ -54,7 +54,7 @@ export default function CTA() {
                     transition: 'all 200ms ease',
                   }}
                 >
-                  {t('findAPro')}
+                  Post a job
                 </Button>
 
                 <Button
