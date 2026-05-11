@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<Profession> Professions => Set<Profession>();
+    public DbSet<Report> Reports => Set<Report>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

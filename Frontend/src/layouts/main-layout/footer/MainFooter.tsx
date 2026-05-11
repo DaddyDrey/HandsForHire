@@ -1,7 +1,7 @@
 import { Box, Button, Container, Divider, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import paths from "../../../routes/paths";
-import { useLanguage } from "../../../i18n/useLanguage";
+import { useLanguage } from "../../../translations/useLanguage";
 
 export default function MainFooter() {
   const { t } = useLanguage();

@@ -24,13 +24,21 @@ export type MessageApiDto = {
   readAt: string | null;
 };
 
+export type UserStatus = 'Active' | 'Suspended';
+
 export type UserApiDto = {
   id: number;
   fullName: string;
   email: string;
+  status: UserStatus;
 };
 
 export const messagesApi = {
+  async getAllUsers(): Promise<UserApiDto[]> {
+    const { data } = await axiosInstance.get<UserApiDto[]>('/Users');
+    return data;
+  },
+
   async getUserByEmail(email: string): Promise<UserApiDto | null> {
     try {
       const { data } = await axiosInstance.get<UserApiDto>(
@@ -40,6 +48,22 @@ export const messagesApi = {
     } catch {
       return null;
     }
+  },
+
+  async createUser(email: string, fullName: string): Promise<UserApiDto | null> {
+    try {
+      const { data } = await axiosInstance.post<UserApiDto>('/Users', {
+        email,
+        fullName,
+      });
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
+  async setUserStatus(id: number, status: UserStatus): Promise<void> {
+    await axiosInstance.put(`/Users/${id}/status`, { status });
   },
 
   async getConversationsForUser(userId: number): Promise<ConversationApiDto[]> {

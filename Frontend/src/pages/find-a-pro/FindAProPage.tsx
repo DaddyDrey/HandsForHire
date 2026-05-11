@@ -25,9 +25,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../translations/LanguageContext';
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
-import { useProService, type Pro } from '../../mock_data/pros';
+import { type Pro } from '../../mock_data/pros';
+import { prosApi, type ProApiDto } from '../../api/prosApi';
+import { reviewsApi, type ReviewApiDto } from '../../api/reviewsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
@@ -35,12 +37,39 @@ import { ensureConversation } from '../../mock_data/messagesStore';
 import { professionsApi } from '../../api/professionsApi';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
+function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): Pro {
+  const proReviews = reviews.filter((r) => r.proId === p.id);
+  const avgRating = proReviews.length > 0
+    ? proReviews.reduce((acc, r) => acc + r.rating, 0) / proReviews.length
+    : 0;
+  return {
+    id: String(p.id),
+    name: p.fullName,
+    age: 0,
+    trade: p.trade,
+    city: p.city,
+    rating: avgRating,
+    reviewsCount: proReviews.length,
+    hourlyFrom: p.hourlyRate,
+    tags: [],
+    description: '',
+    reviews: proReviews.map((r) => ({
+      id: String(r.id),
+      author: r.reviewerName,
+      rating: r.rating,
+      date: r.createdAt.slice(0, 10),
+      text: r.comment,
+    })),
+  };
+}
+
+const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
+type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
 
 export default function FindAProPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
-  const { getAll } = useProService();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const verifiedFromUrl = searchParams.get('verified') === 'true';
@@ -57,9 +86,9 @@ export default function FindAProPage() {
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
-  const [trade, setTrade] = useState(() => tradeFromUrl || 'All');
-  const [minRating, setMinRating] = useState<number>(1);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 30]);
+  const [trade, setTrade] = useState<TradeOption>(() => getTradeFromUrl(tradeFromUrl));
+  const [minRating, setMinRating] = useState<number>(0);
+  const [priceRange, setPriceRange] = useState<number[]>([0, 50]);
   const [sort, setSort] = useState<SortOption>('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(() => verifiedFromUrl);
 
@@ -67,12 +96,23 @@ export default function FindAProPage() {
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
   const [pros, setPros] = useState<Pro[]>([]);
   const [tradeOptions, setTradeOptions] = useState<string[]>(DEFAULT_TRADE_OPTIONS);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    void getAll()
-      .then(setPros)
-      .catch((error) => console.error('Could not load professionals', error));
-  }, [getAll]);
+    let cancelled = false;
+    Promise.all([
+      prosApi.getAll(),
+      reviewsApi.getAll().catch(() => [] as ReviewApiDto[]),
+    ]).then(([prosData, reviewsData]) => {
+      if (cancelled) return;
+      setPros(prosData.map((p) => mapApiProToPro(p, reviewsData)));
+      setLoadError(null);
+    }).catch(() => {
+      if (cancelled) return;
+      setLoadError(t('couldNotLoadPros'));
+    });
+    return () => { cancelled = true; };
+  }, [t]);
 
   useEffect(() => {
     void professionsApi.getAll()
@@ -137,8 +177,8 @@ export default function FindAProPage() {
     setQuery('');
     setCity('');
     setTrade('All');
-    setMinRating(1);
-    setPriceRange([0, 30]);
+    setMinRating(0);
+    setPriceRange([0, 50]);
     setSort('relevance');
     setVerifiedOnly(false);
 
@@ -287,6 +327,14 @@ export default function FindAProPage() {
               </Stack>
             </CardContent>
           </Card>
+
+          {loadError && (
+            <Card variant="outlined" sx={{ borderRadius: 3, borderColor: 'error.main' }}>
+              <CardContent>
+                <Typography color="error.main">{loadError}</Typography>
+              </CardContent>
+            </Card>
+          )}
 
           <Stack direction="row" justifyContent="space-between" alignItems="baseline">
             <Typography color="text.secondary">

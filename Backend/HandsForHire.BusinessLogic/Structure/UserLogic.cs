@@ -22,7 +22,8 @@ public class UserLogic : IUserLogic
             {
                 Id = user.Id,
                 FullName = user.FullName,
-                Email = user.Email
+                Email = user.Email,
+                Status = user.Status
             })
             .ToListAsync();
     }
@@ -38,7 +39,8 @@ public class UserLogic : IUserLogic
         {
             Id = user.Id,
             FullName = user.FullName,
-            Email = user.Email
+            Email = user.Email,
+            Status = user.Status
         };
     }
 
@@ -55,7 +57,8 @@ public class UserLogic : IUserLogic
         {
             Id = user.Id,
             FullName = user.FullName,
-            Email = user.Email
+            Email = user.Email,
+            Status = user.Status
         };
     }
 
@@ -74,7 +77,8 @@ public class UserLogic : IUserLogic
         {
             Id = user.Id,
             FullName = user.FullName,
-            Email = user.Email
+            Email = user.Email,
+            Status = user.Status
         };
     }
 
@@ -88,6 +92,18 @@ public class UserLogic : IUserLogic
         user.FullName = dto.FullName;
         user.Email = dto.Email;
 
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> SetStatusAsync(int id, UserStatus status)
+    {
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null)
+            return false;
+
+        user.Status = status;
         await _context.SaveChangesAsync();
         return true;
     }

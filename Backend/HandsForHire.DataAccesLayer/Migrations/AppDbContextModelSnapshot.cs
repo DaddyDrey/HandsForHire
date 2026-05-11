@@ -121,12 +121,19 @@ namespace HandsForHire.DataAccesLayer.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("HourlyRate")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Trade")
                         .IsRequired()
@@ -138,12 +145,40 @@ namespace HandsForHire.DataAccesLayer.Migrations
                 });
 
             modelBuilder.Entity("HandsForHire.Domain.Entities.Profession", b =>
+            modelBuilder.Entity("HandsForHire.Domain.Entities.Report", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
+                    b.Property<int>("ActionTaken")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReporterEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -197,11 +232,18 @@ namespace HandsForHire.DataAccesLayer.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("ProId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Rating")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReviewerEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ReviewerName")
                         .IsRequired()
@@ -225,6 +267,9 @@ namespace HandsForHire.DataAccesLayer.Migrations
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

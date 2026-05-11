@@ -1,7 +1,7 @@
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import ContainerMax from '../../common/ContainerMax';
 import Section from '../../common/Section';
-import { useLanguage } from '../../../i18n/useLanguage';
+import { useLanguage } from '../../../translations/useLanguage';
 import { Link as RouterLink } from 'react-router-dom';
 import paths from '../../../routes/paths';
 

@@ -14,15 +14,20 @@ import {
   Typography,
 } from '@mui/material';
 
+import { useNavigate } from 'react-router-dom';
+
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 import { useLanguage } from '../../i18n/useLanguage';
 import { professionsApi } from '../../api/professionsApi';
+import { getUser } from '../../auth/auth';
+import paths from '../../routes/paths';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const currentYear = new Date().getFullYear();
   const minBirthYear = currentYear - 16;
@@ -37,21 +42,42 @@ export default function BecomeAProPage() {
 
   const [submitted, setSubmitted] = useState(false);
   const [snackOpen, setSnackOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    void professionsApi.getAll()
-      .then((items) => setTradeOptions(items.map((item) => item.name)))
-      .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
-  }, []);
+useEffect(() => {
+  void professionsApi.getAll()
+    .then((items) => setTradeOptions(items.map((item) => item.name)))
+    .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
+}, []);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+  setSubmitted(true);
 
-    const isValid = fullName.trim() && birthYear && trade && city.trim() && hourlyRate.trim();
+  const currentUser = getUser();
+  if (!currentUser) {
+    setErrorMessage(t('pleaseLogInFirst'));
+    return;
+  }
+
+  const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
+  const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
+
     if (!isValid) return;
 
-    setSnackOpen(true);
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await prosApi.create({
+        fullName: fullName.trim(),
+        email: currentUser.email,
+        trade: selectedTrade,
+        city: city.trim(),
+        hourlyRate: Number(hourlyRate),
+      });
+
+      setSnackOpen(true);
 
     setFullName('');
     setBirthYear('');
@@ -124,10 +150,10 @@ export default function BecomeAProPage() {
                   }}
                 >
                   <Typography sx={{ fontWeight: 850, fontSize: '1.15rem' }}>
-                    Professional profile
+                    {t('professionalProfileSection')}
                   </Typography>
                   <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.7 }}>
-                    Add your trade, city, and hourly rate so customers can find and compare your services.
+                    {t('professionalProfileSubtitle')}
                   </Typography>
                 </Box>
 
@@ -180,6 +206,9 @@ export default function BecomeAProPage() {
                               {opt}
                             </MenuItem>
                           ))}
+                          <MenuItem value={CUSTOM_TRADE}>
+                            {t('otherTrade')}
+                          </MenuItem>
                         </Select>
                         {submitted && !trade && (
                           <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
@@ -197,6 +226,17 @@ export default function BecomeAProPage() {
                         helperText={hasError(city) ? t('fieldRequired') : ''}
                       />
                     </Stack>
+
+                    {isCustomTrade && (
+                      <TextField
+                        fullWidth
+                        label={t('customTradeLabel')}
+                        value={customTrade}
+                        onChange={(e) => setCustomTrade(e.target.value)}
+                        error={hasError(customTrade)}
+                        helperText={hasError(customTrade) ? t('fieldRequired') : t('customTradeHint')}
+                      />
+                    )}
 
                     <TextField
                       fullWidth
@@ -219,7 +259,7 @@ export default function BecomeAProPage() {
                       rows={4}
                     />
 
-                    <Button type="submit" variant="contained" size="large" sx={{ alignSelf: 'flex-start', px: 3 }}>
+                    <Button type="submit" variant="contained" size="large" disabled={submitting} sx={{ alignSelf: 'flex-start', px: 3 }}>
                       {t('submitApplication')}
                     </Button>
                   </Stack>
@@ -234,6 +274,13 @@ export default function BecomeAProPage() {
           autoHideDuration={4000}
           onClose={() => setSnackOpen(false)}
           message={t('applicationSuccess')}
+        />
+
+        <Snackbar
+          open={!!errorMessage}
+          autoHideDuration={5000}
+          onClose={() => setErrorMessage(null)}
+          message={errorMessage ?? ''}
         />
       </ContainerMax>
     </Section>

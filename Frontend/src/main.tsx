@@ -8,7 +8,7 @@ import "@fontsource/inter/700.css";
 import './styles/globals.css';
 import theme from './theme';
 import router from './routes/router';
-import { LanguageProvider } from './i18n/LanguageContext';
+import { LanguageProvider } from './translations/LanguageContext';
 import { AxiosProvider } from './api/AxiosProvider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

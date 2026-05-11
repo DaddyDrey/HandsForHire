@@ -34,6 +34,7 @@ builder.Services.AddScoped<IConversationLogic, ConversationLogic>();
 builder.Services.AddScoped<IMessageLogic, MessageLogic>();
 builder.Services.AddScoped<IAnnouncementLogic, AnnouncementLogic>();
 builder.Services.AddScoped<IProfessionLogic, ProfessionLogic>();
+builder.Services.AddScoped<IReportLogic, ReportLogic>();
 
 var app = builder.Build();
 
@@ -49,7 +50,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();
