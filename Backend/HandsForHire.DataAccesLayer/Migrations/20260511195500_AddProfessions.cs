@@ -1,3 +1,5 @@
+using HandsForHire.DataAccesLayer.Context;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HandsForHire.DataAccesLayer.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260511195500_AddProfessions")]
     public partial class AddProfessions : Migration
     {
         /// <inheritdoc />
@@ -23,18 +27,15 @@ namespace HandsForHire.DataAccesLayer.Migrations
                     table.PrimaryKey("PK_Professions", x => x.Id);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Professions",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Electrician" },
-                    { 2, "Plumber" },
-                    { 3, "Carpenter" },
-                    { 4, "Painter" },
-                    { 5, "HVAC" },
-                    { 6, "Handyman" }
-                });
+            migrationBuilder.Sql("""
+                INSERT INTO Professions (Id, Name) VALUES
+                (1, 'Electrician'),
+                (2, 'Plumber'),
+                (3, 'Carpenter'),
+                (4, 'Painter'),
+                (5, 'HVAC'),
+                (6, 'Handyman');
+                """);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Professions_Name",
