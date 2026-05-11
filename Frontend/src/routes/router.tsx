@@ -4,6 +4,7 @@ import AdminLayout from "../layouts/admin-layout/AdminLayout";
 import HomePage from "../pages/home/HomePage";
 import FindAProPage from "../pages/find-a-pro/FindAProPage";
 import BecomeAProPage from "../pages/become-a-pro/BecomeAProPage";
+import PostJobPage from "../pages/post-job/PostJobPage";
 import paths from "./paths";
 import LoginPage from "../pages/Login-Page/Login";
 import ProtectedRoute from "../auth/ProtectedRoute";
@@ -31,6 +32,14 @@ const router = createBrowserRouter([
       { path: paths.about, element: <AboutPage /> },
       { path: paths.terms, element: <TermsPage /> },
       { path: paths.findAPro, element: <FindAProPage /> },
+      {
+        path: paths.postJob,
+        element: (
+          <ProtectedRoute>
+            <PostJobPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: paths.becomeAPro,
         element: (
