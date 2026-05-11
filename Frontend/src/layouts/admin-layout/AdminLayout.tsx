@@ -37,6 +37,7 @@ const navItems: NavGroup[] = [
     items: [
       { label: "Users", icon: <PeopleRoundedIcon fontSize="small" />, path: adminPaths.users },
       { label: "Pros", icon: <StarRoundedIcon fontSize="small" />, path: adminPaths.pros },
+      { label: "Professions", icon: <WorkRoundedIcon fontSize="small" />, path: adminPaths.professions },
       { label: "Job listings", icon: <WorkRoundedIcon fontSize="small" />, path: adminPaths.jobs },
     ],
   },
