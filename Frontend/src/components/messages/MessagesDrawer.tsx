@@ -206,7 +206,7 @@ function ConversationRow({
 
 export default function MessagesDrawer() {
   const { t } = useLanguage();
-  const { isOpen, activeProId, closeDrawer, setActiveProId } = useMessagesDrawer();
+  const { isOpen, activeProId, modeRequest, closeDrawer, setActiveProId } = useMessagesDrawer();
   const user = getUser();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<InboxMode>('client');
@@ -220,6 +220,10 @@ export default function MessagesDrawer() {
   const initial = activePro?.name?.trim()[0]?.toUpperCase() ?? '?';
 
   const userEmail = user?.email;
+
+  useEffect(() => {
+    if (modeRequest) setMode(modeRequest.mode);
+  }, [modeRequest?.id]);
 
   useEffect(() => {
     if (!userEmail) {

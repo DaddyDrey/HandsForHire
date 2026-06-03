@@ -1,9 +1,16 @@
 import { createContext, useContext } from 'react';
+import type { InboxMode } from '../../services/messagesStore';
+
+export type MessagesDrawerModeRequest = {
+  mode: InboxMode;
+  id: number;
+};
 
 export type MessagesDrawerContextType = {
   isOpen: boolean;
   activeProId: string | null;
-  openDrawer: (proId?: string) => void;
+  modeRequest: MessagesDrawerModeRequest | null;
+  openDrawer: (proId?: string, mode?: InboxMode) => void;
   closeDrawer: () => void;
   setActiveProId: (proId: string | null) => void;
 };
