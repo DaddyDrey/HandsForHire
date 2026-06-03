@@ -14,17 +14,17 @@ import {
 } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { useNavigate } from 'react-router-dom';
-import type { Pro } from '../../mock_data/pros';
 import { useLanguage } from '../../translations/useLanguage';
 import { proReviewsTo } from '../../routes/paths';
 import { useMessagesDrawer } from '../messages/MessagesDrawerContext';
 import { ensureConversation } from '../../mock_data/messagesStore';
 import { getUser } from '../../auth/auth';
+import type { ProProfile } from '../../types/pro';
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  pro: Pro | null;
+  pro: ProProfile | null;
 };
 
 export default function ViewProfileDialog({ open, onClose, pro }: Props) {
@@ -120,7 +120,8 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
               </Typography>
 
               <Typography color="text.secondary" noWrap>
-                {pro.trade} • {pro.city} • {pro.age} {t('years')}
+                {pro.trade} • {pro.city}
+                {pro.age ? ` • ${pro.age} ${t('years')}` : ''}
               </Typography>
 
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.75, flexWrap: 'wrap' }}>

@@ -117,7 +117,14 @@ namespace HandsForHire.DataAccesLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("BirthYear")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

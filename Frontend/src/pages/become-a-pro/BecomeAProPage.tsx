@@ -76,9 +76,11 @@ export default function BecomeAProPage() {
       await prosApi.create({
         fullName: fullName.trim(),
         email: currentUser.email,
+        birthYear: Number(birthYear),
         trade: selectedTrade,
         city: city.trim(),
         hourlyRate: Number(hourlyRate),
+        description: description.trim(),
       });
 
       setSnackOpen(true);

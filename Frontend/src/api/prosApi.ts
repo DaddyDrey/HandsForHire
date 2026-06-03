@@ -6,18 +6,22 @@ export type ProApiDto = {
   id: number;
   fullName: string;
   email: string;
+  birthYear: number;
   trade: string;
   city: string;
   hourlyRate: number;
+  description: string;
   status: ProStatus;
 };
 
 export type CreateProRequest = {
   fullName: string;
   email: string;
+  birthYear: number;
   trade: string;
   city: string;
   hourlyRate: number;
+  description: string;
 };
 
 export const prosApi = {
