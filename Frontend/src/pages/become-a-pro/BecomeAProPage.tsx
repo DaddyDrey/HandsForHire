@@ -18,12 +18,14 @@ import { useNavigate } from 'react-router-dom';
 
 import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
-import { useLanguage } from '../../i18n/useLanguage';
+import { prosApi } from '../../api/prosApi';
 import { professionsApi } from '../../api/professionsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
+import { useLanguage } from '../../translations/useLanguage';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
+const CUSTOM_TRADE = '__custom__';
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
@@ -35,6 +37,7 @@ export default function BecomeAProPage() {
   const [fullName, setFullName] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [trade, setTrade] = useState('');
+  const [customTrade, setCustomTrade] = useState('');
   const [city, setCity] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
   const [description, setDescription] = useState('');
@@ -44,25 +47,26 @@ export default function BecomeAProPage() {
   const [snackOpen, setSnackOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isCustomTrade = trade === CUSTOM_TRADE;
 
-useEffect(() => {
-  void professionsApi.getAll()
-    .then((items) => setTradeOptions(items.map((item) => item.name)))
-    .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
-}, []);
+  useEffect(() => {
+    void professionsApi.getAll()
+      .then((items) => setTradeOptions(items.map((item) => item.name)))
+      .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
+  }, []);
 
-const handleSubmit = async (e: FormEvent) => {
-  e.preventDefault();
-  setSubmitted(true);
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
 
-  const currentUser = getUser();
-  if (!currentUser) {
-    setErrorMessage(t('pleaseLogInFirst'));
-    return;
-  }
+    const currentUser = getUser();
+    if (!currentUser) {
+      setErrorMessage(t('pleaseLogInFirst'));
+      return;
+    }
 
-  const selectedTrade = trade === CUSTOM_TRADE ? customTrade.trim() : trade;
-  const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
+    const selectedTrade = isCustomTrade ? customTrade.trim() : trade;
+    const isValid = fullName.trim() && birthYear && selectedTrade && city.trim() && hourlyRate.trim();
 
     if (!isValid) return;
 
@@ -79,13 +83,20 @@ const handleSubmit = async (e: FormEvent) => {
 
       setSnackOpen(true);
 
-    setFullName('');
-    setBirthYear('');
-    setTrade('');
-    setCity('');
-    setHourlyRate('');
-    setDescription('');
-    setSubmitted(false);
+      setFullName('');
+      setBirthYear('');
+      setTrade('');
+      setCustomTrade('');
+      setCity('');
+      setHourlyRate('');
+      setDescription('');
+      setSubmitted(false);
+      navigate(paths.account);
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Could not submit application.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const hasError = (value: string) => submitted && !value.trim();
