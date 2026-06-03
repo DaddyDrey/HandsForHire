@@ -32,7 +32,7 @@ import { reviewsApi, type ReviewApiDto } from '../../api/reviewsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
-import { ensureConversation } from '../../mock_data/messagesStore';
+import { ensureConversation } from '../../services/messagesStore';
 import { professionsApi } from '../../api/professionsApi';
 import type { ProProfile } from '../../types/pro';
 
@@ -388,9 +388,9 @@ export default function FindAProPage() {
                     <Button
                       fullWidth
                       variant="contained"
-                      onClick={() => {
+                      onClick={async () => {
                         if (!user) return requireAuth();
-                        ensureConversation(user.email, p.id, {
+                        await ensureConversation(user.email, p.id, {
                           name: p.name,
                           trade: p.trade,
                           city: p.city,

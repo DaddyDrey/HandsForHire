@@ -29,7 +29,7 @@ import {
   subscribeToMessages,
   type ChatMessage,
   type ConversationSummary,
-} from '../../mock_data/messagesStore';
+} from '../../services/messagesStore';
 import { useMessagesDrawer } from './MessagesDrawerContext';
 
 function formatRelative(iso: string, t: (k: Parameters<ReturnType<typeof useLanguage>['t']>[0]) => string): string {

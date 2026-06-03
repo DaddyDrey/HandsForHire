@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../translations/useLanguage';
 import { proReviewsTo } from '../../routes/paths';
 import { useMessagesDrawer } from '../messages/MessagesDrawerContext';
-import { ensureConversation } from '../../mock_data/messagesStore';
+import { ensureConversation } from '../../services/messagesStore';
 import { getUser } from '../../auth/auth';
 import type { ProProfile } from '../../types/pro';
 
@@ -52,10 +52,10 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
 
   if (!pro) return null;
 
-  const openMessageThread = () => {
+  const openMessageThread = async () => {
     const user = getUser();
     if (user) {
-      ensureConversation(user.email, pro.id, {
+      await ensureConversation(user.email, pro.id, {
         name: pro.name,
         trade: pro.trade,
         city: pro.city,

@@ -20,7 +20,7 @@ import paths from "../../../routes/paths";
 import { useLanguage } from "../../../translations/useLanguage";
 import { type Language } from "../../../translations/translations";
 import { getUser, logout, getAvatarDataUrl, clearAvatar, isAdmin } from "../../../auth/auth";
-import { fetchConversations, getMessagesTick, subscribeToMessages, totalUnread } from "../../../mock_data/messagesStore";
+import { fetchConversations, getMessagesTick, subscribeToMessages, totalUnread } from "../../../services/messagesStore";
 import { useMessagesDrawer } from "../../../components/messages/MessagesDrawerContext";
 
 
