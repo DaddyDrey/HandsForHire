@@ -64,9 +64,15 @@ public class MessageLogic : IMessageLogic
 
     public async Task<bool> MarkConversationReadAsync(int conversationId)
     {
+        return await MarkConversationReadAsync(conversationId, MessageSender.User);
+    }
+
+    public async Task<bool> MarkConversationReadAsync(int conversationId, MessageSender viewer)
+    {
+        var unreadFrom = viewer == MessageSender.User ? MessageSender.Pro : MessageSender.User;
         var unread = await _context.Messages
             .Where(m => m.ConversationId == conversationId
-                        && m.From == MessageSender.Pro
+                        && m.From == unreadFrom
                         && m.ReadAt == null)
             .ToListAsync();
 

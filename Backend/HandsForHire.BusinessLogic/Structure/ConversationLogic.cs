@@ -25,12 +25,40 @@ public class ConversationLogic : IConversationLogic
                 Id = c.Id,
                 UserId = c.UserId,
                 ProId = c.ProId,
+                UserName = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
+                UserEmail = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault() ?? string.Empty,
                 ProName = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.FullName).FirstOrDefault() ?? string.Empty,
                 ProTrade = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Trade).FirstOrDefault() ?? string.Empty,
                 ProCity = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.City).FirstOrDefault() ?? string.Empty,
                 CreatedAt = c.CreatedAt,
                 LastMessageAt = c.LastMessageAt,
                 UnreadCount = c.Messages.Count(m => m.From == MessageSender.Pro && m.ReadAt == null),
+                LastMessageBody = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => m.Body)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<ConversationDto>> GetForProAsync(int proId)
+    {
+        return await _context.Conversations
+            .Where(c => c.ProId == proId)
+            .OrderByDescending(c => c.LastMessageAt)
+            .Select(c => new ConversationDto
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                ProId = c.ProId,
+                UserName = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
+                UserEmail = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault() ?? string.Empty,
+                ProName = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.FullName).FirstOrDefault() ?? string.Empty,
+                ProTrade = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Trade).FirstOrDefault() ?? string.Empty,
+                ProCity = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.City).FirstOrDefault() ?? string.Empty,
+                CreatedAt = c.CreatedAt,
+                LastMessageAt = c.LastMessageAt,
+                UnreadCount = c.Messages.Count(m => m.From == MessageSender.User && m.ReadAt == null),
                 LastMessageBody = c.Messages
                     .OrderByDescending(m => m.SentAt)
                     .Select(m => m.Body)
@@ -48,6 +76,8 @@ public class ConversationLogic : IConversationLogic
                 Id = c.Id,
                 UserId = c.UserId,
                 ProId = c.ProId,
+                UserName = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
+                UserEmail = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault() ?? string.Empty,
                 ProName = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.FullName).FirstOrDefault() ?? string.Empty,
                 ProTrade = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Trade).FirstOrDefault() ?? string.Empty,
                 ProCity = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.City).FirstOrDefault() ?? string.Empty,

@@ -22,6 +22,13 @@ public class ConversationsController : ControllerBase
         return Ok(conversations);
     }
 
+    [HttpGet("pro/{proId}")]
+    public async Task<IActionResult> GetForPro(int proId)
+    {
+        var conversations = await _ConversationLogic.GetForProAsync(proId);
+        return Ok(conversations);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
