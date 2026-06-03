@@ -63,9 +63,11 @@ function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): Pro {
   };
 }
 
-const TRADE_OPTIONS = ['All', 'Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'] as const;
-type TradeOption = (typeof TRADE_OPTIONS)[number];
 type SortOption = 'relevance' | 'rating' | 'price_low' | 'price_high';
+
+function getTradeFromUrl(value: string | null): string {
+  return value?.trim() || 'All';
+}
 
 export default function FindAProPage() {
   const { t } = useLanguage();
@@ -86,7 +88,7 @@ export default function FindAProPage() {
 
   const [query, setQuery] = useState('');
   const [city, setCity] = useState('');
-  const [trade, setTrade] = useState<TradeOption>(() => getTradeFromUrl(tradeFromUrl));
+  const [trade, setTrade] = useState<string>(() => getTradeFromUrl(tradeFromUrl));
   const [minRating, setMinRating] = useState<number>(0);
   const [priceRange, setPriceRange] = useState<number[]>([0, 50]);
   const [sort, setSort] = useState<SortOption>('relevance');
