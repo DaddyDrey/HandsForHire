@@ -17,8 +17,8 @@ export default function LoginPage() {
     return st?.from || "/";
   }, [location.state]);
 
-  const [email, setEmail] = useState("demo@handsforhire.com");
-  const [password, setPassword] = useState("demo1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
 
   const [loading, setLoading] = useState(false);
@@ -54,9 +54,7 @@ try {
     <div style={styles.page}>
       <div style={styles.card}>
         <h1 style={styles.title}>{t('loginTitle')}</h1>
-        <p style={styles.sub}>
-          Demo: <b>demo@handsforhire.com</b> / <b>demo1234</b>
-        </p>
+        <p style={styles.sub}>{t('loginSubtitle')}</p>
 
         {error && <div style={styles.error}>{error}</div>}
 

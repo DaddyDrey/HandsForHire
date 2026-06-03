@@ -1,68 +1,52 @@
 import axiosInstance from "../api/axiosInstance";
 
-export type User = { email: string };
+export type User = { id: number; fullName: string; email: string };
 type BackendUser = { id: number; fullName: string; email: string };
 
 const STORAGE_KEY = "handsforhire_auth";
-const USERS_KEY = "handsforhire_users";
 const ADMIN_EMAILS = ["demo@handsforhire.com"];
+const AVATAR_KEY = "handsforhire_avatar";
 
-const MOCK_USERS: Record<string, string> = {
-  "demo@handsforhire.com": "demo1234",
-  "test@test.com": "test1234",
-};
-
-function loadUsers(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    if (!raw) return { ...MOCK_USERS };
-    const parsed = JSON.parse(raw) as Record<string, string>;
-    return { ...MOCK_USERS, ...parsed };
-  } catch {
-    return { ...MOCK_USERS };
+function persistUser(user: User, remember: boolean) {
+  if (remember) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    sessionStorage.removeItem(STORAGE_KEY);
+  } else {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    localStorage.removeItem(STORAGE_KEY);
   }
 }
 
-export function saveMockUser(email: string, password: string) {
-  const e = email.trim().toLowerCase();
-  const users = loadUsers();
-  users[e] = password;
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+export async function login(email: string, password: string, remember: boolean) {
+  try {
+    const { data } = await axiosInstance.post<BackendUser>("/Users/login", {
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    const user: User = { id: data.id, fullName: data.fullName, email: data.email };
+    persistUser(user, remember);
+    return user;
+  } catch (error: unknown) {
+    const message = getApiErrorMessage(error) || "Email sau parola incorectă.";
+    throw new Error(message);
+  }
 }
 
-export async function login(email: string, password: string, remember: boolean) {
-  const e = email.trim().toLowerCase();
+export async function register(fullName: string, email: string, password: string, remember: boolean) {
   try {
-    const { data } = await axiosInstance.get<BackendUser>(`/Users/by-email/${encodeURIComponent(e)}`);
-    const user: User = { email: data.email };
+    const { data } = await axiosInstance.post<BackendUser>("/Users/register", {
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+    });
 
-    if (remember) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      sessionStorage.removeItem(STORAGE_KEY);
-    } else {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      localStorage.removeItem(STORAGE_KEY);
-    }
-
+    const user: User = { id: data.id, fullName: data.fullName, email: data.email };
+    persistUser(user, remember);
     return user;
-  } catch {
-    const expected = loadUsers()[e];
-
-    if (!expected || expected !== password) {
-      throw new Error("Email sau parola incorectă.");
-    }
-
-    const user: User = { email: e };
-
-    if (remember) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      sessionStorage.removeItem(STORAGE_KEY);
-    } else {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      localStorage.removeItem(STORAGE_KEY);
-    }
-
-    return user;
+  } catch (error: unknown) {
+    const message = getApiErrorMessage(error) || "Could not create account.";
+    throw new Error(message);
   }
 }
 
@@ -75,7 +59,13 @@ export function getUser(): User | null {
   const raw = localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as User;
+    const parsed = JSON.parse(raw) as Partial<User>;
+    if (!parsed.email) return null;
+    return {
+      id: parsed.id ?? 0,
+      fullName: parsed.fullName ?? parsed.email,
+      email: parsed.email,
+    };
   } catch {
     return null;
   }
@@ -85,27 +75,26 @@ export function isAdmin(user: User | null): boolean {
   return !!user && ADMIN_EMAILS.includes(user.email);
 }
 
-export function changePassword(email: string, newPassword: string) {
-  const e = email.trim().toLowerCase();
-  const users = loadUsers();
-  if (!users[e]) throw new Error("User not found.");
-  users[e] = newPassword;
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+export async function changePassword(email: string, currentPassword: string, newPassword: string) {
+  try {
+    await axiosInstance.post("/Users/change-password", {
+      email: email.trim().toLowerCase(),
+      currentPassword,
+      newPassword,
+    });
+  } catch (error: unknown) {
+    const message = getApiErrorMessage(error) || "Could not change password.";
+    throw new Error(message);
+  }
 }
 
 export function deleteAccount(email: string) {
-  const e = email.trim().toLowerCase();
-  const users = loadUsers();
-
-  if (e === "demo@handsforhire.com") {
+  if (email.trim().toLowerCase() === "demo@handsforhire.com") {
     throw new Error("Demo account cannot be deleted.");
   }
 
-  delete users[e];
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
   logout();
 }
-const AVATAR_KEY = "handsforhire_avatar";
 
 export function getAvatarDataUrl(): string | null {
   return localStorage.getItem(AVATAR_KEY);
@@ -117,4 +106,17 @@ export function setAvatarDataUrl(dataUrl: string) {
 
 export function clearAvatar() {
   localStorage.removeItem(AVATAR_KEY);
+}
+
+function getApiErrorMessage(error: unknown): string | null {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as { response?: { data?: unknown } }).response?.data === "string"
+  ) {
+    return (error as { response: { data: string } }).response.data;
+  }
+
+  return null;
 }
