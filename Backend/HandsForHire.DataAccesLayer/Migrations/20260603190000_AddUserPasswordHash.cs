@@ -1,3 +1,5 @@
+using HandsForHire.DataAccesLayer.Context;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HandsForHire.DataAccesLayer.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260603190000_AddUserPasswordHash")]
     public partial class AddUserPasswordHash : Migration
     {
         /// <inheritdoc />
