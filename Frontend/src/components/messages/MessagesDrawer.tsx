@@ -7,8 +7,6 @@ import {
   IconButton,
   Stack,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
@@ -21,14 +19,15 @@ import { useLanguage } from '../../translations/LanguageContext';
 import { getUser } from '../../auth/auth';
 import {
   deleteConversation,
-  fetchConversations,
+  fetchAllConversations,
   fetchMessages,
+  getCombinedConversations,
   getConversation,
-  getConversations,
   getMessagesTick,
+  getOtherTyping,
   markRead,
-  resolveProId,
   sendMessage,
+  setTyping,
   subscribeToMessages,
   type ChatMessage,
   type ConversationSummary,
@@ -51,12 +50,15 @@ function formatRelative(iso: string, t: (k: Parameters<ReturnType<typeof useLang
 function ThreadInput({
   disabled,
   onSend,
+  onTyping,
 }: {
   disabled: boolean;
   onSend: (body: string) => void;
+  onTyping: () => void;
 }) {
   const { t } = useLanguage();
   const [value, setValue] = useState('');
+  const lastTypingAt = useRef(0);
   const submit = () => {
     const text = value.trim();
     if (!text) return;
@@ -72,7 +74,13 @@ function ThreadInput({
         size="small"
         placeholder={t('messageInputPlaceholder')}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          setValue(e.target.value);
+          if (e.target.value.trim() && Date.now() - lastTypingAt.current > 900) {
+            lastTypingAt.current = Date.now();
+            onTyping();
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -113,7 +121,14 @@ function MessageBubble({
       direction="row"
       spacing={0.75}
       alignItems="flex-end"
-      sx={{ justifyContent: mine ? 'flex-end' : 'flex-start' }}
+      sx={{
+        justifyContent: mine ? 'flex-end' : 'flex-start',
+        '@keyframes hfhMessageIn': {
+          from: { opacity: 0, transform: 'translateY(10px) scale(0.98)' },
+          to: { opacity: 1, transform: 'translateY(0) scale(1)' },
+        },
+        animation: 'hfhMessageIn 220ms ease-out both',
+      }}
     >
       {!mine && <Avatar sx={{ width: 26, height: 26, fontSize: 12 }}>{proInitial}</Avatar>}
       <Box
@@ -130,6 +145,8 @@ function MessageBubble({
           boxShadow: mine
             ? '0 2px 8px rgba(124,92,255,0.25)'
             : '0 1px 4px rgba(0,0,0,0.15)',
+          opacity: message.pending ? 0.72 : 1,
+          transition: 'opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease',
         }}
       >
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -146,8 +163,58 @@ function MessageBubble({
           }}
         >
           {new Date(message.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {message.pending ? ' ...' : message.failed ? ' !' : ''}
         </Typography>
       </Box>
+    </Stack>
+  );
+}
+
+function TypingIndicator({ initial }: { initial: string }) {
+  return (
+    <Stack
+      direction="row"
+      spacing={0.75}
+      alignItems="flex-end"
+      sx={{
+        '@keyframes hfhTypingDot': {
+          '0%, 80%, 100%': { transform: 'translateY(0)', opacity: 0.45 },
+          '40%': { transform: 'translateY(-4px)', opacity: 1 },
+        },
+        '@keyframes hfhTypingIn': {
+          from: { opacity: 0, transform: 'translateY(8px)' },
+          to: { opacity: 1, transform: 'translateY(0)' },
+        },
+        animation: 'hfhTypingIn 180ms ease-out both',
+      }}
+    >
+      <Avatar sx={{ width: 26, height: 26, fontSize: 12 }}>{initial}</Avatar>
+      <Stack
+        direction="row"
+        spacing={0.45}
+        sx={{
+          px: 1.25,
+          py: 1.1,
+          borderRadius: '16px',
+          borderBottomLeftRadius: '4px',
+          bgcolor: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        {[0, 1, 2].map((dot) => (
+          <Box
+            key={dot}
+            sx={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              bgcolor: 'text.secondary',
+              animation: 'hfhTypingDot 1s ease-in-out infinite',
+              animationDelay: `${dot * 120}ms`,
+            }}
+          />
+        ))}
+      </Stack>
     </Stack>
   );
 }
@@ -165,7 +232,8 @@ function ConversationRow({
   const pro = summary.proMeta;
   const initial = pro?.name?.trim()[0]?.toUpperCase() ?? '?';
   const last = summary.lastMessage;
-  const preview = last ? (last.from === 'user' ? `${t('youLabel')}: ` : '') + last.body : '';
+  const lastIsMine = last && (summary.mode === 'client' ? last.from === 'user' : last.from === 'pro');
+  const preview = last ? (lastIsMine ? `${t('youLabel')}: ` : '') + last.body : '';
 
   return (
     <Box
@@ -206,15 +274,15 @@ function ConversationRow({
 
 export default function MessagesDrawer() {
   const { t } = useLanguage();
-  const { isOpen, activeProId, closeDrawer, setActiveProId } = useMessagesDrawer();
+  const { isOpen, activeProId, modeRequest, closeDrawer, setActiveProId } = useMessagesDrawer();
   const user = getUser();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<InboxMode>('client');
-  const [hasProInbox, setHasProInbox] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
 
   useSyncExternalStore(subscribeToMessages, getMessagesTick, getMessagesTick);
 
-  const conversations: ConversationSummary[] = user ? getConversations(user.email, mode) : [];
+  const conversations: ConversationSummary[] = user ? getCombinedConversations(user.email) : [];
   const active = user && activeProId ? getConversation(user.email, activeProId, mode) : null;
   const activePro = active?.proMeta;
   const initial = activePro?.name?.trim()[0]?.toUpperCase() ?? '?';
@@ -222,35 +290,51 @@ export default function MessagesDrawer() {
   const userEmail = user?.email;
 
   useEffect(() => {
-    if (!userEmail) {
-      setHasProInbox(false);
-      setMode('client');
-      return;
-    }
-
-    let alive = true;
-    resolveProId(userEmail).then((proId) => {
-      if (!alive) return;
-      const available = proId != null;
-      setHasProInbox(available);
-      if (!available) setMode('client');
-    });
-    return () => {
-      alive = false;
-    };
-  }, [userEmail]);
+    if (modeRequest) setMode(modeRequest.mode);
+  }, [modeRequest?.id]);
 
   useEffect(() => {
-    if (userEmail && isOpen) fetchConversations(userEmail, mode);
-  }, [userEmail, isOpen, mode]);
+    if (!userEmail || !isOpen) return;
+    fetchAllConversations(userEmail);
+    const id = window.setInterval(() => {
+      fetchAllConversations(userEmail);
+    }, 2500);
+    return () => window.clearInterval(id);
+  }, [userEmail, isOpen]);
 
   useEffect(() => {
-    if (userEmail && activeProId && isOpen) fetchMessages(userEmail, activeProId, mode);
+    if (!userEmail || !activeProId || !isOpen) return;
+    fetchMessages(userEmail, activeProId, mode);
+    const id = window.setInterval(() => {
+      fetchMessages(userEmail, activeProId, mode);
+      markRead(userEmail, activeProId, mode);
+    }, 1500);
+    return () => window.clearInterval(id);
   }, [userEmail, activeProId, isOpen, mode]);
 
   useEffect(() => {
     if (userEmail && activeProId && isOpen) markRead(userEmail, activeProId, mode);
   }, [userEmail, activeProId, isOpen, active?.messages.length, mode]);
+
+  useEffect(() => {
+    if (!userEmail || !activeProId || !isOpen) {
+      setOtherTyping(false);
+      return;
+    }
+
+    let alive = true;
+    const checkTyping = () => {
+      getOtherTyping(userEmail, activeProId, mode).then((isTyping) => {
+        if (alive) setOtherTyping(isTyping);
+      });
+    };
+    checkTyping();
+    const id = window.setInterval(checkTyping, 900);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, [userEmail, activeProId, isOpen, mode]);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -261,6 +345,11 @@ export default function MessagesDrawer() {
   const handleSend = (body: string) => {
     if (!user || !activeProId) return;
     sendMessage(user.email, activeProId, body, activePro, mode);
+  };
+
+  const handleTyping = () => {
+    if (!user || !activeProId) return;
+    setTyping(user.email, activeProId, mode);
   };
 
   const handleDelete = () => {
@@ -316,31 +405,9 @@ export default function MessagesDrawer() {
                 </Box>
               </Stack>
             ) : (
-              <Stack spacing={1}>
-                <Typography sx={{ fontWeight: 850, fontSize: 18, pl: 0.5 }}>
-                  {t('messagesTitle')}
-                </Typography>
-                {hasProInbox ? (
-                  <ToggleButtonGroup
-                    exclusive
-                    size="small"
-                    value={mode}
-                    onChange={(_, next: InboxMode | null) => {
-                      if (!next) return;
-                      setMode(next);
-                      setActiveProId(null);
-                    }}
-                    sx={{ pl: 0.5 }}
-                  >
-                    <ToggleButton value="client" sx={{ textTransform: 'none', py: 0.25 }}>
-                      Client
-                    </ToggleButton>
-                    <ToggleButton value="professional" sx={{ textTransform: 'none', py: 0.25 }}>
-                      Professional
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                ) : null}
-              </Stack>
+              <Typography sx={{ fontWeight: 850, fontSize: 18, pl: 0.5 }}>
+                {t('messagesTitle')}
+              </Typography>
             )}
           </Box>
 
@@ -362,7 +429,7 @@ export default function MessagesDrawer() {
                 <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 44, opacity: 0.5, mb: 1 }} />
                 <Typography sx={{ fontWeight: 750 }}>{t('noConversations')}</Typography>
                 <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-                  {mode === 'client' ? t('startFromPro') : 'No client messages yet.'}
+                  {t('startFromPro')}
                 </Typography>
               </Box>
             ) : (
@@ -372,7 +439,10 @@ export default function MessagesDrawer() {
                     key={`${c.mode}-${c.proId}`}
                     summary={c}
                     active={false}
-                    onClick={() => setActiveProId(c.proId)}
+                    onClick={() => {
+                      setMode(c.mode);
+                      setActiveProId(c.proId);
+                    }}
                   />
                 ))}
               </Stack>
@@ -411,10 +481,11 @@ export default function MessagesDrawer() {
                   <MessageBubble key={m.id} message={m} proInitial={initial} mode={mode} />
                 ))
               )}
+              {otherTyping && <TypingIndicator initial={initial} />}
             </Box>
 
             <Box sx={{ p: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
-              <ThreadInput key={activeProId} disabled={!activePro} onSend={handleSend} />
+              <ThreadInput key={`${mode}-${activeProId}`} disabled={!activePro} onSend={handleSend} onTyping={handleTyping} />
             </Box>
           </>
         )}

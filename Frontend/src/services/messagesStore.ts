@@ -13,6 +13,8 @@ export type ChatMessage = {
   body: string;
   at: string;
   readAt?: string;
+  pending?: boolean;
+  failed?: boolean;
 };
 
 export type ProMeta = {
@@ -172,6 +174,14 @@ export function getConversations(email: string, mode: InboxMode = 'client'): Con
   return conversationsByInbox.get(inboxKey(email, mode)) ?? [];
 }
 
+export function getCombinedConversations(email: string): ConversationSummary[] {
+  return [...getConversations(email, 'client'), ...getConversations(email, 'professional')].sort((a, b) => {
+    const aTime = a.lastMessage?.at ?? '';
+    const bTime = b.lastMessage?.at ?? '';
+    return bTime.localeCompare(aTime);
+  });
+}
+
 export function getConversation(
   email: string,
   proId: string,
@@ -218,6 +228,15 @@ export async function fetchConversations(
   }
 }
 
+export async function fetchAllConversations(email: string): Promise<void> {
+  await Promise.all([
+    fetchConversations(email, 'client'),
+    resolveProId(email).then((proId) =>
+      proId == null ? Promise.resolve() : fetchConversations(email, 'professional')
+    ),
+  ]);
+}
+
 export async function fetchMessages(
   email: string,
   proId: string,
@@ -231,11 +250,19 @@ export async function fetchMessages(
     const messages = await messagesApi.getMessages(backendId);
     const summary = findSummary(email, proId, mode);
     const proMeta = summary?.proMeta;
+    const current = conversationByKey.get(convoKey(email, proId, mode));
+    const savedMessages = messages.map(convertMessage);
+    const pendingMessages =
+      current?.messages.filter(
+        (message) =>
+          message.pending &&
+          !savedMessages.some((saved) => saved.body === message.body && saved.from === message.from)
+      ) ?? [];
     conversationByKey.set(convoKey(email, proId, mode), {
       proId,
       backendId,
       proMeta,
-      messages: messages.map(convertMessage),
+      messages: [...savedMessages, ...pendingMessages],
     });
     bumpTick();
   } catch {
@@ -276,11 +303,37 @@ export async function sendMessage(
 
   try {
     upsertLocalConversation(email, proId, proMeta, backendId, mode);
+    const key = convoKey(email, proId, mode);
+    const current = conversationByKey.get(key);
+    const optimistic: ChatMessage = {
+      id: `pending-${Date.now()}`,
+      from: mode === 'client' ? 'user' : 'pro',
+      body: text,
+      at: new Date().toISOString(),
+      pending: true,
+    };
+    conversationByKey.set(key, {
+      proId,
+      backendId,
+      proMeta: proMeta ?? current?.proMeta,
+      messages: [...(current?.messages ?? []), optimistic],
+    });
+    bumpTick();
     await messagesApi.sendMessage(backendId, mode === 'client' ? 'User' : 'Pro', text);
     await fetchMessages(email, proId, mode);
-    await fetchConversations(email, mode);
+    await fetchAllConversations(email);
   } catch {
-    // Backend is unavailable; keep the local drawer state stable.
+    const key = convoKey(email, proId, mode);
+    const current = conversationByKey.get(key);
+    if (current) {
+      conversationByKey.set(key, {
+        ...current,
+        messages: current.messages.map((message) =>
+          message.pending && message.body === text ? { ...message, pending: false, failed: true } : message
+        ),
+      });
+      bumpTick();
+    }
   }
 }
 
@@ -294,9 +347,37 @@ export async function markRead(
   try {
     await messagesApi.markReadAs(backendId, mode === 'client' ? 'User' : 'Pro');
     await fetchMessages(email, proId, mode);
-    await fetchConversations(email, mode);
+    await fetchAllConversations(email);
   } catch {
     // Backend is unavailable; keep the local drawer state stable.
+  }
+}
+
+export async function setTyping(
+  email: string,
+  proId: string,
+  mode: InboxMode = 'client'
+): Promise<void> {
+  const backendId = getBackendId(email, proId, mode);
+  if (!backendId) return;
+  try {
+    await messagesApi.setTyping(backendId, mode === 'client' ? 'User' : 'Pro');
+  } catch {
+    // Backend is unavailable; typing can safely be skipped.
+  }
+}
+
+export async function getOtherTyping(
+  email: string,
+  proId: string,
+  mode: InboxMode = 'client'
+): Promise<boolean> {
+  const backendId = getBackendId(email, proId, mode);
+  if (!backendId) return false;
+  try {
+    return await messagesApi.getOtherTyping(backendId, mode === 'client' ? 'User' : 'Pro');
+  } catch {
+    return false;
   }
 }
 
