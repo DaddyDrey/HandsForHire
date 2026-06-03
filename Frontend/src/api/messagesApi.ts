@@ -121,4 +121,15 @@ export const messagesApi = {
   async markReadAs(conversationId: number, viewer: MessageSender): Promise<void> {
     await axiosInstance.post(`/Messages/conversation/${conversationId}/read/${viewer}`);
   },
+
+  async setTyping(conversationId: number, viewer: MessageSender): Promise<void> {
+    await axiosInstance.post(`/Messages/conversation/${conversationId}/typing/${viewer}`);
+  },
+
+  async getOtherTyping(conversationId: number, viewer: MessageSender): Promise<boolean> {
+    const { data } = await axiosInstance.get<{ isTyping: boolean }>(
+      `/Messages/conversation/${conversationId}/typing/${viewer}`
+    );
+    return data.isTyping;
+  },
 };
