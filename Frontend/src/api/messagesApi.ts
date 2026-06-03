@@ -6,6 +6,8 @@ export type ConversationApiDto = {
   id: number;
   userId: number;
   proId: number;
+  userName: string;
+  userEmail: string;
   proName: string;
   proTrade: string;
   proCity: string;
@@ -73,6 +75,13 @@ export const messagesApi = {
     return data;
   },
 
+  async getConversationsForPro(proId: number): Promise<ConversationApiDto[]> {
+    const { data } = await axiosInstance.get<ConversationApiDto[]>(
+      `/Conversations/pro/${proId}`
+    );
+    return data;
+  },
+
   async ensureConversation(userId: number, proId: number): Promise<ConversationApiDto> {
     const { data } = await axiosInstance.post<ConversationApiDto>('/Conversations', {
       userId,
@@ -107,5 +116,9 @@ export const messagesApi = {
 
   async markRead(conversationId: number): Promise<void> {
     await axiosInstance.post(`/Messages/conversation/${conversationId}/read`);
+  },
+
+  async markReadAs(conversationId: number, viewer: MessageSender): Promise<void> {
+    await axiosInstance.post(`/Messages/conversation/${conversationId}/read/${viewer}`);
   },
 };

@@ -7,6 +7,8 @@ import {
   IconButton,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
@@ -25,11 +27,13 @@ import {
   getConversations,
   getMessagesTick,
   markRead,
+  resolveProId,
   sendMessage,
   subscribeToMessages,
   type ChatMessage,
   type ConversationSummary,
-} from '../../mock_data/messagesStore';
+  type InboxMode,
+} from '../../services/messagesStore';
 import { useMessagesDrawer } from './MessagesDrawerContext';
 
 function formatRelative(iso: string, t: (k: Parameters<ReturnType<typeof useLanguage>['t']>[0]) => string): string {
@@ -94,8 +98,16 @@ function ThreadInput({
   );
 }
 
-function MessageBubble({ message, proInitial }: { message: ChatMessage; proInitial: string }) {
-  const mine = message.from === 'user';
+function MessageBubble({
+  message,
+  proInitial,
+  mode,
+}: {
+  message: ChatMessage;
+  proInitial: string;
+  mode: InboxMode;
+}) {
+  const mine = mode === 'client' ? message.from === 'user' : message.from === 'pro';
   return (
     <Stack
       direction="row"
@@ -197,27 +209,48 @@ export default function MessagesDrawer() {
   const { isOpen, activeProId, closeDrawer, setActiveProId } = useMessagesDrawer();
   const user = getUser();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [mode, setMode] = useState<InboxMode>('client');
+  const [hasProInbox, setHasProInbox] = useState(false);
 
   useSyncExternalStore(subscribeToMessages, getMessagesTick, getMessagesTick);
 
-  const conversations: ConversationSummary[] = user ? getConversations(user.email) : [];
-  const active = user && activeProId ? getConversation(user.email, activeProId) : null;
+  const conversations: ConversationSummary[] = user ? getConversations(user.email, mode) : [];
+  const active = user && activeProId ? getConversation(user.email, activeProId, mode) : null;
   const activePro = active?.proMeta;
   const initial = activePro?.name?.trim()[0]?.toUpperCase() ?? '?';
 
   const userEmail = user?.email;
 
   useEffect(() => {
-    if (userEmail && isOpen) fetchConversations(userEmail);
-  }, [userEmail, isOpen]);
+    if (!userEmail) {
+      setHasProInbox(false);
+      setMode('client');
+      return;
+    }
+
+    let alive = true;
+    resolveProId(userEmail).then((proId) => {
+      if (!alive) return;
+      const available = proId != null;
+      setHasProInbox(available);
+      if (!available) setMode('client');
+    });
+    return () => {
+      alive = false;
+    };
+  }, [userEmail]);
 
   useEffect(() => {
-    if (userEmail && activeProId && isOpen) fetchMessages(userEmail, activeProId);
-  }, [userEmail, activeProId, isOpen]);
+    if (userEmail && isOpen) fetchConversations(userEmail, mode);
+  }, [userEmail, isOpen, mode]);
 
   useEffect(() => {
-    if (userEmail && activeProId && isOpen) markRead(userEmail, activeProId);
-  }, [userEmail, activeProId, isOpen, active?.messages.length]);
+    if (userEmail && activeProId && isOpen) fetchMessages(userEmail, activeProId, mode);
+  }, [userEmail, activeProId, isOpen, mode]);
+
+  useEffect(() => {
+    if (userEmail && activeProId && isOpen) markRead(userEmail, activeProId, mode);
+  }, [userEmail, activeProId, isOpen, active?.messages.length, mode]);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -227,13 +260,13 @@ export default function MessagesDrawer() {
 
   const handleSend = (body: string) => {
     if (!user || !activeProId) return;
-    sendMessage(user.email, activeProId, body);
+    sendMessage(user.email, activeProId, body, activePro, mode);
   };
 
   const handleDelete = () => {
     if (!user || !activeProId) return;
     if (!window.confirm(t('confirmDelete'))) return;
-    deleteConversation(user.email, activeProId);
+    deleteConversation(user.email, activeProId, mode);
     setActiveProId(null);
   };
 
@@ -283,9 +316,31 @@ export default function MessagesDrawer() {
                 </Box>
               </Stack>
             ) : (
-              <Typography sx={{ fontWeight: 850, fontSize: 18, pl: 0.5 }}>
-                {t('messagesTitle')}
-              </Typography>
+              <Stack spacing={1}>
+                <Typography sx={{ fontWeight: 850, fontSize: 18, pl: 0.5 }}>
+                  {t('messagesTitle')}
+                </Typography>
+                {hasProInbox ? (
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={mode}
+                    onChange={(_, next: InboxMode | null) => {
+                      if (!next) return;
+                      setMode(next);
+                      setActiveProId(null);
+                    }}
+                    sx={{ pl: 0.5 }}
+                  >
+                    <ToggleButton value="client" sx={{ textTransform: 'none', py: 0.25 }}>
+                      Client
+                    </ToggleButton>
+                    <ToggleButton value="professional" sx={{ textTransform: 'none', py: 0.25 }}>
+                      Professional
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                ) : null}
+              </Stack>
             )}
           </Box>
 
@@ -307,14 +362,14 @@ export default function MessagesDrawer() {
                 <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 44, opacity: 0.5, mb: 1 }} />
                 <Typography sx={{ fontWeight: 750 }}>{t('noConversations')}</Typography>
                 <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
-                  {t('startFromPro')}
+                  {mode === 'client' ? t('startFromPro') : 'No client messages yet.'}
                 </Typography>
               </Box>
             ) : (
               <Stack spacing={0.5}>
                 {conversations.map((c) => (
                   <ConversationRow
-                    key={c.proId}
+                    key={`${c.mode}-${c.proId}`}
                     summary={c}
                     active={false}
                     onClick={() => setActiveProId(c.proId)}
@@ -353,7 +408,7 @@ export default function MessagesDrawer() {
                 </Box>
               ) : (
                 active.messages.map((m) => (
-                  <MessageBubble key={m.id} message={m} proInitial={initial} />
+                  <MessageBubble key={m.id} message={m} proInitial={initial} mode={mode} />
                 ))
               )}
             </Box>

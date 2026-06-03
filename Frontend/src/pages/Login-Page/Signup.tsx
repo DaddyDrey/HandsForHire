@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { login, saveMockUser } from "../../auth/auth.ts";
+import { register } from "../../auth/auth.ts";
 import { useLanguage } from "../../translations/useLanguage";
-import axiosInstance from "../../api/axiosInstance";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -19,6 +18,7 @@ export default function Signup() {
   }, [location.state]);
 
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [remember, setRemember] = useState(true);
@@ -36,14 +36,7 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      await axiosInstance.post("/Users", {
-        fullName: email.split("@")[0],
-        email: email.trim().toLowerCase(),
-      });
-      saveMockUser(email, password);
-
-      await login(email, password, remember);
-
+      await register(fullName || email.split("@")[0], email, password, remember);
       nav(redirectTo, { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('signupFailed');
@@ -62,6 +55,18 @@ export default function Signup() {
         {error && <div style={styles.error}>{error}</div>}
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+          <label style={styles.label}>
+            {t('fullName')}
+            <input
+              style={styles.input}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              type="text"
+              placeholder="Alex Smith"
+              autoComplete="name"
+            />
+          </label>
+
           <label style={styles.label}>
             {t('email')}
             <input

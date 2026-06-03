@@ -23,9 +23,11 @@ public class ProLogic : IProLogic
                 Id = pro.Id,
                 FullName = pro.FullName,
                 Email = pro.Email,
+                BirthYear = pro.BirthYear,
                 Trade = pro.Trade,
                 City = pro.City,
                 HourlyRate = pro.HourlyRate,
+                Description = pro.Description,
                 Status = pro.Status
             })
             .ToListAsync();
@@ -43,9 +45,11 @@ public class ProLogic : IProLogic
             Id = pro.Id,
             FullName = pro.FullName,
             Email = pro.Email,
+            BirthYear = pro.BirthYear,
             Trade = pro.Trade,
             City = pro.City,
             HourlyRate = pro.HourlyRate,
+            Description = pro.Description,
             Status = pro.Status
         };
     }
@@ -63,9 +67,11 @@ public class ProLogic : IProLogic
             Id = pro.Id,
             FullName = pro.FullName,
             Email = pro.Email,
+            BirthYear = pro.BirthYear,
             Trade = pro.Trade,
             City = pro.City,
             HourlyRate = pro.HourlyRate,
+            Description = pro.Description,
             Status = pro.Status
         };
     }
@@ -74,16 +80,23 @@ public class ProLogic : IProLogic
     {
         await EnsureProfessionExistsAsync(dto.Trade);
 
-        var pro = new Pro
-        {
-            FullName = dto.FullName,
-            Email = dto.Email,
-            Trade = dto.Trade,
-            City = dto.City,
-            HourlyRate = dto.HourlyRate
-        };
+        var normalizedEmail = dto.Email.Trim().ToLower();
+        var pro = await _context.Pros.FirstOrDefaultAsync(p => p.Email.ToLower() == normalizedEmail);
 
-        _context.Pros.Add(pro);
+        if (pro == null)
+        {
+            pro = new Pro { Email = normalizedEmail };
+            _context.Pros.Add(pro);
+        }
+
+        pro.FullName = dto.FullName.Trim();
+        pro.BirthYear = dto.BirthYear;
+        pro.Trade = dto.Trade.Trim();
+        pro.City = dto.City.Trim();
+        pro.HourlyRate = dto.HourlyRate;
+        pro.Description = dto.Description.Trim();
+        pro.Status = ProStatus.Verified;
+
         await _context.SaveChangesAsync();
 
         return new ProDto
@@ -91,9 +104,11 @@ public class ProLogic : IProLogic
             Id = pro.Id,
             FullName = pro.FullName,
             Email = pro.Email,
+            BirthYear = pro.BirthYear,
             Trade = pro.Trade,
             City = pro.City,
             HourlyRate = pro.HourlyRate,
+            Description = pro.Description,
             Status = pro.Status
         };
     }
@@ -107,10 +122,12 @@ public class ProLogic : IProLogic
         if (pro == null)
             return false;
 
-        pro.FullName = dto.FullName;
-        pro.Trade = dto.Trade;
-        pro.City = dto.City;
+        pro.FullName = dto.FullName.Trim();
+        pro.BirthYear = dto.BirthYear;
+        pro.Trade = dto.Trade.Trim();
+        pro.City = dto.City.Trim();
         pro.HourlyRate = dto.HourlyRate;
+        pro.Description = dto.Description.Trim();
 
         await _context.SaveChangesAsync();
         return true;
@@ -146,6 +163,9 @@ public class ProLogic : IProLogic
         var exists = await _context.Professions.AnyAsync(p => p.Name.ToLower() == normalized);
 
         if (!exists)
-            throw new InvalidOperationException("Profession is not approved.");
+        {
+            _context.Professions.Add(new Profession { Name = trade.Trim() });
+            await _context.SaveChangesAsync();
+        }
     }
 }

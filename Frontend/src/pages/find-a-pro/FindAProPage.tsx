@@ -27,17 +27,23 @@ import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 import { useLanguage } from '../../translations/LanguageContext';
 import ViewProfileDialog from '../../components/findAPro/ViewProfileDialog';
-import { type Pro } from '../../mock_data/pros';
 import { prosApi, type ProApiDto } from '../../api/prosApi';
 import { reviewsApi, type ReviewApiDto } from '../../api/reviewsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
-import { ensureConversation } from '../../mock_data/messagesStore';
+import { ensureConversation } from '../../services/messagesStore';
 import { professionsApi } from '../../api/professionsApi';
+import type { ProProfile } from '../../types/pro';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
-function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): Pro {
+
+function getAge(birthYear: number): number | null {
+  if (!birthYear) return null;
+  return new Date().getFullYear() - birthYear;
+}
+
+function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): ProProfile {
   const proReviews = reviews.filter((r) => r.proId === p.id);
   const avgRating = proReviews.length > 0
     ? proReviews.reduce((acc, r) => acc + r.rating, 0) / proReviews.length
@@ -45,14 +51,14 @@ function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): Pro {
   return {
     id: String(p.id),
     name: p.fullName,
-    age: 0,
+    age: getAge(p.birthYear),
     trade: p.trade,
     city: p.city,
     rating: avgRating,
     reviewsCount: proReviews.length,
     hourlyFrom: p.hourlyRate,
-    tags: [],
-    description: '',
+    tags: p.status === 'Verified' ? ['Verified'] : [p.status],
+    description: p.description || `${p.fullName} offers ${p.trade.toLowerCase()} services in ${p.city}.`,
     reviews: proReviews.map((r) => ({
       id: String(r.id),
       author: r.reviewerName,
@@ -90,13 +96,13 @@ export default function FindAProPage() {
   const [city, setCity] = useState('');
   const [trade, setTrade] = useState<string>(() => getTradeFromUrl(tradeFromUrl));
   const [minRating, setMinRating] = useState<number>(0);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 50]);
+  const [priceRange, setPriceRange] = useState<number[]>([0, 200]);
   const [sort, setSort] = useState<SortOption>('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(() => verifiedFromUrl);
 
   const [profileOpen, setProfileOpen] = useState(false);
-  const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
-  const [pros, setPros] = useState<Pro[]>([]);
+  const [selectedPro, setSelectedPro] = useState<ProProfile | null>(null);
+  const [pros, setPros] = useState<ProProfile[]>([]);
   const [tradeOptions, setTradeOptions] = useState<string[]>(DEFAULT_TRADE_OPTIONS);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -107,7 +113,7 @@ export default function FindAProPage() {
       reviewsApi.getAll().catch(() => [] as ReviewApiDto[]),
     ]).then(([prosData, reviewsData]) => {
       if (cancelled) return;
-      setPros(prosData.map((p) => mapApiProToPro(p, reviewsData)));
+      setPros(prosData.filter((p) => p.status !== 'Suspended').map((p) => mapApiProToPro(p, reviewsData)));
       setLoadError(null);
     }).catch(() => {
       if (cancelled) return;
@@ -132,7 +138,7 @@ export default function FindAProPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
-  const openProfile = (p: Pro) => {
+  const openProfile = (p: ProProfile) => {
     if (!user) return requireAuth();
     setSelectedPro(p);
     setProfileOpen(true);
@@ -168,7 +174,7 @@ export default function FindAProPage() {
       if (sort === 'price_low') return a.hourlyFrom - b.hourlyFrom;
       if (sort === 'price_high') return b.hourlyFrom - a.hourlyFrom;
 
-      const score = (x: Pro) => x.rating * 10 + Math.min(100, x.reviewsCount);
+      const score = (x: ProProfile) => x.rating * 10 + Math.min(100, x.reviewsCount);
       return score(b) - score(a);
     });
 
@@ -180,7 +186,7 @@ export default function FindAProPage() {
     setCity('');
     setTrade('All');
     setMinRating(0);
-    setPriceRange([0, 50]);
+    setPriceRange([0, 200]);
     setSort('relevance');
     setVerifiedOnly(false);
 
@@ -297,7 +303,7 @@ export default function FindAProPage() {
                     <Slider
                       value={priceRange}
                       min={0}
-                      max={50}
+                      max={200}
                       step={1}
                       onChange={(_, v) => setPriceRange(v as number[])}
                     />
@@ -382,9 +388,9 @@ export default function FindAProPage() {
                     <Button
                       fullWidth
                       variant="contained"
-                      onClick={() => {
+                      onClick={async () => {
                         if (!user) return requireAuth();
-                        ensureConversation(user.email, p.id, {
+                        await ensureConversation(user.email, p.id, {
                           name: p.name,
                           trade: p.trade,
                           city: p.city,

@@ -90,6 +90,7 @@ export default function ProfilePage() {
   const user = getUser();
 
   const [avatar, setAvatar] = useState<string | null>(() => getAvatarDataUrl());
+  const [currentPwd, setCurrentPwd] = useState("");
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
@@ -277,8 +278,14 @@ export default function ProfilePage() {
     nav(paths.home, { replace: true });
   };
 
-  const onChangePassword = () => {
+  const onChangePassword = async () => {
     setMsg("");
+
+    if (currentPwd.length < 6) {
+      setMsgSeverity("error");
+      setMsg(t("currentPasswordRequired"));
+      return;
+    }
 
     if (pwd.length < 6) {
       setMsgSeverity("error");
@@ -293,7 +300,8 @@ export default function ProfilePage() {
     }
 
     try {
-      changePassword(user.email, pwd);
+      await changePassword(user.email, currentPwd, pwd);
+      setCurrentPwd("");
       setPwd("");
       setPwd2("");
       setMsgSeverity("success");
@@ -617,6 +625,12 @@ export default function ProfilePage() {
             <Divider sx={{ my: 1.5 }} />
 
             <Stack spacing={1.5}>
+              <TextField
+                label={t("currentPassword")}
+                type="password"
+                value={currentPwd}
+                onChange={(e) => setCurrentPwd(e.target.value)}
+              />
               <TextField
                 label={t("newPassword")}
                 type="password"

@@ -1,4 +1,5 @@
 using HandsForHire.BusinessLogic.Interfaces;
+using HandsForHire.Domain.Entities;
 using HandsForHire.Domain.Models.Messages;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,13 @@ public class MessagesController : ControllerBase
     public async Task<IActionResult> MarkRead(int conversationId)
     {
         await _MessageLogic.MarkConversationReadAsync(conversationId);
+        return NoContent();
+    }
+
+    [HttpPost("conversation/{conversationId}/read/{viewer}")]
+    public async Task<IActionResult> MarkRead(int conversationId, MessageSender viewer)
+    {
+        await _MessageLogic.MarkConversationReadAsync(conversationId, viewer);
         return NoContent();
     }
 }
