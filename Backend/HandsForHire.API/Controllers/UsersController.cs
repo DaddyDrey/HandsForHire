@@ -51,6 +51,56 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
     }
 
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(RegisterUserDto dto)
+    {
+        try
+        {
+            var createdUser = await _UserLogic.RegisterAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginUserDto dto)
+    {
+        try
+        {
+            var user = await _UserLogic.LoginAsync(dto);
+
+            if (user == null)
+                return Unauthorized("Email or password is incorrect.");
+
+            return Ok(user);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+    {
+        try
+        {
+            var changed = await _UserLogic.ChangePasswordAsync(dto);
+
+            if (!changed)
+                return BadRequest("Current password is incorrect.");
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateUserDto dto)
     {
