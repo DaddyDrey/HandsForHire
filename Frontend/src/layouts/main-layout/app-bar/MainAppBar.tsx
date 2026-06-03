@@ -20,7 +20,7 @@ import paths from "../../../routes/paths";
 import { useLanguage } from "../../../translations/useLanguage";
 import { type Language } from "../../../translations/translations";
 import { getUser, logout, getAvatarDataUrl, clearAvatar, isAdmin } from "../../../auth/auth";
-import { fetchConversations, getMessagesTick, subscribeToMessages, totalUnread } from "../../../services/messagesStore";
+import { fetchConversations, getMessagesTick, resolveProId, subscribeToMessages, totalUnread } from "../../../services/messagesStore";
 import { useMessagesDrawer } from "../../../components/messages/MessagesDrawerContext";
 
 
@@ -39,7 +39,12 @@ export default function MainAppBar() {
   const unread = user ? totalUnread(user.email) : 0;
 
   useEffect(() => {
-    if (user) fetchConversations(user.email);
+    if (!user) return;
+
+    fetchConversations(user.email, "client");
+    resolveProId(user.email).then((proId) => {
+      if (proId != null) fetchConversations(user.email, "professional");
+    });
   }, [user?.email]);
 
   const { openDrawer } = useMessagesDrawer();
