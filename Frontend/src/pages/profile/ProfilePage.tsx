@@ -100,8 +100,9 @@ export default function ProfilePage() {
   const [msg, setMsg] = useState("");
   const [msgSeverity, setMsgSeverity] = useState<"success" | "info" | "error">("info");
 
-  const [proProfile, setProProfile] = useState<ProApiDto | null>(null);
+  const [proProfiles, setProProfiles] = useState<ProApiDto[]>([]);
   const [proLoading, setProLoading] = useState(true);
+  const proProfile = proProfiles[0] ?? null;
 
   useEffect(() => {
     if (!user) {
@@ -109,17 +110,17 @@ export default function ProfilePage() {
       return;
     }
     let cancelled = false;
-    prosApi.getByEmail(user.email)
-      .then((data) => { if (!cancelled) setProProfile(data); })
+    prosApi.getAllByEmail(user.email)
+      .then((data) => { if (!cancelled) setProProfiles(data); })
+      .catch(() => { if (!cancelled) setProProfiles([]); })
       .finally(() => { if (!cancelled) setProLoading(false); });
     return () => { cancelled = true; };
   }, [user]);
 
-  const onDeletePro = async () => {
-    if (!proProfile) return;
+  const onDeletePro = async (id: number) => {
     try {
-      await prosApi.delete(proProfile.id);
-      setProProfile(null);
+      await prosApi.delete(id);
+      setProProfiles((prev) => prev.filter((pro) => pro.id !== id));
       setMsgSeverity("success");
       setMsg(t("proProfileDeletedToast"));
     } catch {
@@ -335,7 +336,6 @@ export default function ProfilePage() {
     "handsforhiresupp@gmail.com"
   )}&su=${encodeURIComponent("HandsForHire - Help")}`;
   const announcementCount = announcements?.length ?? 0;
-  const openAnnouncementCount = announcements?.filter((a) => a.status === "Open").length ?? 0;
 
   return (
     <Section sx={{ py: { xs: 3, md: 5 } }}>
@@ -474,17 +474,15 @@ export default function ProfilePage() {
               >
                 <Box>
                   <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("proProfileSection")}</Typography>
-                  {proProfile && (
+                  {proProfiles.length > 0 && (
                     <Typography color="text.secondary" variant="body2">
-                      {announcementCount} {t("listingsCountLabel")} • {openAnnouncementCount} {t("openListingsLabel")}
+                      {proProfiles.length} {t("listingsCountLabel")}
                     </Typography>
                   )}
                 </Box>
-                {proProfile && (
-                  <Button color="error" variant="outlined" size="small" onClick={onDeletePro}>
-                    {t("deleteProProfileBtn")}
-                  </Button>
-                )}
+                <Button variant="contained" size="small" onClick={() => nav(paths.becomeAPro)}>
+                  {t("addNewBtn")}
+                </Button>
               </Stack>
               <Divider />
 
@@ -492,33 +490,54 @@ export default function ProfilePage() {
                 <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
                   <CircularProgress size={20} />
                 </Box>
-              ) : proProfile ? (
+              ) : proProfiles.length > 0 ? (
                 <Box
                   sx={{
                     display: "grid",
                     gap: 1.5,
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
+                    gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
                   }}
                 >
-                  {[
-                    [t("tradeField"), proProfile.trade],
-                    [t("cityField"), proProfile.city],
-                    [t("hourlyRateField"), `${proProfile.hourlyRate}`],
-                    [t("displayNameField"), proProfile.fullName],
-                  ].map(([label, value]) => (
-                    <Box
-                      key={label}
+                  {proProfiles.map((pro) => (
+                    <Stack
+                      key={pro.id}
+                      spacing={1.5}
                       sx={{
-                        p: 1.5,
+                        p: 1.6,
                         borderRadius: 2,
                         bgcolor: "rgba(255,255,255,0.035)",
                         border: "1px solid rgba(255,255,255,0.08)",
                         minWidth: 0,
                       }}
                     >
-                      <Typography color="text.secondary" variant="body2" noWrap>{label}</Typography>
-                      <Typography sx={{ fontWeight: 800, mt: 0.35 }} noWrap>{value}</Typography>
-                    </Box>
+                      <Stack direction="row" justifyContent="space-between" spacing={1} alignItems="flex-start">
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ fontWeight: 850 }} noWrap>{pro.trade}</Typography>
+                          <Typography color="text.secondary" variant="body2" noWrap>{pro.description}</Typography>
+                        </Box>
+                        <Button color="error" variant="outlined" size="small" onClick={() => onDeletePro(pro.id)}>
+                          {t("deleteMenuItem")}
+                        </Button>
+                      </Stack>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gap: 1,
+                          gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+                        }}
+                      >
+                        {[
+                          [t("cityField"), pro.city],
+                          [t("hourlyRateField"), `${pro.hourlyRate}`],
+                          [t("displayNameField"), pro.fullName],
+                        ].map(([label, value]) => (
+                          <Box key={label} sx={{ minWidth: 0 }}>
+                            <Typography color="text.secondary" variant="body2" noWrap>{label}</Typography>
+                            <Typography sx={{ fontWeight: 800 }} noWrap>{value}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Stack>
                   ))}
                 </Box>
               ) : (

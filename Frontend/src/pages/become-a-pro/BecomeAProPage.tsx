@@ -93,7 +93,7 @@ export default function BecomeAProPage() {
       setHourlyRate('');
       setDescription('');
       setSubmitted(false);
-      navigate(paths.account);
+      navigate(paths.myListings);
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : 'Could not submit application.');
     } finally {

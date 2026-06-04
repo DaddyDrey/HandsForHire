@@ -146,6 +146,10 @@ export default function MainAppBar() {
                     </Box>
                   </MenuItem>
 
+                  <MenuItem onClick={() => { closeMenu(); nav(paths.myListings); }}>
+                    My listings
+                  </MenuItem>
+
                   <MenuItem onClick={() => { closeMenu(); nav(paths.account); }}>
                     {t('settingsLabel')}
                   </MenuItem>
