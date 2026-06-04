@@ -21,15 +21,8 @@ public class UserLogic : IUserLogic
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {
-        return await _context.Users
-            .Select(user => new UserDto
-            {
-                Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                Status = user.Status
-            })
-            .ToListAsync();
+        var users = await _context.Users.ToListAsync();
+        return users.Select(ToDto);
     }
 
     public async Task<UserDto?> GetByIdAsync(int id)
@@ -39,13 +32,7 @@ public class UserLogic : IUserLogic
         if (user == null)
             return null;
 
-        return new UserDto
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Status = user.Status
-        };
+        return ToDto(user);
     }
 
     public async Task<UserDto?> GetByEmailAsync(string email)
@@ -57,13 +44,7 @@ public class UserLogic : IUserLogic
         if (user == null)
             return null;
 
-        return new UserDto
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Status = user.Status
-        };
+        return ToDto(user);
     }
 
     public async Task<UserDto> CreateAsync(CreateUserDto dto)
@@ -153,6 +134,9 @@ public class UserLogic : IUserLogic
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email,
+            City = user.City,
+            BirthYear = user.BirthYear,
+            PhoneNumber = user.PhoneNumber,
             Status = user.Status
         };
     }
@@ -221,8 +205,19 @@ public class UserLogic : IUserLogic
         if (user == null)
             return false;
 
-        user.FullName = dto.FullName;
-        user.Email = dto.Email;
+        var normalizedEmail = NormalizeEmail(dto.Email);
+        var currentEmail = NormalizeEmail(user.Email);
+        var emailTaken = currentEmail != normalizedEmail && await _context.Users
+            .AnyAsync(u => u.Id != id && u.Email.ToLower() == normalizedEmail);
+
+        if (emailTaken)
+            throw new InvalidOperationException("An account with this email already exists.");
+
+        user.FullName = dto.FullName.Trim();
+        user.Email = normalizedEmail;
+        user.City = dto.City.Trim();
+        user.BirthYear = dto.BirthYear;
+        user.PhoneNumber = dto.PhoneNumber.Trim();
 
         await _context.SaveChangesAsync();
         return true;
@@ -252,3 +247,4 @@ public class UserLogic : IUserLogic
         return true;
     }
 }
+

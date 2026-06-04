@@ -31,13 +31,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import CakeOutlinedIcon from "@mui/icons-material/CakeOutlined";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 
 import paths from "../../routes/paths";
 import {
-  changePassword,
-  deleteAccount,
   getUser,
-  logout,
   setAvatarDataUrl,
   getAvatarDataUrl,
   clearAvatar,
@@ -81,8 +80,9 @@ type ProHistory = {
 type Profile = {
   email: string;
   fullName: string;
-  phone: string;
+  phoneNumber: string;
   city: string;
+  birthYear: number | null;
   createdAt: string;
   announcements: Announcement[];
   prosCheckedOut: ProHistory[];
@@ -94,9 +94,6 @@ export default function ProfilePage() {
   const user = getUser();
 
   const [avatar, setAvatar] = useState<string | null>(() => getAvatarDataUrl());
-  const [currentPwd, setCurrentPwd] = useState("");
-  const [pwd, setPwd] = useState("");
-  const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
   const [msgSeverity, setMsgSeverity] = useState<"success" | "info" | "error">("info");
 
@@ -131,6 +128,7 @@ export default function ProfilePage() {
 
   const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
   const [backendUserId, setBackendUserId] = useState<number | null>(null);
+  const [backendUser, setBackendUser] = useState<Awaited<ReturnType<typeof messagesApi.getUserByEmail>> | null>(null);
 
   const userEmail = user?.email;
   useEffect(() => {
@@ -143,6 +141,7 @@ export default function ProfilePage() {
         return;
       }
       if (!cancelled) setBackendUserId(resolved.id);
+      if (!cancelled) setBackendUser(resolved);
       try {
         const data = await announcementsApi.getForUser(resolved.id);
         if (!cancelled) setAnnouncements(data);
@@ -247,15 +246,16 @@ export default function ProfilePage() {
     if (!user) return null;
 
     return {
-      email: user.email,
-      fullName: t("newUser"),
-      phone: "",
-      city: "",
+      email: backendUser?.email ?? user.email,
+      fullName: backendUser?.fullName || user.fullName || user.email,
+      phoneNumber: backendUser?.phoneNumber ?? user.phoneNumber ?? "",
+      city: backendUser?.city ?? user.city ?? "",
+      birthYear: backendUser?.birthYear ?? user.birthYear ?? null,
       createdAt: new Date().toISOString().slice(0, 10),
       announcements: [],
       prosCheckedOut: [],
     };
-  }, [user, t]);
+  }, [backendUser, user]);
 
   if (!user || !profile) return null;
 
@@ -282,59 +282,6 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const onLogout = () => {
-    logout();
-    nav(paths.home, { replace: true });
-  };
-
-  const onChangePassword = async () => {
-    setMsg("");
-
-    if (currentPwd.length < 6) {
-      setMsgSeverity("error");
-      setMsg(t("currentPasswordRequired"));
-      return;
-    }
-
-    if (pwd.length < 6) {
-      setMsgSeverity("error");
-      setMsg(t("passwordTooShort"));
-      return;
-    }
-
-    if (pwd !== pwd2) {
-      setMsgSeverity("error");
-      setMsg(t("passwordsMismatch"));
-      return;
-    }
-
-    try {
-      await changePassword(user.email, currentPwd, pwd);
-      setCurrentPwd("");
-      setPwd("");
-      setPwd2("");
-      setMsgSeverity("success");
-      setMsg(t("passwordUpdated"));
-    } catch (e: unknown) {
-      setMsgSeverity("error");
-      setMsg(e instanceof Error ? e.message : t("couldNotChangePassword"));
-    }
-  };
-
-  const onDeleteAccount = () => {
-    setMsg("");
-    try {
-      deleteAccount(user.email);
-      nav(paths.home, { replace: true });
-    } catch (e: unknown) {
-      setMsgSeverity("error");
-      setMsg(e instanceof Error ? e.message : t("couldNotDeleteAccount"));
-    }
-  };
-
-  const helpHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-    "handsforhiresupp@gmail.com"
-  )}&su=${encodeURIComponent("HandsForHire - Help")}`;
   const announcementCount = announcements?.length ?? 0;
 
   return (
@@ -385,70 +332,109 @@ export default function ProfilePage() {
 
               <Divider />
 
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={2}
-                alignItems={{ sm: "center" }}
-                justifyContent="space-between"
-              >
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar src={avatar ?? undefined} sx={{ width: 56, height: 56 }}>
-                    {profile.email[0].toUpperCase()}
-                  </Avatar>
+              <Stack spacing={2}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  justifyContent="space-between"
+                >
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Avatar
+                      src={avatar ?? undefined}
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        bgcolor: "rgba(124,92,255,0.22)",
+                        border: "1px solid rgba(124,92,255,0.35)",
+                      }}
+                    >
+                      {profile.email[0].toUpperCase()}
+                    </Avatar>
 
-                  <Box>
-                    <Typography color="text.secondary" variant="body2">
-                      {t("email")}
-                    </Typography>
-                    <Typography sx={{ fontWeight: 700 }}>{profile.email}</Typography>
-                  </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 900, fontSize: 20 }} noWrap>
+                        {profile.fullName}
+                      </Typography>
+                      <Typography color="text.secondary" variant="body2" noWrap>
+                        {profile.email}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                    <Button variant="outlined" component="label">
+                      {t("uploadPhoto")}
+                      <input hidden type="file" accept="image/*" onChange={onAvatarChange} />
+                    </Button>
+
+                    <Button
+                      variant="text"
+                      color="error"
+                      onClick={() => {
+                        clearAvatar();
+                        setAvatar(null);
+                        setMsgSeverity("info");
+                        setMsg(t("profilePhotoRemoved"));
+                      }}
+                    >
+                      {t("removePhoto")}
+                    </Button>
+                  </Stack>
                 </Stack>
 
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                  <Button variant="outlined" component="label">
-                    {t("uploadPhoto")}
-                    <input hidden type="file" accept="image/*" onChange={onAvatarChange} />
-                  </Button>
-
-                  <Button
-                    variant="text"
-                    color="error"
-                    onClick={() => {
-                      clearAvatar();
-                      setAvatar(null);
-                      setMsgSeverity("info");
-                      setMsg(t("profilePhotoRemoved"));
-                    }}
-                  >
-                    {t("removePhoto")}
-                  </Button>
-                </Stack>
-              </Stack>
-
-              <Stack direction="row" spacing={2} sx={{ mt: 1, flexWrap: "wrap" }}>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("fullNameLabel")}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{profile.fullName}</Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.25,
+                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+                  }}
+                >
+                  {[
+                    { label: t("cityLabel"), value: profile.city || t("notProvided"), icon: <LocationOnOutlinedIcon /> },
+                    { label: t("birthYear"), value: profile.birthYear ?? t("notProvided"), icon: <CakeOutlinedIcon /> },
+                    { label: "Phone number", value: profile.phoneNumber || t("notProvided"), icon: <PhoneOutlinedIcon /> },
+                    { label: t("createdLabel"), value: profile.createdAt, icon: <CalendarTodayOutlinedIcon /> },
+                  ].map((item) => (
+                    <Stack
+                      key={item.label}
+                      direction="row"
+                      spacing={1.25}
+                      alignItems="center"
+                      sx={{
+                        minWidth: 0,
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        bgcolor: "rgba(255,255,255,0.035)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 1.5,
+                          display: "grid",
+                          placeItems: "center",
+                          color: "primary.light",
+                          bgcolor: "rgba(124,92,255,0.12)",
+                          flexShrink: 0,
+                          "& svg": { fontSize: 18 },
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography color="text.secondary" variant="caption" noWrap>
+                          {item.label}
+                        </Typography>
+                        <Typography sx={{ fontWeight: 800 }} noWrap>
+                          {item.value}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  ))}
                 </Box>
-
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("cityLabel")}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {profile.city || t("notProvided")}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("createdLabel")}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{profile.createdAt}</Typography>
-                </Box>
-
               </Stack>
             </Stack>
           </CardContent>
@@ -742,77 +728,6 @@ export default function ProfilePage() {
           </Card>
         </Box>
 
-        <Card
-          variant="outlined"
-          sx={{
-            borderRadius: 3,
-            borderColor: "rgba(255,255,255,0.10)",
-            background: "rgba(14,20,37,0.78)",
-            backdropFilter: "blur(14px)",
-          }}
-        >
-          <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-            <Typography sx={{ fontWeight: 800 }}>{t("security")}</Typography>
-            <Divider sx={{ my: 1.5 }} />
-
-            <Stack spacing={1.5}>
-              <TextField
-                label={t("currentPassword")}
-                type="password"
-                value={currentPwd}
-                onChange={(e) => setCurrentPwd(e.target.value)}
-              />
-              <TextField
-                label={t("newPassword")}
-                type="password"
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
-              />
-              <TextField
-                label={t("confirmPasswordLabel")}
-                type="password"
-                value={pwd2}
-                onChange={(e) => setPwd2(e.target.value)}
-              />
-
-              <Divider />
-
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                spacing={2}
-                sx={{ flexWrap: "wrap" }}
-              >
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                  <Button variant="contained" onClick={onChangePassword}>
-                    {t("changePasswordButton")}
-                  </Button>
-
-                  <Button color="error" variant="outlined" onClick={onDeleteAccount}>
-                    {t("deleteAccountButton")}
-                  </Button>
-                </Stack>
-
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                  <Button
-                    variant="outlined"
-                    component="a"
-                    href={helpHref}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t("help")}
-                  </Button>
-
-                  <Button variant="contained" onClick={onLogout}>
-                    {t("logoutButton")}
-                  </Button>
-                </Stack>
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
         </Stack>
 
         <Menu

@@ -6,6 +6,7 @@ const paths = {
   login: "/login",
   signup: "/signup",
   account: "/account",
+  settings: "/settings",
   myListings: "/my-listings",
   contacts: "/contacts",
   about: "/about",

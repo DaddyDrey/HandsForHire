@@ -1,7 +1,22 @@
 import axiosInstance from "../api/axiosInstance";
 
-export type User = { id: number; fullName: string; email: string };
-type BackendUser = { id: number; fullName: string; email: string };
+export type User = {
+  id: number;
+  fullName: string;
+  email: string;
+  city?: string;
+  birthYear?: number | null;
+  phoneNumber?: string;
+};
+
+type BackendUser = {
+  id: number;
+  fullName: string;
+  email: string;
+  city?: string;
+  birthYear?: number | null;
+  phoneNumber?: string;
+};
 
 const STORAGE_KEY = "handsforhire_auth";
 const ADMIN_EMAILS = ["demo@handsforhire.com"];
@@ -24,7 +39,14 @@ export async function login(email: string, password: string, remember: boolean) 
       password,
     });
 
-    const user: User = { id: data.id, fullName: data.fullName, email: data.email };
+    const user: User = {
+      id: data.id,
+      fullName: data.fullName,
+      email: data.email,
+      city: data.city ?? "",
+      birthYear: data.birthYear ?? null,
+      phoneNumber: data.phoneNumber ?? "",
+    };
     persistUser(user, remember);
     return user;
   } catch (error: unknown) {
@@ -41,7 +63,14 @@ export async function register(fullName: string, email: string, password: string
       password,
     });
 
-    const user: User = { id: data.id, fullName: data.fullName, email: data.email };
+    const user: User = {
+      id: data.id,
+      fullName: data.fullName,
+      email: data.email,
+      city: data.city ?? "",
+      birthYear: data.birthYear ?? null,
+      phoneNumber: data.phoneNumber ?? "",
+    };
     persistUser(user, remember);
     return user;
   } catch (error: unknown) {
@@ -65,9 +94,23 @@ export function getUser(): User | null {
       id: parsed.id ?? 0,
       fullName: parsed.fullName ?? parsed.email,
       email: parsed.email,
+      city: parsed.city ?? "",
+      birthYear: parsed.birthYear ?? null,
+      phoneNumber: parsed.phoneNumber ?? "",
     };
   } catch {
     return null;
+  }
+}
+
+export function updateStoredUser(user: User) {
+  if (localStorage.getItem(STORAGE_KEY)) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    return;
+  }
+
+  if (sessionStorage.getItem(STORAGE_KEY)) {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   }
 }
 

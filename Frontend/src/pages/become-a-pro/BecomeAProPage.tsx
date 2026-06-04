@@ -26,6 +26,7 @@ import { useLanguage } from '../../translations/useLanguage';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 const CUSTOM_TRADE = '__custom__';
+const MAX_HOURLY_RATE = 400;
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
@@ -110,7 +111,7 @@ export default function BecomeAProPage() {
     }
 
     const numericValue = Number(value);
-    setHourlyRate(String(Math.max(0, numericValue)));
+    setHourlyRate(String(Math.min(MAX_HOURLY_RATE, Math.max(0, numericValue))));
   };
 
   return (
@@ -259,7 +260,7 @@ export default function BecomeAProPage() {
                       onChange={(e) => handleHourlyRateChange(e.target.value)}
                       error={hasError(hourlyRate)}
                       helperText={hasError(hourlyRate) ? t('fieldRequired') : ''}
-                      inputProps={{ min: 0 }}
+                      inputProps={{ min: 0, max: MAX_HOURLY_RATE }}
                     />
 
                     <TextField
