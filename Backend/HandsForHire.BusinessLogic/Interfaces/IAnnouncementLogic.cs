@@ -10,4 +10,5 @@ public interface IAnnouncementLogic
     Task<AnnouncementDto> CreateAsync(CreateAnnouncementDto dto);
     Task<bool> UpdateAsync(int id, UpdateAnnouncementDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<bool> DeleteForUserAsync(int id, int userId);
 }

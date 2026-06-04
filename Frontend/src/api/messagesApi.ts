@@ -32,6 +32,9 @@ export type UserApiDto = {
   id: number;
   fullName: string;
   email: string;
+  city: string;
+  birthYear: number | null;
+  phoneNumber: string;
   status: UserStatus;
 };
 

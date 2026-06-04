@@ -11,6 +11,8 @@ import ProtectedRoute from "../auth/ProtectedRoute";
 import AdminRoute from "../auth/AdminRoute";
 import Signup from "../pages/Login-Page/Signup";
 import ProfilePage from "../pages/profile/ProfilePage";
+import MyListingsPage from "../pages/my-listings/MyListingsPage";
+import SettingsPage from "../pages/settings/SettingsPage";
 import ContactsPage from "../pages/contacts/ContactsPage";
 import AboutPage from "../pages/about/AboutPage";
 import TermsPage from "../pages/terms/TermsPage";
@@ -54,6 +56,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: paths.myListings,
+        element: (
+          <ProtectedRoute>
+            <MyListingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: paths.settings,
+        element: (
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         ),
       },

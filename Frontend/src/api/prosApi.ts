@@ -50,6 +50,19 @@ export const prosApi = {
     }
   },
 
+  async getAllByEmail(email: string): Promise<ProApiDto[]> {
+    try {
+      const { data } = await axiosInstance.get<ProApiDto[]>(
+        `/Pros/by-email/${encodeURIComponent(email)}/all`
+      );
+      return data;
+    } catch {
+      const { data: all } = await axiosInstance.get<ProApiDto[]>('/Pros');
+      const normalized = email.trim().toLowerCase();
+      return all.filter((pro) => pro.email.trim().toLowerCase() === normalized);
+    }
+  },
+
   async create(req: CreateProRequest): Promise<ProApiDto> {
     const { data } = await axiosInstance.post<ProApiDto>('/Pros', req);
     return data;

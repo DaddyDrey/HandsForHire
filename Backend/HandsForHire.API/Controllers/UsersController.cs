@@ -104,7 +104,15 @@ public class UsersController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateUserDto dto)
     {
-        var updated = await _UserLogic.UpdateAsync(id, dto);
+        bool updated;
+        try
+        {
+            updated = await _UserLogic.UpdateAsync(id, dto);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
         if (!updated)
             return NotFound();

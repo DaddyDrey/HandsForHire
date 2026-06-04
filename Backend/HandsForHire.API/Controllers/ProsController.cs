@@ -44,6 +44,13 @@ public class ProsController : ControllerBase
         return Ok(pro);
     }
 
+    [HttpGet("by-email/{email}/all")]
+    public async Task<IActionResult> GetAllByEmail(string email)
+    {
+        var pros = await _ProLogic.GetAllByEmailAsync(email);
+        return Ok(pros);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(CreateProDto dto)
     {

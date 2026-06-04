@@ -27,13 +27,16 @@ import {
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import CakeOutlinedIcon from "@mui/icons-material/CakeOutlined";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 
 import paths from "../../routes/paths";
 import {
-  changePassword,
-  deleteAccount,
   getUser,
-  logout,
   setAvatarDataUrl,
   getAvatarDataUrl,
   clearAvatar,
@@ -42,7 +45,7 @@ import { useLanguage } from "../../translations/useLanguage";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
-import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
+import { announcementsApi, type AnnouncementApiDto as BackendAnnouncement } from "../../api/announcementsApi";
 import { messagesApi } from "../../api/messagesApi";
 
 const ANNOUNCEMENT_CATEGORIES: Array<{ value: string; key: 'catPlumbing' | 'catElectrical' | 'catCleaning' | 'catMoving' | 'catPainting' | 'catAssembly' | 'catHvac' | 'catHandyman' | 'catCarpentry' | 'catOther' }> = [
@@ -77,8 +80,9 @@ type ProHistory = {
 type Profile = {
   email: string;
   fullName: string;
-  phone: string;
+  phoneNumber: string;
   city: string;
+  birthYear: number | null;
   createdAt: string;
   announcements: Announcement[];
   prosCheckedOut: ProHistory[];
@@ -90,14 +94,12 @@ export default function ProfilePage() {
   const user = getUser();
 
   const [avatar, setAvatar] = useState<string | null>(() => getAvatarDataUrl());
-  const [currentPwd, setCurrentPwd] = useState("");
-  const [pwd, setPwd] = useState("");
-  const [pwd2, setPwd2] = useState("");
   const [msg, setMsg] = useState("");
   const [msgSeverity, setMsgSeverity] = useState<"success" | "info" | "error">("info");
 
-  const [proProfile, setProProfile] = useState<ProApiDto | null>(null);
+  const [proProfiles, setProProfiles] = useState<ProApiDto[]>([]);
   const [proLoading, setProLoading] = useState(true);
+  const proProfile = proProfiles[0] ?? null;
 
   useEffect(() => {
     if (!user) {
@@ -105,17 +107,17 @@ export default function ProfilePage() {
       return;
     }
     let cancelled = false;
-    prosApi.getByEmail(user.email)
-      .then((data) => { if (!cancelled) setProProfile(data); })
+    prosApi.getAllByEmail(user.email)
+      .then((data) => { if (!cancelled) setProProfiles(data); })
+      .catch(() => { if (!cancelled) setProProfiles([]); })
       .finally(() => { if (!cancelled) setProLoading(false); });
     return () => { cancelled = true; };
   }, [user]);
 
-  const onDeletePro = async () => {
-    if (!proProfile) return;
+  const onDeletePro = async (id: number) => {
     try {
-      await prosApi.delete(proProfile.id);
-      setProProfile(null);
+      await prosApi.delete(id);
+      setProProfiles((prev) => prev.filter((pro) => pro.id !== id));
       setMsgSeverity("success");
       setMsg(t("proProfileDeletedToast"));
     } catch {
@@ -124,9 +126,9 @@ export default function ProfilePage() {
     }
   };
 
-  const { getForUser, create: createAnnouncement, remove: removeAnnouncement } = useAnnouncementService();
   const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
   const [backendUserId, setBackendUserId] = useState<number | null>(null);
+  const [backendUser, setBackendUser] = useState<Awaited<ReturnType<typeof messagesApi.getUserByEmail>> | null>(null);
 
   const userEmail = user?.email;
   useEffect(() => {
@@ -139,8 +141,9 @@ export default function ProfilePage() {
         return;
       }
       if (!cancelled) setBackendUserId(resolved.id);
+      if (!cancelled) setBackendUser(resolved);
       try {
-        const data = await getForUser(resolved.id);
+        const data = await announcementsApi.getForUser(resolved.id);
         if (!cancelled) setAnnouncements(data);
       } catch {
         if (!cancelled) setAnnouncements([]);
@@ -149,7 +152,7 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [userEmail, getForUser]);
+  }, [userEmail]);
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [menuAnnouncementId, setMenuAnnouncementId] = useState<number | null>(null);
@@ -193,8 +196,13 @@ export default function ProfilePage() {
 
   const handleDeleteAnnouncement = async (id: number) => {
     if (!window.confirm(t("deleteAnnouncementConfirm"))) return;
+    if (!backendUserId) {
+      setMsgSeverity("error");
+      setMsg(t("couldNotIdentifyAccount"));
+      return;
+    }
     try {
-      await removeAnnouncement(id);
+      await announcementsApi.deleteForUser(id, backendUserId);
       setAnnouncements((prev) => (prev ? prev.filter((a) => a.id !== id) : prev));
       setMsgSeverity("success");
       setMsg(t("announcementDeletedToast"));
@@ -214,7 +222,7 @@ export default function ProfilePage() {
     }
     setPostSubmitting(true);
     try {
-      const created = await createAnnouncement({
+      const created = await announcementsApi.create({
         userId: backendUserId,
         title: postTitle.trim(),
         description: postDescription.trim(),
@@ -238,15 +246,16 @@ export default function ProfilePage() {
     if (!user) return null;
 
     return {
-      email: user.email,
-      fullName: t("newUser"),
-      phone: "",
-      city: "",
+      email: backendUser?.email ?? user.email,
+      fullName: backendUser?.fullName || user.fullName || user.email,
+      phoneNumber: backendUser?.phoneNumber ?? user.phoneNumber ?? "",
+      city: backendUser?.city ?? user.city ?? "",
+      birthYear: backendUser?.birthYear ?? user.birthYear ?? null,
       createdAt: new Date().toISOString().slice(0, 10),
       announcements: [],
       prosCheckedOut: [],
     };
-  }, [user, t]);
+  }, [backendUser, user]);
 
   if (!user || !profile) return null;
 
@@ -273,59 +282,7 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const onLogout = () => {
-    logout();
-    nav(paths.home, { replace: true });
-  };
-
-  const onChangePassword = async () => {
-    setMsg("");
-
-    if (currentPwd.length < 6) {
-      setMsgSeverity("error");
-      setMsg(t("currentPasswordRequired"));
-      return;
-    }
-
-    if (pwd.length < 6) {
-      setMsgSeverity("error");
-      setMsg(t("passwordTooShort"));
-      return;
-    }
-
-    if (pwd !== pwd2) {
-      setMsgSeverity("error");
-      setMsg(t("passwordsMismatch"));
-      return;
-    }
-
-    try {
-      await changePassword(user.email, currentPwd, pwd);
-      setCurrentPwd("");
-      setPwd("");
-      setPwd2("");
-      setMsgSeverity("success");
-      setMsg(t("passwordUpdated"));
-    } catch (e: unknown) {
-      setMsgSeverity("error");
-      setMsg(e instanceof Error ? e.message : t("couldNotChangePassword"));
-    }
-  };
-
-  const onDeleteAccount = () => {
-    setMsg("");
-    try {
-      deleteAccount(user.email);
-      nav(paths.home, { replace: true });
-    } catch (e: unknown) {
-      setMsgSeverity("error");
-      setMsg(e instanceof Error ? e.message : t("couldNotDeleteAccount"));
-    }
-  };
-
-  const helpHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-    "handsforhiresupp@gmail.com"
-  )}&su=${encodeURIComponent("HandsForHire - Help")}`;
+  const announcementCount = announcements?.length ?? 0;
 
   return (
     <Section sx={{ py: { xs: 3, md: 5 } }}>
@@ -375,120 +332,211 @@ export default function ProfilePage() {
 
               <Divider />
 
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={2}
-                alignItems={{ sm: "center" }}
-                justifyContent="space-between"
-              >
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar src={avatar ?? undefined} sx={{ width: 56, height: 56 }}>
-                    {profile.email[0].toUpperCase()}
-                  </Avatar>
+              <Stack spacing={2}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  justifyContent="space-between"
+                >
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Avatar
+                      src={avatar ?? undefined}
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        bgcolor: "rgba(124,92,255,0.22)",
+                        border: "1px solid rgba(124,92,255,0.35)",
+                      }}
+                    >
+                      {profile.email[0].toUpperCase()}
+                    </Avatar>
 
-                  <Box>
-                    <Typography color="text.secondary" variant="body2">
-                      {t("email")}
-                    </Typography>
-                    <Typography sx={{ fontWeight: 700 }}>{profile.email}</Typography>
-                  </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 900, fontSize: 20 }} noWrap>
+                        {profile.fullName}
+                      </Typography>
+                      <Typography color="text.secondary" variant="body2" noWrap>
+                        {profile.email}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                    <Button variant="outlined" component="label">
+                      {t("uploadPhoto")}
+                      <input hidden type="file" accept="image/*" onChange={onAvatarChange} />
+                    </Button>
+
+                    <Button
+                      variant="text"
+                      color="error"
+                      onClick={() => {
+                        clearAvatar();
+                        setAvatar(null);
+                        setMsgSeverity("info");
+                        setMsg(t("profilePhotoRemoved"));
+                      }}
+                    >
+                      {t("removePhoto")}
+                    </Button>
+                  </Stack>
                 </Stack>
 
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                  <Button variant="outlined" component="label">
-                    {t("uploadPhoto")}
-                    <input hidden type="file" accept="image/*" onChange={onAvatarChange} />
-                  </Button>
-
-                  <Button
-                    variant="text"
-                    color="error"
-                    onClick={() => {
-                      clearAvatar();
-                      setAvatar(null);
-                      setMsgSeverity("info");
-                      setMsg(t("profilePhotoRemoved"));
-                    }}
-                  >
-                    {t("removePhoto")}
-                  </Button>
-                </Stack>
-              </Stack>
-
-              <Stack direction="row" spacing={2} sx={{ mt: 1, flexWrap: "wrap" }}>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("fullNameLabel")}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{profile.fullName}</Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.25,
+                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+                  }}
+                >
+                  {[
+                    { label: t("cityLabel"), value: profile.city || t("notProvided"), icon: <LocationOnOutlinedIcon /> },
+                    { label: t("birthYear"), value: profile.birthYear ?? t("notProvided"), icon: <CakeOutlinedIcon /> },
+                    { label: "Phone number", value: profile.phoneNumber || t("notProvided"), icon: <PhoneOutlinedIcon /> },
+                    { label: t("createdLabel"), value: profile.createdAt, icon: <CalendarTodayOutlinedIcon /> },
+                  ].map((item) => (
+                    <Stack
+                      key={item.label}
+                      direction="row"
+                      spacing={1.25}
+                      alignItems="center"
+                      sx={{
+                        minWidth: 0,
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        bgcolor: "rgba(255,255,255,0.035)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 1.5,
+                          display: "grid",
+                          placeItems: "center",
+                          color: "primary.light",
+                          bgcolor: "rgba(124,92,255,0.12)",
+                          flexShrink: 0,
+                          "& svg": { fontSize: 18 },
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography color="text.secondary" variant="caption" noWrap>
+                          {item.label}
+                        </Typography>
+                        <Typography sx={{ fontWeight: 800 }} noWrap>
+                          {item.value}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  ))}
                 </Box>
-
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("cityLabel")}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {profile.city || t("notProvided")}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("createdLabel")}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{profile.createdAt}</Typography>
-                </Box>
-
               </Stack>
             </Stack>
           </CardContent>
         </Card>
 
-        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography sx={{ fontWeight: 800 }}>{t("proProfileSection")}</Typography>
-              {proProfile && (
-                <Button color="error" variant="outlined" size="small" onClick={onDeletePro}>
-                  {t("deleteProProfileBtn")}
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            overflow: "hidden",
+            borderColor: "rgba(255,255,255,0.10)",
+            background:
+              "linear-gradient(135deg, rgba(18,25,44,0.94) 0%, rgba(16,25,38,0.92) 55%, rgba(22,35,30,0.90) 100%)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 2.75 } }}>
+            <Stack spacing={2.25}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "stretch", sm: "center" }}
+                spacing={1.5}
+              >
+                <Box>
+                  <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("proProfileSection")}</Typography>
+                  {proProfiles.length > 0 && (
+                    <Typography color="text.secondary" variant="body2">
+                      {proProfiles.length} {t("listingsCountLabel")}
+                    </Typography>
+                  )}
+                </Box>
+                <Button variant="contained" size="small" onClick={() => nav(paths.becomeAPro)}>
+                  {t("addNewBtn")}
                 </Button>
+              </Stack>
+              <Divider />
+
+              {proLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                  <CircularProgress size={20} />
+                </Box>
+              ) : proProfiles.length > 0 ? (
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.5,
+                    gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                  }}
+                >
+                  {proProfiles.map((pro) => (
+                    <Stack
+                      key={pro.id}
+                      spacing={1.5}
+                      sx={{
+                        p: 1.6,
+                        borderRadius: 2,
+                        bgcolor: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        minWidth: 0,
+                      }}
+                    >
+                      <Stack direction="row" justifyContent="space-between" spacing={1} alignItems="flex-start">
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ fontWeight: 850 }} noWrap>{pro.trade}</Typography>
+                          <Typography color="text.secondary" variant="body2" noWrap>{pro.description}</Typography>
+                        </Box>
+                        <Button color="error" variant="outlined" size="small" onClick={() => onDeletePro(pro.id)}>
+                          {t("deleteMenuItem")}
+                        </Button>
+                      </Stack>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gap: 1,
+                          gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+                        }}
+                      >
+                        {[
+                          [t("cityField"), pro.city],
+                          [t("hourlyRateField"), `${pro.hourlyRate}`],
+                          [t("displayNameField"), pro.fullName],
+                        ].map(([label, value]) => (
+                          <Box key={label} sx={{ minWidth: 0 }}>
+                            <Typography color="text.secondary" variant="body2" noWrap>{label}</Typography>
+                            <Typography sx={{ fontWeight: 800 }} noWrap>{value}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Stack>
+                  ))}
+                </Box>
+              ) : (
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
+                  <Typography color="text.secondary" sx={{ flex: 1 }}>
+                    {t("noApplicationYet")}
+                  </Typography>
+                  <Button variant="contained" onClick={() => nav(paths.becomeAPro)}>
+                    {t("becomeProBtn")}
+                  </Button>
+                </Stack>
               )}
             </Stack>
-            <Divider sx={{ my: 1.5 }} />
-
-            {proLoading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                <CircularProgress size={20} />
-              </Box>
-            ) : proProfile ? (
-              <Stack direction="row" spacing={3} sx={{ flexWrap: "wrap" }}>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("tradeField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.trade}</Typography>
-                </Box>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("cityField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.city}</Typography>
-                </Box>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("hourlyRateField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.hourlyRate}</Typography>
-                </Box>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("displayNameField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.fullName}</Typography>
-                </Box>
-              </Stack>
-            ) : (
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap" }}>
-                <Typography color="text.secondary">
-                  {t("noApplicationYet")}
-                </Typography>
-                <Button variant="contained" onClick={() => nav(paths.becomeAPro)}>
-                  {t("becomeProBtn")}
-                </Button>
-              </Stack>
-            )}
           </CardContent>
         </Card>
 
@@ -496,7 +544,7 @@ export default function ProfilePage() {
           sx={{
             display: "grid",
             gap: 2,
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gridTemplateColumns: "1fr",
             alignItems: "start",
           }}
         >
@@ -510,57 +558,126 @@ export default function ProfilePage() {
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "stretch", sm: "center" }}
+                spacing={1.5}
+              >
+                <Box>
+                  <Typography sx={{ fontWeight: 850 }}>{t("myAnnouncements")}</Typography>
+                  <Typography color="text.secondary" variant="body2">
+                    {proProfile ? `${announcementCount} ${t("listingsCountLabel")}` : t("noApplicationYet")}
+                  </Typography>
+                </Box>
                 <Button
                   size="small"
-                  variant="outlined"
+                  variant="contained"
+                  startIcon={<AddRoundedIcon />}
                   onClick={() => setPostOpen(true)}
-                  disabled={!backendUserId}
+                  disabled={!backendUserId || !proProfile}
                 >
                   {t("addNewBtn")}
                 </Button>
               </Stack>
-              <Divider sx={{ my: 1.5 }} />
+              <Divider sx={{ my: 1.75 }} />
 
               {announcements === null ? (
-                <Typography color="text.secondary">…</Typography>
+                <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                  <CircularProgress size={22} />
+                </Box>
               ) : announcements.length === 0 ? (
-                <Typography color="text.secondary">{t("noAnnouncementsYet")}</Typography>
+                <Box
+                  sx={{
+                    py: 4,
+                    textAlign: "center",
+                    borderRadius: 2,
+                    border: "1px dashed rgba(255,255,255,0.14)",
+                    bgcolor: "rgba(255,255,255,0.025)",
+                  }}
+                >
+                  <WorkOutlineRoundedIcon sx={{ fontSize: 38, opacity: 0.55, mb: 1 }} />
+                  <Typography sx={{ fontWeight: 750 }}>{t("noAnnouncementsYet")}</Typography>
+                  {proProfile && (
+                    <Button variant="outlined" size="small" sx={{ mt: 1.5 }} onClick={() => setPostOpen(true)}>
+                      {t("postNewAnnouncement")}
+                    </Button>
+                  )}
+                </Box>
               ) : (
-                <Stack spacing={1}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.5,
+                    gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                  }}
+                >
                   {announcements.map((a) => (
                     <Box
                       key={a.id}
                       sx={{
-                        p: 1.25,
+                        p: 1.6,
                         borderRadius: 2,
                         border: "1px solid rgba(255,255,255,0.10)",
+                        bgcolor: "rgba(255,255,255,0.035)",
+                        transition: "border-color 150ms ease, background-color 150ms ease, transform 150ms ease",
+                        "&:hover": {
+                          borderColor: "rgba(124,92,255,0.45)",
+                          bgcolor: "rgba(124,92,255,0.08)",
+                          transform: "translateY(-1px)",
+                        },
                       }}
                     >
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        spacing={1}
-                      >
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography sx={{ fontWeight: 750 }} noWrap>{a.title}</Typography>
-                          <Typography color="text.secondary" variant="body2">
-                            {a.status} • {a.createdAt.slice(0, 10)}
-                          </Typography>
-                        </Box>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => openMenu(e, a.id)}
-                          sx={{ flexShrink: 0 }}
+                      <Stack spacing={1.25}>
+                        <Stack direction="row" justifyContent="space-between" spacing={1}>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
+                              <Chip label={a.status} size="small" variant="outlined" />
+                              <Typography color="text.secondary" variant="caption" noWrap>
+                                {a.category}
+                              </Typography>
+                            </Stack>
+                            <Typography sx={{ fontWeight: 850, fontSize: 15 }} noWrap>
+                              {a.title}
+                            </Typography>
+                          </Box>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => openMenu(e, a.id)}
+                            sx={{ flexShrink: 0, alignSelf: "flex-start" }}
+                          >
+                            <MenuRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          sx={{
+                            minHeight: 40,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
                         >
-                          <MenuRoundedIcon fontSize="small" />
-                        </IconButton>
+                          {a.description}
+                        </Typography>
+
+                        <Stack direction="row" spacing={1.5} sx={{ flexWrap: "wrap" }}>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <LocationOnOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                            <Typography color="text.secondary" variant="caption">{a.city || "—"}</Typography>
+                          </Stack>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <CalendarTodayOutlinedIcon sx={{ fontSize: 15, color: "text.secondary" }} />
+                            <Typography color="text.secondary" variant="caption">{a.createdAt.slice(0, 10)}</Typography>
+                          </Stack>
+                        </Stack>
                       </Stack>
                     </Box>
                   ))}
-                </Stack>
+                </Box>
               )}
             </CardContent>
           </Card>
@@ -611,77 +728,6 @@ export default function ProfilePage() {
           </Card>
         </Box>
 
-        <Card
-          variant="outlined"
-          sx={{
-            borderRadius: 3,
-            borderColor: "rgba(255,255,255,0.10)",
-            background: "rgba(14,20,37,0.78)",
-            backdropFilter: "blur(14px)",
-          }}
-        >
-          <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-            <Typography sx={{ fontWeight: 800 }}>{t("security")}</Typography>
-            <Divider sx={{ my: 1.5 }} />
-
-            <Stack spacing={1.5}>
-              <TextField
-                label={t("currentPassword")}
-                type="password"
-                value={currentPwd}
-                onChange={(e) => setCurrentPwd(e.target.value)}
-              />
-              <TextField
-                label={t("newPassword")}
-                type="password"
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
-              />
-              <TextField
-                label={t("confirmPasswordLabel")}
-                type="password"
-                value={pwd2}
-                onChange={(e) => setPwd2(e.target.value)}
-              />
-
-              <Divider />
-
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                spacing={2}
-                sx={{ flexWrap: "wrap" }}
-              >
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                  <Button variant="contained" onClick={onChangePassword}>
-                    {t("changePasswordButton")}
-                  </Button>
-
-                  <Button color="error" variant="outlined" onClick={onDeleteAccount}>
-                    {t("deleteAccountButton")}
-                  </Button>
-                </Stack>
-
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                  <Button
-                    variant="outlined"
-                    component="a"
-                    href={helpHref}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t("help")}
-                  </Button>
-
-                  <Button variant="contained" onClick={onLogout}>
-                    {t("logoutButton")}
-                  </Button>
-                </Stack>
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
         </Stack>
 
         <Menu

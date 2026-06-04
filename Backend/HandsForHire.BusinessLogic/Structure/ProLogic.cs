@@ -57,7 +57,9 @@ public class ProLogic : IProLogic
     public async Task<ProDto?> GetByEmailAsync(string email)
     {
         var normalized = email.Trim().ToLower();
-        var pro = await _context.Pros.FirstOrDefaultAsync(p => p.Email.ToLower() == normalized);
+        var pro = await _context.Pros
+            .OrderBy(p => p.Id)
+            .FirstOrDefaultAsync(p => p.Email.ToLower() == normalized);
 
         if (pro == null)
             return null;
@@ -76,26 +78,46 @@ public class ProLogic : IProLogic
         };
     }
 
+    public async Task<IEnumerable<ProDto>> GetAllByEmailAsync(string email)
+    {
+        var normalized = email.Trim().ToLower();
+
+        return await _context.Pros
+            .Where(p => p.Email.ToLower() == normalized)
+            .OrderByDescending(p => p.Id)
+            .Select(pro => new ProDto
+            {
+                Id = pro.Id,
+                FullName = pro.FullName,
+                Email = pro.Email,
+                BirthYear = pro.BirthYear,
+                Trade = pro.Trade,
+                City = pro.City,
+                HourlyRate = pro.HourlyRate,
+                Description = pro.Description,
+                Status = pro.Status
+            })
+            .ToListAsync();
+    }
+
     public async Task<ProDto> CreateAsync(CreateProDto dto)
     {
         await EnsureProfessionExistsAsync(dto.Trade);
 
         var normalizedEmail = dto.Email.Trim().ToLower();
-        var pro = await _context.Pros.FirstOrDefaultAsync(p => p.Email.ToLower() == normalizedEmail);
-
-        if (pro == null)
+        var pro = new Pro
         {
-            pro = new Pro { Email = normalizedEmail };
-            _context.Pros.Add(pro);
-        }
+            Email = normalizedEmail,
+            FullName = dto.FullName.Trim(),
+            BirthYear = dto.BirthYear,
+            Trade = dto.Trade.Trim(),
+            City = dto.City.Trim(),
+            HourlyRate = dto.HourlyRate,
+            Description = dto.Description.Trim(),
+            Status = ProStatus.Verified
+        };
 
-        pro.FullName = dto.FullName.Trim();
-        pro.BirthYear = dto.BirthYear;
-        pro.Trade = dto.Trade.Trim();
-        pro.City = dto.City.Trim();
-        pro.HourlyRate = dto.HourlyRate;
-        pro.Description = dto.Description.Trim();
-        pro.Status = ProStatus.Verified;
+        _context.Pros.Add(pro);
 
         await _context.SaveChangesAsync();
 

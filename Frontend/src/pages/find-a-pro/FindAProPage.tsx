@@ -37,6 +37,7 @@ import { professionsApi } from '../../api/professionsApi';
 import type { ProProfile } from '../../types/pro';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
+const DEFAULT_MAX_HOURLY_RATE = 400;
 
 function getAge(birthYear: number): number | null {
   if (!birthYear) return null;
@@ -96,7 +97,7 @@ export default function FindAProPage() {
   const [city, setCity] = useState('');
   const [trade, setTrade] = useState<string>(() => getTradeFromUrl(tradeFromUrl));
   const [minRating, setMinRating] = useState<number>(0);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 200]);
+  const [priceRange, setPriceRange] = useState<number[]>([0, DEFAULT_MAX_HOURLY_RATE]);
   const [sort, setSort] = useState<SortOption>('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(() => verifiedFromUrl);
 
@@ -108,23 +109,58 @@ export default function FindAProPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      prosApi.getAll(),
-      reviewsApi.getAll().catch(() => [] as ReviewApiDto[]),
-    ]).then(([prosData, reviewsData]) => {
-      if (cancelled) return;
-      setPros(prosData.filter((p) => p.status !== 'Suspended').map((p) => mapApiProToPro(p, reviewsData)));
-      setLoadError(null);
-    }).catch(() => {
-      if (cancelled) return;
-      setLoadError(t('couldNotLoadPros'));
-    });
-    return () => { cancelled = true; };
+
+    const loadPros = () => {
+      Promise.all([
+        prosApi.getAll(),
+        reviewsApi.getAll().catch(() => [] as ReviewApiDto[]),
+      ]).then(([prosData, reviewsData]) => {
+        if (cancelled) return;
+        setPros(
+          prosData
+            .filter((p) => p.status !== 'Suspended')
+            .sort((a, b) => b.id - a.id)
+            .map((p) => mapApiProToPro(p, reviewsData))
+        );
+        setLoadError(null);
+      }).catch(() => {
+        if (cancelled) return;
+        setLoadError(t('couldNotLoadPros'));
+      });
+    };
+
+    loadPros();
+    window.addEventListener('focus', loadPros);
+    document.addEventListener('visibilitychange', loadPros);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', loadPros);
+      document.removeEventListener('visibilitychange', loadPros);
+    };
   }, [t]);
 
   useEffect(() => {
+    let cancelled = false;
+    prosApi.getAll().then((prosData) => {
+      if (cancelled) return;
+      const trades = Array.from(new Set([
+        ...DEFAULT_TRADE_OPTIONS,
+        ...prosData.map((pro) => pro.trade).filter(Boolean),
+      ]));
+      setTradeOptions(trades);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     void professionsApi.getAll()
-      .then((items) => setTradeOptions(items.map((item) => item.name)))
+      .then((items) => {
+        setTradeOptions((current) => Array.from(new Set([
+          ...current,
+          ...items.map((item) => item.name),
+        ])));
+      })
       .catch(() => setTradeOptions(DEFAULT_TRADE_OPTIONS));
   }, []);
 
@@ -161,7 +197,7 @@ export default function FindAProPage() {
         p.tags.some((tag) => tag.toLowerCase().includes(q));
 
       const matchCity = !c || p.city.toLowerCase().includes(c);
-      const matchTrade = trade === 'All' || p.trade === trade;
+      const matchTrade = trade === 'All' || p.trade.toLowerCase() === trade.toLowerCase();
       const matchRating = p.rating >= minRating;
       const matchPrice = p.hourlyFrom >= priceRange[0] && p.hourlyFrom <= priceRange[1];
       const matchVerified = !verifiedOnly || p.tags.some((tag) => tag.toLowerCase() === 'verified');
@@ -181,12 +217,17 @@ export default function FindAProPage() {
     return list;
   }, [pros, query, city, trade, minRating, priceRange, sort, verifiedOnly]);
 
+  const hourlyRateMax = useMemo(() => {
+    const highestRate = pros.reduce((max, pro) => Math.max(max, pro.hourlyFrom), 200);
+    return Math.max(highestRate, priceRange[1], DEFAULT_MAX_HOURLY_RATE);
+  }, [priceRange, pros]);
+
   const clearFilters = () => {
     setQuery('');
     setCity('');
     setTrade('All');
     setMinRating(0);
-    setPriceRange([0, 200]);
+    setPriceRange([0, DEFAULT_MAX_HOURLY_RATE]);
     setSort('relevance');
     setVerifiedOnly(false);
 
@@ -303,7 +344,7 @@ export default function FindAProPage() {
                     <Slider
                       value={priceRange}
                       min={0}
-                      max={200}
+                      max={hourlyRateMax}
                       step={1}
                       onChange={(_, v) => setPriceRange(v as number[])}
                     />
