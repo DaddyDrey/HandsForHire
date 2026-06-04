@@ -27,6 +27,10 @@ import {
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 
 import paths from "../../routes/paths";
 import {
@@ -330,6 +334,8 @@ export default function ProfilePage() {
   const helpHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
     "handsforhiresupp@gmail.com"
   )}&su=${encodeURIComponent("HandsForHire - Help")}`;
+  const announcementCount = announcements?.length ?? 0;
+  const openAnnouncementCount = announcements?.filter((a) => a.status === "Open").length ?? 0;
 
   return (
     <Section sx={{ py: { xs: 3, md: 5 } }}>
@@ -448,51 +454,84 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography sx={{ fontWeight: 800 }}>{t("proProfileSection")}</Typography>
-              {proProfile && (
-                <Button color="error" variant="outlined" size="small" onClick={onDeletePro}>
-                  {t("deleteProProfileBtn")}
-                </Button>
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            overflow: "hidden",
+            borderColor: "rgba(255,255,255,0.10)",
+            background:
+              "linear-gradient(135deg, rgba(18,25,44,0.94) 0%, rgba(16,25,38,0.92) 55%, rgba(22,35,30,0.90) 100%)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, md: 2.75 } }}>
+            <Stack spacing={2.25}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "stretch", sm: "center" }}
+                spacing={1.5}
+              >
+                <Box>
+                  <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("proProfileSection")}</Typography>
+                  {proProfile && (
+                    <Typography color="text.secondary" variant="body2">
+                      {announcementCount} {t("listingsCountLabel")} • {openAnnouncementCount} {t("openListingsLabel")}
+                    </Typography>
+                  )}
+                </Box>
+                {proProfile && (
+                  <Button color="error" variant="outlined" size="small" onClick={onDeletePro}>
+                    {t("deleteProProfileBtn")}
+                  </Button>
+                )}
+              </Stack>
+              <Divider />
+
+              {proLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                  <CircularProgress size={20} />
+                </Box>
+              ) : proProfile ? (
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.5,
+                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
+                  }}
+                >
+                  {[
+                    [t("tradeField"), proProfile.trade],
+                    [t("cityField"), proProfile.city],
+                    [t("hourlyRateField"), `${proProfile.hourlyRate}`],
+                    [t("displayNameField"), proProfile.fullName],
+                  ].map(([label, value]) => (
+                    <Box
+                      key={label}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 2,
+                        bgcolor: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        minWidth: 0,
+                      }}
+                    >
+                      <Typography color="text.secondary" variant="body2" noWrap>{label}</Typography>
+                      <Typography sx={{ fontWeight: 800, mt: 0.35 }} noWrap>{value}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
+                  <Typography color="text.secondary" sx={{ flex: 1 }}>
+                    {t("noApplicationYet")}
+                  </Typography>
+                  <Button variant="contained" onClick={() => nav(paths.becomeAPro)}>
+                    {t("becomeProBtn")}
+                  </Button>
+                </Stack>
               )}
             </Stack>
-            <Divider sx={{ my: 1.5 }} />
-
-            {proLoading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                <CircularProgress size={20} />
-              </Box>
-            ) : proProfile ? (
-              <Stack direction="row" spacing={3} sx={{ flexWrap: "wrap" }}>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("tradeField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.trade}</Typography>
-                </Box>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("cityField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.city}</Typography>
-                </Box>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("hourlyRateField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.hourlyRate}</Typography>
-                </Box>
-                <Box>
-                  <Typography color="text.secondary" variant="body2">{t("displayNameField")}</Typography>
-                  <Typography sx={{ fontWeight: 700 }}>{proProfile.fullName}</Typography>
-                </Box>
-              </Stack>
-            ) : (
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: "wrap" }}>
-                <Typography color="text.secondary">
-                  {t("noApplicationYet")}
-                </Typography>
-                <Button variant="contained" onClick={() => nav(paths.becomeAPro)}>
-                  {t("becomeProBtn")}
-                </Button>
-              </Stack>
-            )}
           </CardContent>
         </Card>
 
@@ -500,7 +539,7 @@ export default function ProfilePage() {
           sx={{
             display: "grid",
             gap: 2,
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gridTemplateColumns: "1fr",
             alignItems: "start",
           }}
         >
@@ -514,57 +553,126 @@ export default function ProfilePage() {
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography sx={{ fontWeight: 800 }}>{t("myAnnouncements")}</Typography>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "stretch", sm: "center" }}
+                spacing={1.5}
+              >
+                <Box>
+                  <Typography sx={{ fontWeight: 850 }}>{t("myAnnouncements")}</Typography>
+                  <Typography color="text.secondary" variant="body2">
+                    {proProfile ? `${announcementCount} ${t("listingsCountLabel")}` : t("noApplicationYet")}
+                  </Typography>
+                </Box>
                 <Button
                   size="small"
-                  variant="outlined"
+                  variant="contained"
+                  startIcon={<AddRoundedIcon />}
                   onClick={() => setPostOpen(true)}
-                  disabled={!backendUserId}
+                  disabled={!backendUserId || !proProfile}
                 >
                   {t("addNewBtn")}
                 </Button>
               </Stack>
-              <Divider sx={{ my: 1.5 }} />
+              <Divider sx={{ my: 1.75 }} />
 
               {announcements === null ? (
-                <Typography color="text.secondary">…</Typography>
+                <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                  <CircularProgress size={22} />
+                </Box>
               ) : announcements.length === 0 ? (
-                <Typography color="text.secondary">{t("noAnnouncementsYet")}</Typography>
+                <Box
+                  sx={{
+                    py: 4,
+                    textAlign: "center",
+                    borderRadius: 2,
+                    border: "1px dashed rgba(255,255,255,0.14)",
+                    bgcolor: "rgba(255,255,255,0.025)",
+                  }}
+                >
+                  <WorkOutlineRoundedIcon sx={{ fontSize: 38, opacity: 0.55, mb: 1 }} />
+                  <Typography sx={{ fontWeight: 750 }}>{t("noAnnouncementsYet")}</Typography>
+                  {proProfile && (
+                    <Button variant="outlined" size="small" sx={{ mt: 1.5 }} onClick={() => setPostOpen(true)}>
+                      {t("postNewAnnouncement")}
+                    </Button>
+                  )}
+                </Box>
               ) : (
-                <Stack spacing={1}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.5,
+                    gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                  }}
+                >
                   {announcements.map((a) => (
                     <Box
                       key={a.id}
                       sx={{
-                        p: 1.25,
+                        p: 1.6,
                         borderRadius: 2,
                         border: "1px solid rgba(255,255,255,0.10)",
+                        bgcolor: "rgba(255,255,255,0.035)",
+                        transition: "border-color 150ms ease, background-color 150ms ease, transform 150ms ease",
+                        "&:hover": {
+                          borderColor: "rgba(124,92,255,0.45)",
+                          bgcolor: "rgba(124,92,255,0.08)",
+                          transform: "translateY(-1px)",
+                        },
                       }}
                     >
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        spacing={1}
-                      >
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography sx={{ fontWeight: 750 }} noWrap>{a.title}</Typography>
-                          <Typography color="text.secondary" variant="body2">
-                            {a.status} • {a.createdAt.slice(0, 10)}
-                          </Typography>
-                        </Box>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => openMenu(e, a.id)}
-                          sx={{ flexShrink: 0 }}
+                      <Stack spacing={1.25}>
+                        <Stack direction="row" justifyContent="space-between" spacing={1}>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
+                              <Chip label={a.status} size="small" variant="outlined" />
+                              <Typography color="text.secondary" variant="caption" noWrap>
+                                {a.category}
+                              </Typography>
+                            </Stack>
+                            <Typography sx={{ fontWeight: 850, fontSize: 15 }} noWrap>
+                              {a.title}
+                            </Typography>
+                          </Box>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => openMenu(e, a.id)}
+                            sx={{ flexShrink: 0, alignSelf: "flex-start" }}
+                          >
+                            <MenuRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          sx={{
+                            minHeight: 40,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
                         >
-                          <MenuRoundedIcon fontSize="small" />
-                        </IconButton>
+                          {a.description}
+                        </Typography>
+
+                        <Stack direction="row" spacing={1.5} sx={{ flexWrap: "wrap" }}>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <LocationOnOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                            <Typography color="text.secondary" variant="caption">{a.city || "—"}</Typography>
+                          </Stack>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <CalendarTodayOutlinedIcon sx={{ fontSize: 15, color: "text.secondary" }} />
+                            <Typography color="text.secondary" variant="caption">{a.createdAt.slice(0, 10)}</Typography>
+                          </Stack>
+                        </Stack>
                       </Stack>
                     </Box>
                   ))}
-                </Stack>
+                </Box>
               )}
             </CardContent>
           </Card>
