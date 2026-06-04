@@ -105,4 +105,17 @@ public class AnnouncementLogic : IAnnouncementLogic
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> DeleteForUserAsync(int id, int userId)
+    {
+        var a = await _context.Announcements
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+
+        if (a == null)
+            return false;
+
+        _context.Announcements.Remove(a);
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

@@ -42,7 +42,7 @@ import { useLanguage } from "../../translations/useLanguage";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
-import { useAnnouncementService, type Announcement as BackendAnnouncement } from "../../mock_data/announcements";
+import { announcementsApi, type AnnouncementApiDto as BackendAnnouncement } from "../../api/announcementsApi";
 import { messagesApi } from "../../api/messagesApi";
 
 const ANNOUNCEMENT_CATEGORIES: Array<{ value: string; key: 'catPlumbing' | 'catElectrical' | 'catCleaning' | 'catMoving' | 'catPainting' | 'catAssembly' | 'catHvac' | 'catHandyman' | 'catCarpentry' | 'catOther' }> = [
@@ -124,7 +124,6 @@ export default function ProfilePage() {
     }
   };
 
-  const { getForUser, create: createAnnouncement, remove: removeAnnouncement } = useAnnouncementService();
   const [announcements, setAnnouncements] = useState<BackendAnnouncement[] | null>(null);
   const [backendUserId, setBackendUserId] = useState<number | null>(null);
 
@@ -140,7 +139,7 @@ export default function ProfilePage() {
       }
       if (!cancelled) setBackendUserId(resolved.id);
       try {
-        const data = await getForUser(resolved.id);
+        const data = await announcementsApi.getForUser(resolved.id);
         if (!cancelled) setAnnouncements(data);
       } catch {
         if (!cancelled) setAnnouncements([]);
@@ -149,7 +148,7 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [userEmail, getForUser]);
+  }, [userEmail]);
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [menuAnnouncementId, setMenuAnnouncementId] = useState<number | null>(null);
@@ -193,8 +192,13 @@ export default function ProfilePage() {
 
   const handleDeleteAnnouncement = async (id: number) => {
     if (!window.confirm(t("deleteAnnouncementConfirm"))) return;
+    if (!backendUserId) {
+      setMsgSeverity("error");
+      setMsg(t("couldNotIdentifyAccount"));
+      return;
+    }
     try {
-      await removeAnnouncement(id);
+      await announcementsApi.deleteForUser(id, backendUserId);
       setAnnouncements((prev) => (prev ? prev.filter((a) => a.id !== id) : prev));
       setMsgSeverity("success");
       setMsg(t("announcementDeletedToast"));
@@ -214,7 +218,7 @@ export default function ProfilePage() {
     }
     setPostSubmitting(true);
     try {
-      const created = await createAnnouncement({
+      const created = await announcementsApi.create({
         userId: backendUserId,
         title: postTitle.trim(),
         description: postDescription.trim(),

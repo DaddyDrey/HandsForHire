@@ -68,4 +68,15 @@ public class AnnouncementsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpDelete("{id}/user/{userId}")]
+    public async Task<IActionResult> DeleteForUser(int id, int userId)
+    {
+        var deleted = await _AnnouncementLogic.DeleteForUserAsync(id, userId);
+
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
+    }
 }
