@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 
@@ -7,6 +7,8 @@ import components from './components';
 import {
   getThemeMode,
   paletteForMode,
+  DEFAULT_THEME_MODE,
+  THEME_RESET_EVENT,
   THEME_STORAGE_KEY,
   themeModes,
   type ThemeMode,
@@ -24,8 +26,15 @@ const AppThemeContext = createContext<AppThemeContextValue | null>(null);
 export function AppThemeProvider({ children }: { children: ReactNode }) {
   const [modeId, setModeId] = useState<ThemeModeId>(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return getThemeMode(stored).id;
+    return stored ? getThemeMode(stored).id : DEFAULT_THEME_MODE;
   });
+
+  useEffect(() => {
+    const resetTheme = () => setModeId(DEFAULT_THEME_MODE);
+
+    window.addEventListener(THEME_RESET_EVENT, resetTheme);
+    return () => window.removeEventListener(THEME_RESET_EVENT, resetTheme);
+  }, []);
 
   const mode = getThemeMode(modeId);
 

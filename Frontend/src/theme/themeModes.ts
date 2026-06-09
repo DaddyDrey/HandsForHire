@@ -15,6 +15,8 @@ export type ThemeMode = {
 };
 
 export const THEME_STORAGE_KEY = 'handsforhire_theme';
+export const DEFAULT_THEME_MODE: ThemeModeId = 'violet';
+export const THEME_RESET_EVENT = 'handsforhire_theme_reset';
 
 export const themeModes: ThemeMode[] = [
   {
@@ -64,7 +66,7 @@ export const themeModes: ThemeMode[] = [
 ];
 
 export function getThemeMode(id: string | null): ThemeMode {
-  return themeModes.find((mode) => mode.id === id) ?? themeModes[0];
+  return themeModes.find((mode) => mode.id === id) ?? themeModes.find((mode) => mode.id === DEFAULT_THEME_MODE) ?? themeModes[0];
 }
 
 export function paletteForMode(mode: ThemeMode): PaletteOptions {
