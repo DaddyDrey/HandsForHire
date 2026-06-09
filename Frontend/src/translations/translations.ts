@@ -62,9 +62,9 @@ const translations = {
     step3Title: 'Book & get it done',
     step3Desc: 'Message, schedule, and pay securely.',
 
-    // Featured pros
-    featuredProfessionals: 'Featured professionals',
-    handPickedReviews: 'Hand-picked based on reviews',
+    // Featured jobs
+    featuredProfessionals: 'Featured jobs',
+    handPickedReviews: 'Recent open requests from clients',
     verified: 'Verified',
     topRated: 'Top rated',
     fastResponse: 'Fast response',
@@ -474,9 +474,9 @@ const translations = {
     step3Title: 'Rezervă și gata',
     step3Desc: 'Trimite mesaje, programează și plătește în siguranță.',
 
-    // Featured pros
-    featuredProfessionals: 'Specialiști recomandați',
-    handPickedReviews: 'Selectați pe baza recenziilor',
+    // Featured jobs
+    featuredProfessionals: 'Lucrări recomandate',
+    handPickedReviews: 'Cereri recente deschise de clienți',
     verified: 'Verificat',
     topRated: 'Cel mai bine evaluat',
     fastResponse: 'Răspuns rapid',
@@ -886,9 +886,9 @@ const translations = {
     step3Title: 'Забронируйте и готово',
     step3Desc: 'Пишите, назначайте время и платите безопасно.',
 
-    // Featured pros
-    featuredProfessionals: 'Рекомендуемые специалисты',
-    handPickedReviews: 'Отобраны на основе отзывов',
+    // Featured jobs
+    featuredProfessionals: 'Рекомендуемые заказы',
+    handPickedReviews: 'Новые открытые запросы от клиентов',
     verified: 'Проверен',
     topRated: 'Лучший рейтинг',
     fastResponse: 'Быстрый ответ',
