@@ -1,4 +1,5 @@
 import axiosInstance from "../api/axiosInstance";
+import { THEME_RESET_EVENT, THEME_STORAGE_KEY } from "../theme/themeModes";
 
 export type User = {
   id: number;
@@ -82,6 +83,8 @@ export async function register(fullName: string, email: string, password: string
 export function logout() {
   localStorage.removeItem(STORAGE_KEY);
   sessionStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(THEME_STORAGE_KEY);
+  window.dispatchEvent(new Event(THEME_RESET_EVENT));
 }
 
 export function getUser(): User | null {
