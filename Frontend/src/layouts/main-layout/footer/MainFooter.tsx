@@ -24,13 +24,18 @@ export default function MainFooter() {
       >
         <Container maxWidth="lg">
           <Stack
-            direction="row"
+            direction={{ xs: "column", md: "row" }}
             spacing={1.5}
-            alignItems="center"
+            alignItems={{ xs: "stretch", md: "center" }}
             justifyContent="space-between"
-            sx={{ flexWrap: "wrap", rowGap: 1 }}
+            sx={{ rowGap: 1.25 }}
           >
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 0.25, sm: 1 }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              sx={{ minWidth: 0 }}
+            >
               <Typography sx={{ fontSize: "0.95rem", fontWeight: 900, letterSpacing: 0.2, lineHeight: 1.15 }}>
                 HandsForHire
               </Typography>
@@ -39,7 +44,11 @@ export default function MainFooter() {
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap" }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={0.75}
+              sx={{ flexWrap: "wrap", alignItems: { xs: "stretch", sm: "center" } }}
+            >
               <Button component={RouterLink} to={paths.contacts} variant="text" size="small" sx={{ minHeight: 34, px: 1.25, py: 0.5 }}>
                 {t("contacts")}
               </Button>
