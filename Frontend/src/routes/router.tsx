@@ -23,6 +23,7 @@ import ProfessionsPage from "../pages/admin/ProfessionsPage";
 import JobsPage from "../pages/admin/JobsPage";
 import ReportsPage from "../pages/admin/ReportsPage";
 import ProReviewsPage from "../pages/reviews/ProReviewsPage";
+import NotFoundPage from "../pages/not-found/NotFoundPage";
 
 const router = createBrowserRouter([
   {
@@ -83,6 +84,7 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
   {
