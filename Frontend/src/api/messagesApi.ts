@@ -27,7 +27,8 @@ export type MessageApiDto = {
   readAt: string | null;
 };
 
-export type UserStatus = 'Active' | 'Suspended';
+export type UserStatus = 'Active' | 'Suspended' | 'Verified';
+type UserStatusApiValue = UserStatus | 0 | 1 | 2;
 
 export type UserApiDto = {
   id: number;
@@ -40,18 +41,41 @@ export type UserApiDto = {
   warningCount: number;
 };
 
+type BackendUserApiDto = Omit<UserApiDto, 'status'> & {
+  status: UserStatusApiValue;
+};
+
+function normalizeUserStatus(status: UserStatusApiValue): UserStatus {
+  if (status === 1 || status === 'Suspended') return 'Suspended';
+  if (status === 2 || status === 'Verified') return 'Verified';
+  return 'Active';
+}
+
+function normalizeUser(user: BackendUserApiDto): UserApiDto {
+  return {
+    ...user,
+    status: normalizeUserStatus(user.status),
+  };
+}
+
+function toUserStatusApiValue(status: UserStatus): 0 | 1 | 2 {
+  if (status === 'Suspended') return 1;
+  if (status === 'Verified') return 2;
+  return 0;
+}
+
 export const messagesApi = {
   async getAllUsers(): Promise<UserApiDto[]> {
-    const { data } = await axiosInstance.get<UserApiDto[]>('/Users');
-    return data;
+    const { data } = await axiosInstance.get<BackendUserApiDto[]>('/Users');
+    return data.map(normalizeUser);
   },
 
   async getUserByEmail(email: string): Promise<UserApiDto | null> {
     try {
-      const { data } = await axiosInstance.get<UserApiDto>(
+      const { data } = await axiosInstance.get<BackendUserApiDto>(
         `/Users/by-email/${encodeURIComponent(email)}`
       );
-      return data;
+      return normalizeUser(data);
     } catch {
       return null;
     }
@@ -59,18 +83,18 @@ export const messagesApi = {
 
   async createUser(email: string, fullName: string): Promise<UserApiDto | null> {
     try {
-      const { data } = await axiosInstance.post<UserApiDto>('/Users', {
+      const { data } = await axiosInstance.post<BackendUserApiDto>('/Users', {
         email,
         fullName,
       });
-      return data;
+      return normalizeUser(data);
     } catch {
       return null;
     }
   },
 
   async setUserStatus(id: number, status: UserStatus): Promise<void> {
-    await axiosInstance.put(`/Users/${id}/status`, { status });
+    await axiosInstance.put(`/Users/${id}/status`, { status: toUserStatusApiValue(status) });
   },
 
   async getConversationsForUser(userId: number): Promise<ConversationApiDto[]> {

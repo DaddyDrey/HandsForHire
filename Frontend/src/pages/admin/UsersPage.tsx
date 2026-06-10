@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
-import { messagesApi, type UserApiDto } from "../../api/messagesApi";
+import { messagesApi, type UserApiDto, type UserStatus } from "../../api/messagesApi";
 import { useLanguage } from "../../translations/useLanguage";
 
 const ADMIN_EMAILS = ["demo@handsforhire.com"];
@@ -15,7 +15,7 @@ type Row = {
   id: number;
   email: string;
   fullName: string;
-  status: "Active" | "Suspended" | "Pending" | "Demo";
+  status: UserStatus | "Pending" | "Demo";
   role: "Admin" | "User";
   isAdmin: boolean;
   warningCount: number;
@@ -24,6 +24,7 @@ type Row = {
 const statusColor: Record<string, "success" | "error" | "warning" | "primary" | "default"> = {
   Active: "success",
   Suspended: "error",
+  Verified: "success",
   Pending: "warning",
   Demo: "primary",
 };
@@ -32,7 +33,7 @@ function mapUser(u: UserApiDto): Row {
   const isAdmin = ADMIN_EMAILS.includes(u.email.toLowerCase());
   let status: Row["status"];
   if (isAdmin) status = "Demo";
-  else status = u.status === "Suspended" ? "Suspended" : "Active";
+  else status = u.status;
   return {
     id: u.id,
     email: u.email,
@@ -56,6 +57,7 @@ export default function UsersPage() {
   const statusLabel: Record<string, string> = {
     Active: t("statusActive"),
     Suspended: t("statusSuspended"),
+    Verified: t("statusVerified"),
     Pending: t("statusPending"),
     Demo: t("statusDemo"),
   };
@@ -68,9 +70,8 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<Row | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
 
-  const toggleStatus = async (user: Row) => {
+  const setStatus = async (user: Row, next: UserStatus) => {
     if (user.isAdmin) return;
-    const next = user.status === "Suspended" ? "Active" : "Suspended";
     setBusyId(user.id);
     try {
       await messagesApi.setUserStatus(user.id, next);
@@ -128,6 +129,7 @@ export default function UsersPage() {
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <MenuItem value="All">{t("allStatuses")}</MenuItem>
             <MenuItem value="Active">{t("statusActive")}</MenuItem>
+            <MenuItem value="Verified">{t("statusVerified")}</MenuItem>
             <MenuItem value="Suspended">{t("statusSuspended")}</MenuItem>
             <MenuItem value="Pending">{t("statusPending")}</MenuItem>
           </Select>
@@ -213,7 +215,7 @@ export default function UsersPage() {
                         size="small"
                         variant="outlined"
                         disabled={busyId === user.id}
-                        onClick={() => toggleStatus(user)}
+                        onClick={() => setStatus(user, user.status === "Suspended" ? "Active" : "Suspended")}
                         sx={{
                           fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0,
                           borderColor: "divider", color: "text.secondary",
@@ -223,6 +225,17 @@ export default function UsersPage() {
                         }}
                       >
                         {user.status === "Suspended" ? t("restoreBtn") : t("suspendBtn")}
+                      </Button>
+                    )}
+                    {!user.isAdmin && user.status !== "Verified" && user.status !== "Suspended" && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={busyId === user.id}
+                        onClick={() => setStatus(user, "Verified")}
+                        sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
+                      >
+                        {t("verifyBtn")}
                       </Button>
                     )}
                   </Box>

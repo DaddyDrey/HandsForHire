@@ -3,7 +3,8 @@ namespace HandsForHire.Domain.Entities;
 public enum UserStatus
 {
     Active = 0,
-    Suspended = 1
+    Suspended = 1,
+    Verified = 2
 }
 
 public class User

@@ -8,7 +8,7 @@ export type User = {
   city?: string;
   birthYear?: number | null;
   phoneNumber?: string;
-  status?: "Active" | "Suspended";
+  status?: "Active" | "Suspended" | "Verified";
   warningCount?: number;
 };
 
@@ -19,13 +19,19 @@ type BackendUser = {
   city?: string;
   birthYear?: number | null;
   phoneNumber?: string;
-  status?: "Active" | "Suspended";
+  status?: "Active" | "Suspended" | "Verified" | 0 | 1 | 2;
   warningCount?: number;
 };
 
 const STORAGE_KEY = "handsforhire_auth";
 const ADMIN_EMAILS = ["demo@handsforhire.com"];
 const AVATAR_KEY = "handsforhire_avatar";
+
+function normalizeUserStatus(status: BackendUser["status"]): User["status"] {
+  if (status === 1 || status === "Suspended") return "Suspended";
+  if (status === 2 || status === "Verified") return "Verified";
+  return "Active";
+}
 
 function persistUser(user: User, remember: boolean) {
   if (remember) {
@@ -51,7 +57,7 @@ export async function login(email: string, password: string, remember: boolean) 
       city: data.city ?? "",
       birthYear: data.birthYear ?? null,
       phoneNumber: data.phoneNumber ?? "",
-      status: data.status ?? "Active",
+      status: normalizeUserStatus(data.status),
       warningCount: data.warningCount ?? 0,
     };
     persistUser(user, remember);
@@ -77,7 +83,7 @@ export async function register(fullName: string, email: string, password: string
       city: data.city ?? "",
       birthYear: data.birthYear ?? null,
       phoneNumber: data.phoneNumber ?? "",
-      status: data.status ?? "Active",
+      status: normalizeUserStatus(data.status),
       warningCount: data.warningCount ?? 0,
     };
     persistUser(user, remember);
@@ -108,7 +114,7 @@ export function getUser(): User | null {
       city: parsed.city ?? "",
       birthYear: parsed.birthYear ?? null,
       phoneNumber: parsed.phoneNumber ?? "",
-      status: parsed.status ?? "Active",
+      status: normalizeUserStatus(parsed.status),
       warningCount: parsed.warningCount ?? 0,
     };
   } catch {
