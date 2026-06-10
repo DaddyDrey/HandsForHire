@@ -13,6 +13,7 @@ const translations = {
     becomeAPro: 'Become a pro',
     signIn: 'Log In',
     messagesNav: 'Messages',
+    announcementsNav: 'Announcements',
     MyListings: 'My Listings',
 
     // Messages page
@@ -269,13 +270,22 @@ const translations = {
     newUser: 'New User',
 
     //Listings
-    ListingsDescription: 'Manage every service you offer from one place.',
+    ListingsDescription: 'Manage every service and request you have posted from one place.',
     createNewListing: 'Create new listing',
     activeServices: 'Active services',
+    activeRequests: 'Active requests',
     newBtn: 'New',
     noActiveListingsYet: 'No active listings yet',
+    noActiveRequestsYet: 'No active requests yet',
     createFirstService: 'Create your first service so clients can find you.',
+    createFirstRequest: 'Post your first request so professionals can offer help.',
     noDescriptionProvided: 'No description provided.',
+    requestsCountLabel: 'active requests',
+    createNewRequest: 'Create new request',
+    couldNotLoadRequests: 'Could not load requests from the server.',
+    requestDeletedToast: 'Request deleted.',
+    couldNotDeleteRequest: 'Could not delete request.',
+    deleteRequestConfirm: 'Delete this request?',
 
     // Footer
     footerText: 'HandsForHire. Built with care.',
@@ -496,6 +506,7 @@ const translations = {
     becomeAPro: 'Devino specialist',
     signIn: 'Logare',
     messagesNav: 'Mesaje',
+    announcementsNav: 'Anunțuri',
     MyListings: 'Anunțurile mele',
 
     // Messages page
@@ -752,13 +763,22 @@ const translations = {
     newUser: 'Utilizator nou',
 
     //Listings
-    ListingsDescription: 'Gestionează toate serviciile tale dintr-un singur loc.',
+    ListingsDescription: 'Gestionează toate serviciile și cererile tale dintr-un singur loc.',
     createNewListing: 'Creează un anunț nou',
     activeServices: 'Servicii active',
+    activeRequests: 'Cereri active',
     newBtn: 'Nou',
     noActiveListingsYet: 'Nu ai încă anunțuri active',
+    noActiveRequestsYet: 'Nu ai încă cereri active',
     createFirstService: 'Creează primul serviciu ca să te poată găsi clienții.',
+    createFirstRequest: 'Postează prima cerere ca specialiștii să îți poată oferi ajutor.',
     noDescriptionProvided: 'Nu a fost oferită nicio descriere.',
+    requestsCountLabel: 'cereri active',
+    createNewRequest: 'Creează o cerere nouă',
+    couldNotLoadRequests: 'Nu am putut încărca cererile.',
+    requestDeletedToast: 'Cererea a fost ștearsă.',
+    couldNotDeleteRequest: 'Nu am putut șterge cererea.',
+    deleteRequestConfirm: 'Ștergi această cerere?',
 
     // Footer
     footerText: 'HandsForHire. Construit cu grijă.',
@@ -979,6 +999,7 @@ const translations = {
     becomeAPro: 'Стать мастером',
     signIn: 'Войти',
     messagesNav: 'Сообщения',
+    announcementsNav: 'Объявления',
     MyListings: 'Мои объявления',
 
     // Messages page
@@ -1235,13 +1256,22 @@ const translations = {
     newUser: 'Новый пользователь',
 
     //Listings
-    ListingsDescription: 'Управляйте всеми услугами, которые вы предлагаете, из одного места.',
+    ListingsDescription: 'Управляйте всеми своими услугами и запросами из одного места.',
     createNewListing: 'Создать новое объявление',
     activeServices: 'Активные услуги',
+    activeRequests: 'Активные запросы',
     newBtn: 'Новое',
     noActiveListingsYet: 'Активных объявлений пока нет',
+    noActiveRequestsYet: 'Активных запросов пока нет',
     createFirstService: 'Создайте первую услугу, чтобы клиенты могли вас найти.',
+    createFirstRequest: 'Опубликуйте первый запрос, чтобы специалисты могли предложить помощь.',
     noDescriptionProvided: 'Описание не указано.',
+    requestsCountLabel: 'активные запросы',
+    createNewRequest: 'Создать новый запрос',
+    couldNotLoadRequests: 'Не удалось загрузить запросы.',
+    requestDeletedToast: 'Запрос удалён.',
+    couldNotDeleteRequest: 'Не удалось удалить запрос.',
+    deleteRequestConfirm: 'Удалить этот запрос?',
 
     // Footer
     footerText: 'HandsForHire. Сделано с заботой.',

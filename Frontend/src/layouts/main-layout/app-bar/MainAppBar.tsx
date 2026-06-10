@@ -130,6 +130,10 @@ export default function MainAppBar() {
               </Button>
             )}
 
+            <Button component={RouterLink} to={paths.postJob} color="inherit">
+              {t("announcementsNav")}
+            </Button>
+
             <Button component={RouterLink} to={paths.findAPro} color="inherit">
               {t("findAPro")}
             </Button>
@@ -237,6 +241,17 @@ export default function MainAppBar() {
           <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mb: 1.5 }} />
 
           <Box sx={{ display: "grid", gap: 1 }}>
+            <Button
+              component={RouterLink}
+              to={paths.postJob}
+              color="inherit"
+              fullWidth
+              onClick={closeMobileNav}
+              sx={{ justifyContent: "flex-start", minHeight: 44 }}
+            >
+              {t("announcementsNav")}
+            </Button>
+
             <Button
               component={RouterLink}
               to={paths.findAPro}

@@ -21,6 +21,8 @@ import { useNavigate } from "react-router-dom";
 
 import { getUser, isSuspended } from "../../auth/auth";
 import { prosApi, type ProApiDto, type ProStatus } from "../../api/prosApi";
+import { announcementsApi, type AnnouncementApiDto, type AnnouncementStatus } from "../../api/announcementsApi";
+import { messagesApi } from "../../api/messagesApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
 import paths from "../../routes/paths";
@@ -33,6 +35,26 @@ const statusKey: Record<ProStatus, TranslationKey> = {
   Suspended: "statusSuspended",
 };
 
+const requestStatusKey: Record<AnnouncementStatus, TranslationKey> = {
+  Open: "statusOpen",
+  InProgress: "statusInProgress",
+  Completed: "statusCompleted",
+  Cancelled: "statusCancelled",
+  Paused: "statusPaused",
+};
+
+const requestCategories: Array<{ value: string; key: TranslationKey }> = [
+  { value: "Plumbing", key: "catPlumbing" },
+  { value: "Moving", key: "catMoving" },
+  { value: "Cleaning", key: "catCleaning" },
+  { value: "Electrical", key: "catElectrical" },
+  { value: "Painting", key: "catPainting" },
+  { value: "Assembly", key: "catAssembly" },
+  { value: "HVAC", key: "catHvac" },
+  { value: "Handyman", key: "catHandyman" },
+  { value: "Other", key: "otherTrade" },
+];
+
 export default function MyListingsPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
@@ -41,18 +63,21 @@ export default function MyListingsPage() {
   const suspended = isSuspended(user);
 
   const [listings, setListings] = useState<ProApiDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState<AnnouncementApiDto[]>([]);
+  const [backendUserId, setBackendUserId] = useState<number | null>(null);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [requestsLoading, setRequestsLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState<"success" | "error">("success");
 
   useEffect(() => {
     if (!userEmail) {
-      setLoading(false);
+      setServicesLoading(false);
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
+    setServicesLoading(true);
     prosApi.getAllByEmail(userEmail)
       .then((data) => {
         if (!cancelled) setListings(data);
@@ -65,7 +90,40 @@ export default function MyListingsPage() {
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setServicesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t, userEmail]);
+
+  useEffect(() => {
+    if (!userEmail) {
+      setRequestsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setRequestsLoading(true);
+    messagesApi.getUserByEmail(userEmail)
+      .then(async (backendUser) => {
+        if (!backendUser) return [];
+        if (!cancelled) setBackendUserId(backendUser.id);
+        return announcementsApi.getForUser(backendUser.id);
+      })
+      .then((data) => {
+        if (!cancelled) setRequests(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSeverity("error");
+          setMessage(t("couldNotLoadRequests"));
+          setRequests([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setRequestsLoading(false);
       });
 
     return () => {
@@ -78,6 +136,16 @@ export default function MyListingsPage() {
     [listings]
   );
 
+  const activeRequests = useMemo(
+    () => requests.filter((request) => request.status !== "Completed" && request.status !== "Cancelled"),
+    [requests]
+  );
+
+  const getRequestCategoryLabel = (category: string) => {
+    const match = requestCategories.find((item) => item.value === category);
+    return match ? t(match.key) : category;
+  };
+
   const deleteListing = async (id: number) => {
     if (!window.confirm(t("deleteProProfileBtn"))) return;
 
@@ -89,6 +157,21 @@ export default function MyListingsPage() {
     } catch {
       setSeverity("error");
       setMessage(t("couldNotDeleteProProfile"));
+    }
+  };
+
+  const deleteRequest = async (id: number) => {
+    if (!window.confirm(t("deleteRequestConfirm"))) return;
+
+    try {
+      if (backendUserId) await announcementsApi.deleteForUser(id, backendUserId);
+      else await announcementsApi.delete(id);
+      setRequests((current) => current.filter((request) => request.id !== id));
+      setSeverity("success");
+      setMessage(t("requestDeletedToast"));
+    } catch {
+      setSeverity("error");
+      setMessage(t("couldNotDeleteRequest"));
     }
   };
 
@@ -176,7 +259,7 @@ export default function MyListingsPage() {
 
                 <Divider />
 
-                {loading ? (
+                {servicesLoading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
                     <CircularProgress size={24} />
                   </Box>
@@ -307,6 +390,184 @@ export default function MyListingsPage() {
                             <PaymentsOutlinedIcon sx={{ fontSize: 18 }} />
                             <Typography variant="body2" noWrap>
                               {listing.hourlyRate} / h
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    ))}
+                  </Box>
+                )}
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              overflow: "hidden",
+              borderColor: "rgba(255,255,255,0.10)",
+              background:
+                "linear-gradient(135deg, rgba(18,25,44,0.94) 0%, rgba(28,25,48,0.91) 54%, rgba(35,30,20,0.88) 100%)",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, md: 2.75 } }}>
+              <Stack spacing={2.25}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  spacing={1.5}
+                >
+                  <Box>
+                    <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("activeRequests")}</Typography>
+                    <Typography color="text.secondary" variant="body2">
+                      {activeRequests.length} {t("requestsCountLabel")}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddRoundedIcon />}
+                    onClick={() => nav(paths.postJob)}
+                    disabled={suspended}
+                  >
+                    {t("newBtn")}
+                  </Button>
+                </Stack>
+
+                <Divider />
+
+                {requestsLoading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : activeRequests.length === 0 ? (
+                  <Box
+                    sx={{
+                      py: 6,
+                      px: 2,
+                      textAlign: "center",
+                      borderRadius: 2,
+                      border: "1px dashed rgba(255,255,255,0.16)",
+                      bgcolor: "rgba(255,255,255,0.025)",
+                    }}
+                  >
+                    <WorkOutlineRoundedIcon sx={{ fontSize: 44, opacity: 0.6, mb: 1 }} />
+                    <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("noActiveRequestsYet")}</Typography>
+                    <Typography color="text.secondary" sx={{ mt: 0.75, mb: 2 }}>
+                      {t("createFirstRequest")}
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddRoundedIcon />}
+                      onClick={() => nav(paths.postJob)}
+                      disabled={suspended}
+                    >
+                      {t("createNewRequest")}
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gap: 2,
+                      gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                    }}
+                  >
+                    {activeRequests.map((request) => (
+                      <Stack
+                        key={request.id}
+                        spacing={1.75}
+                        sx={{
+                          p: { xs: 1.75, md: 2 },
+                          minWidth: 0,
+                          borderRadius: 2,
+                          border: "1px solid rgba(255,255,255,0.10)",
+                          bgcolor: "rgba(255,255,255,0.035)",
+                          transition: "border-color 150ms ease, background-color 150ms ease, transform 150ms ease",
+                          "&:hover": {
+                            borderColor: "rgba(245,158,11,0.45)",
+                            bgcolor: "rgba(245,158,11,0.08)",
+                            transform: "translateY(-1px)",
+                          },
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                          <Avatar
+                            sx={{
+                              width: 42,
+                              height: 42,
+                              bgcolor: "rgba(245,158,11,0.18)",
+                              color: "warning.light",
+                              border: "1px solid rgba(245,158,11,0.30)",
+                            }}
+                          >
+                            {request.title[0]?.toUpperCase() ?? "R"}
+                          </Avatar>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                              <Typography sx={{ fontWeight: 900, fontSize: 17 }} noWrap>
+                                {request.title}
+                              </Typography>
+                              <Chip size="small" label={t(requestStatusKey[request.status])} variant="outlined" />
+                            </Stack>
+                            <Typography color="text.secondary" variant="body2" noWrap>
+                              {getRequestCategoryLabel(request.category)}
+                            </Typography>
+                          </Box>
+                          <Button
+                            color="error"
+                            variant="outlined"
+                            size="small"
+                            startIcon={<DeleteOutlineRoundedIcon />}
+                            onClick={() => deleteRequest(request.id)}
+                            sx={{ flexShrink: 0 }}
+                          >
+                            {t("deleteMenuItem")}
+                          </Button>
+                        </Stack>
+
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          sx={{
+                            minHeight: 40,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {request.description || t("noDescriptionProvided")}
+                        </Typography>
+
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gap: 1,
+                            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+                          }}
+                        >
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            sx={{ minWidth: 0, color: "text.secondary" }}
+                          >
+                            <LocationOnOutlinedIcon sx={{ fontSize: 18 }} />
+                            <Typography variant="body2" noWrap>
+                              {request.city}
+                            </Typography>
+                          </Stack>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            sx={{ minWidth: 0, color: "text.secondary" }}
+                          >
+                            <WorkOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                            <Typography variant="body2" noWrap>
+                              {new Date(request.createdAt).toLocaleDateString()}
                             </Typography>
                           </Stack>
                         </Box>
