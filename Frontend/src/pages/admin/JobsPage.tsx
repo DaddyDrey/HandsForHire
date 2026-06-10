@@ -7,6 +7,7 @@ import {
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useAnnouncementService, type Announcement, type AnnouncementStatus } from "../../mock_data/announcements";
 import { useLanguage } from "../../translations/useLanguage";
+import type { TranslationKey } from "../../translations/translations";
 
 function useStatusLabel(): Record<AnnouncementStatus, string> {
   const { t } = useLanguage();
@@ -31,7 +32,18 @@ const STATUS_OPTIONS: ("All" | AnnouncementStatus)[] = [
   "All", "Open", "InProgress", "Completed", "Cancelled", "Paused",
 ];
 
-const categories = ["All", "Plumbing", "Moving", "Cleaning", "Electrical", "Painting", "Assembly", "HVAC", "Handyman", "Other"];
+const categories: Array<{ value: string; key: TranslationKey }> = [
+  { value: "All", key: "allCategoriesFilter" },
+  { value: "Plumbing", key: "catPlumbing" },
+  { value: "Moving", key: "catMoving" },
+  { value: "Cleaning", key: "catCleaning" },
+  { value: "Electrical", key: "catElectrical" },
+  { value: "Painting", key: "catPainting" },
+  { value: "Assembly", key: "catAssembly" },
+  { value: "HVAC", key: "catHvac" },
+  { value: "Handyman", key: "catHandyman" },
+  { value: "Other", key: "catOther" },
+];
 
 const LANG_TO_LOCALE: Record<string, string> = { en: "en-US", ro: "ro-RO", ru: "ru-RU" };
 
@@ -106,7 +118,7 @@ export default function JobsPage() {
         />
         <FormControl size="small" sx={{ minWidth: 140 }}>
           <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            {categories.map((c) => <MenuItem key={c} value={c}>{c === "All" ? t("allCategoriesFilter") : c}</MenuItem>)}
+            {categories.map((c) => <MenuItem key={c.value} value={c.value}>{t(c.key)}</MenuItem>)}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 140 }}>
@@ -139,7 +151,7 @@ export default function JobsPage() {
             {loading && (
               <Box component="tr">
                 <Box component="td" colSpan={6} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
-                  …
+                  {t("loadingLabel")}
                 </Box>
               </Box>
             )}
@@ -170,7 +182,7 @@ export default function JobsPage() {
                   {job.authorName || job.authorEmail || `user#${job.userId}`}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
-                  {job.category}
+                  {t(categories.find((c) => c.value === job.category)?.key ?? "catOther")}
                 </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
                   {formatDate(job.createdAt, locale)}
@@ -236,7 +248,7 @@ export default function JobsPage() {
                   </Box>
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("categoryField")}</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedJob.category}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{t(categories.find((c) => c.value === selectedJob.category)?.key ?? "catOther")}</Typography>
                   </Box>
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("cityField")}</Typography>

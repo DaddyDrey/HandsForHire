@@ -293,6 +293,18 @@ export default function ProfilePage() {
     : proProfile
       ? t("proProfilePendingApproval")
       : t("noApplicationYet");
+  const getAnnouncementCategoryLabel = (value: string) => {
+    const category = ANNOUNCEMENT_CATEGORIES.find((item) => item.value === value);
+    return category ? t(category.key) : value;
+  };
+  const getAnnouncementStatusLabel = (status: string) => {
+    if (status === "Open") return t("statusOpen");
+    if (status === "InProgress") return t("statusInProgress");
+    if (status === "Completed") return t("statusCompleted");
+    if (status === "Cancelled") return t("statusCancelled");
+    if (status === "Paused") return t("statusPaused");
+    return status;
+  };
 
   return (
     <Section sx={{ py: { xs: 3, md: 5 } }}>
@@ -403,7 +415,7 @@ export default function ProfilePage() {
                   {[
                     { label: t("cityLabel"), value: profile.city || t("notProvided"), icon: <LocationOnOutlinedIcon /> },
                     { label: t("birthYear"), value: profile.birthYear ?? t("notProvided"), icon: <CakeOutlinedIcon /> },
-                    { label: "Phone number", value: profile.phoneNumber || t("notProvided"), icon: <PhoneOutlinedIcon /> },
+                    { label: t("phoneNumber"), value: profile.phoneNumber || t("notProvided"), icon: <PhoneOutlinedIcon /> },
                     { label: t("createdLabel"), value: profile.createdAt, icon: <CalendarTodayOutlinedIcon /> },
                   ].map((item) => (
                     <Stack
@@ -647,9 +659,9 @@ export default function ProfilePage() {
                         <Stack direction="row" justifyContent="space-between" spacing={1}>
                           <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
-                              <Chip label={a.status} size="small" variant="outlined" />
+                              <Chip label={getAnnouncementStatusLabel(a.status)} size="small" variant="outlined" />
                               <Typography color="text.secondary" variant="caption" noWrap>
-                                {a.category}
+                                {getAnnouncementCategoryLabel(a.category)}
                               </Typography>
                             </Stack>
                             <Typography sx={{ fontWeight: 850, fontSize: 15 }} noWrap>
@@ -774,7 +786,7 @@ export default function ProfilePage() {
               <DialogTitle sx={{ pb: 1 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>{viewedAnnouncement.title}</Typography>
-                  <Chip label={viewedAnnouncement.status} size="small" variant="outlined" />
+                  <Chip label={getAnnouncementStatusLabel(viewedAnnouncement.status)} size="small" variant="outlined" />
                 </Stack>
               </DialogTitle>
               <DialogContent dividers>
@@ -791,7 +803,7 @@ export default function ProfilePage() {
                   <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                     <Box>
                       <Typography variant="caption" color="text.secondary">{t("categoryField")}</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{viewedAnnouncement.category}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{getAnnouncementCategoryLabel(viewedAnnouncement.category)}</Typography>
                     </Box>
                     <Box>
                       <Typography variant="caption" color="text.secondary">{t("cityField")}</Typography>

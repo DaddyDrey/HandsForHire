@@ -178,7 +178,7 @@ export default function MainAppBar() {
                   </MenuItem>
 
                   <MenuItem onClick={() => { closeMenu(); nav(paths.myListings); }}>
-                    My listings
+                    {t('MyListings')}
                   </MenuItem>
 
                   <MenuItem onClick={() => { closeMenu(); nav(paths.settings); }}>
@@ -202,7 +202,7 @@ export default function MainAppBar() {
 
             <IconButton
               color="inherit"
-              aria-label="Open navigation"
+              aria-label={t("openNavigation")}
               onClick={() => setMobileNavOpen(true)}
             >
               <MenuRoundedIcon />
@@ -229,7 +229,7 @@ export default function MainAppBar() {
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100%", p: { xs: 2, sm: 2.5 } }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
             <Logo />
-            <IconButton color="inherit" aria-label="Close navigation" onClick={closeMobileNav}>
+            <IconButton color="inherit" aria-label={t("closeNavigation")} onClick={closeMobileNav}>
               <CloseRoundedIcon />
             </IconButton>
           </Box>
@@ -292,7 +292,7 @@ export default function MainAppBar() {
                   {t("profileLabel")}
                 </Button>
                 <Button onClick={goMobileListings} color="inherit" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  My listings
+                  {t("MyListings")}
                 </Button>
                 <Button onClick={goMobileSettings} color="inherit" fullWidth sx={{ justifyContent: "flex-start" }}>
                   {t("settingsLabel")}

@@ -111,7 +111,7 @@ export default function BecomeAProPage() {
       setSubmitted(false);
       navigate(paths.myListings);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not submit application.');
+      setErrorMessage(err instanceof Error ? err.message : t('applicationSubmitFailed'));
     } finally {
       setSubmitting(false);
     }

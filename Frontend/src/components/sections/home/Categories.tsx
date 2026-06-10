@@ -48,7 +48,7 @@ export default function Categories() {
           {t('popularCategories')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3.5 }}>
-          Browse by trade and find the right professional for the job.
+          {t('categoriesSubtitle')}
         </Typography>
 
         <Box
