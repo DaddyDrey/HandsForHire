@@ -1,14 +1,12 @@
 import {
   Box,
   Button,
-  Chip,
   Divider,
   Stack,
   Typography,
 } from "@mui/material";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import ContainerMax from "../../components/common/ContainerMax";
 import { useLanguage } from "../../translations/useLanguage";
@@ -61,26 +59,24 @@ export default function ContactsPage() {
     >
       <ContainerMax>
         <Stack spacing={{ xs: 4.5, md: 6 }}>
-          <Box sx={{ maxWidth: 860 }}>
-            <Chip
-              icon={<GroupsRoundedIcon />}
-              label={t("contactsHeroChip")}
-              sx={{
-                mb: 2,
-                border: "1px solid rgba(45,212,191,0.38)",
-                bgcolor: "rgba(45,212,191,0.12)",
-                color: "text.primary",
-                fontWeight: 800,
-              }}
-            />
-
+          <Box
+            sx={{
+              px: { xs: 2.5, md: 4 },
+              py: { xs: 3, md: 4 },
+              borderRadius: 3,
+              border: "1px solid rgba(255,255,255,0.08)",
+              background:
+                "linear-gradient(135deg, rgba(124,92,255,0.14) 0%, rgba(34,197,94,0.07) 55%, rgba(255,255,255,0.03) 100%)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
+            }}
+          >
             <Typography
               component="h1"
               sx={{
-                maxWidth: 820,
-                fontSize: { xs: "2.45rem", md: "4.35rem" },
+                maxWidth: 760,
+                fontSize: { xs: "2.25rem", md: "3.25rem" },
                 fontWeight: 950,
-                lineHeight: 1.03,
+                lineHeight: 1.05,
                 color: "text.primary",
               }}
             >
@@ -89,10 +85,9 @@ export default function ContactsPage() {
 
             <Typography
               sx={{
-                mt: 2.5,
+                mt: 1,
                 maxWidth: 760,
-                fontSize: { xs: "1rem", md: "1.18rem" },
-                lineHeight: 1.8,
+                lineHeight: 1.7,
                 color: "text.secondary",
               }}
             >
