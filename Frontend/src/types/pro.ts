@@ -9,6 +9,7 @@ export type ReviewSummary = {
 export type ProProfile = {
   id: string;
   name: string;
+  email: string;
   age: number | null;
   trade: string;
   city: string;

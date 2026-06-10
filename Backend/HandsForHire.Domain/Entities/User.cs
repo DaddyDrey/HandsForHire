@@ -16,4 +16,5 @@ public class User
     public string PhoneNumber { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public UserStatus Status { get; set; } = UserStatus.Active;
+    public int WarningCount { get; set; }
 }

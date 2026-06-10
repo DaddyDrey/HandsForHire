@@ -19,6 +19,7 @@ export type ChatMessage = {
 
 export type ProMeta = {
   name: string;
+  email?: string;
   trade: string;
   city: string;
 };
@@ -97,8 +98,8 @@ function convertSummary(c: ConversationApiDto, mode: InboxMode): ConversationSum
     backendId: c.id,
     proMeta:
       mode === 'client'
-        ? { name: c.proName, trade: c.proTrade, city: c.proCity }
-        : { name: clientName, trade: 'Client', city: c.userEmail },
+        ? { name: c.proName, email: c.proEmail, trade: c.proTrade, city: c.proCity }
+        : { name: clientName, email: c.userEmail, trade: 'Client', city: c.userEmail },
     lastMessage: last,
     unreadCount: c.unreadCount,
     total: 0,
@@ -280,6 +281,7 @@ export async function ensureConversation(
   if (convo) {
     upsertLocalConversation(email, proId, {
       name: convo.proName,
+      email: convo.proEmail,
       trade: convo.proTrade,
       city: convo.proCity,
     }, convo.id);

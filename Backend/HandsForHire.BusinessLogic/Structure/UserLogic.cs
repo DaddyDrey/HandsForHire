@@ -134,7 +134,8 @@ public class UserLogic : IUserLogic
             City = user.City,
             BirthYear = user.BirthYear,
             PhoneNumber = user.PhoneNumber,
-            Status = user.Status
+            Status = user.Status,
+            WarningCount = user.WarningCount
         };
     }
 

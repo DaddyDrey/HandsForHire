@@ -9,6 +9,7 @@ export type User = {
   birthYear?: number | null;
   phoneNumber?: string;
   status?: "Active" | "Suspended";
+  warningCount?: number;
 };
 
 type BackendUser = {
@@ -19,6 +20,7 @@ type BackendUser = {
   birthYear?: number | null;
   phoneNumber?: string;
   status?: "Active" | "Suspended";
+  warningCount?: number;
 };
 
 const STORAGE_KEY = "handsforhire_auth";
@@ -50,6 +52,7 @@ export async function login(email: string, password: string, remember: boolean) 
       birthYear: data.birthYear ?? null,
       phoneNumber: data.phoneNumber ?? "",
       status: data.status ?? "Active",
+      warningCount: data.warningCount ?? 0,
     };
     persistUser(user, remember);
     return user;
@@ -75,6 +78,7 @@ export async function register(fullName: string, email: string, password: string
       birthYear: data.birthYear ?? null,
       phoneNumber: data.phoneNumber ?? "",
       status: data.status ?? "Active",
+      warningCount: data.warningCount ?? 0,
     };
     persistUser(user, remember);
     return user;
@@ -105,6 +109,7 @@ export function getUser(): User | null {
       birthYear: parsed.birthYear ?? null,
       phoneNumber: parsed.phoneNumber ?? "",
       status: parsed.status ?? "Active",
+      warningCount: parsed.warningCount ?? 0,
     };
   } catch {
     return null;

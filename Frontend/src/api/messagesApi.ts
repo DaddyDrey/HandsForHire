@@ -9,6 +9,7 @@ export type ConversationApiDto = {
   userName: string;
   userEmail: string;
   proName: string;
+  proEmail: string;
   proTrade: string;
   proCity: string;
   createdAt: string;
@@ -36,6 +37,7 @@ export type UserApiDto = {
   birthYear: number | null;
   phoneNumber: string;
   status: UserStatus;
+  warningCount: number;
 };
 
 export const messagesApi = {

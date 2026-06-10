@@ -21,6 +21,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 
 import ContainerMax from '../../components/common/ContainerMax';
@@ -30,6 +31,7 @@ import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { prosApi, type ProApiDto } from '../../api/prosApi';
 import { reviewsApi, type ReviewApiDto } from '../../api/reviewsApi';
+import { reportsApi } from '../../api/reportsApi';
 
 type SortOption = 'recent' | 'highest' | 'lowest';
 type FeedbackMsg = { severity: 'success' | 'info' | 'error'; text: string } | null;
@@ -273,6 +275,48 @@ export default function ProReviewsPage() {
     }
   };
 
+  const requireReportUser = () => {
+    if (user) return user;
+    nav(paths.login, { replace: true, state: { from: `/pros/${pro.id}/reviews` } });
+    return null;
+  };
+
+  const handleReportPro = async () => {
+    const reporter = requireReportUser();
+    if (!reporter) return;
+    try {
+      await reportsApi.create({
+        title: `Reported professional: ${pro.fullName}`,
+        description: `Professional #${pro.id} (${pro.fullName}, ${pro.trade}, ${pro.city}, ${pro.email}) was reported from the reviews page.`,
+        reporterEmail: reporter.email,
+        targetEmail: pro.email,
+        category: 'Other',
+        severity: 'Medium',
+      });
+      setFeedback({ severity: 'success', text: t('reportSubmitted') });
+    } catch {
+      setFeedback({ severity: 'error', text: t('couldNotSubmitReport') });
+    }
+  };
+
+  const handleFlagReview = async (review: ReviewApiDto) => {
+    const reporter = requireReportUser();
+    if (!reporter) return;
+    try {
+      await reportsApi.create({
+        title: `Flagged review for ${pro.fullName}`,
+        description: `Review #${review.id} for professional #${pro.id} was flagged. Reviewer: ${review.reviewerName} <${review.reviewerEmail}>. Comment: ${review.comment}`,
+        reporterEmail: reporter.email,
+        targetEmail: review.reviewerEmail,
+        category: 'Conduct',
+        severity: 'Medium',
+      });
+      setFeedback({ severity: 'success', text: t('reviewFlagged') });
+    } catch {
+      setFeedback({ severity: 'error', text: t('couldNotSubmitReport') });
+    }
+  };
+
   const scrollToForm = () => {
     setEditing(true);
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
@@ -293,6 +337,14 @@ export default function ProReviewsPage() {
               onClick={() => nav(paths.findAPro)}
             >
               {t('backToPro')}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<FlagOutlinedIcon />}
+              onClick={handleReportPro}
+            >
+              {t('report')}
             </Button>
           </Stack>
 
@@ -348,6 +400,8 @@ export default function ProReviewsPage() {
               </Box>
             </CardContent>
           </Card>
+
+          {feedback && <Alert severity={feedback.severity}>{feedback.text}</Alert>}
 
           <Box
             sx={{
@@ -542,6 +596,18 @@ export default function ProReviewsPage() {
                                 {t('deleteReview')}
                               </Button>
                             </Stack>
+                          )}
+                          {!isMine && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              color="error"
+                              startIcon={<FlagOutlinedIcon />}
+                              onClick={() => handleFlagReview(r)}
+                              sx={{ mt: 1 }}
+                            >
+                              {t('flagReview')}
+                            </Button>
                           )}
                         </CardContent>
                       </Card>

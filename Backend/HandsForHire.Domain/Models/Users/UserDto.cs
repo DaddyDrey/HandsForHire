@@ -11,4 +11,5 @@ public class UserDto
     public int? BirthYear { get; set; }
     public string PhoneNumber { get; set; } = string.Empty;
     public UserStatus Status { get; set; } = UserStatus.Active;
+    public int WarningCount { get; set; }
 }

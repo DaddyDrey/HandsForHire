@@ -14,6 +14,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 
 import { useLanguage } from '../../translations/LanguageContext';
 import { getUser } from '../../auth/auth';
@@ -34,6 +35,7 @@ import {
   type InboxMode,
 } from '../../services/messagesStore';
 import { useMessagesDrawer } from './MessagesDrawerContext';
+import { reportsApi } from '../../api/reportsApi';
 
 function formatRelative(iso: string, t: (k: Parameters<ReturnType<typeof useLanguage>['t']>[0]) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -110,11 +112,14 @@ function MessageBubble({
   message,
   proInitial,
   mode,
+  onFlag,
 }: {
   message: ChatMessage;
   proInitial: string;
   mode: InboxMode;
+  onFlag: (message: ChatMessage) => void;
 }) {
+  const { t } = useLanguage();
   const mine = mode === 'client' ? message.from === 'user' : message.from === 'pro';
   return (
     <Stack
@@ -165,6 +170,21 @@ function MessageBubble({
           {new Date(message.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           {message.pending ? ' ...' : message.failed ? ' !' : ''}
         </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.25 }}>
+          <IconButton
+            size="small"
+            color="inherit"
+            title={t('flagMessage')}
+            onClick={() => onFlag(message)}
+            sx={{
+              width: 22,
+              height: 22,
+              color: mine ? 'rgba(255,255,255,0.78)' : 'text.secondary',
+            }}
+          >
+            <FlagOutlinedIcon sx={{ fontSize: 14 }} />
+          </IconButton>
+        </Box>
       </Box>
     </Stack>
   );
@@ -359,6 +379,40 @@ export default function MessagesDrawer() {
     setActiveProId(null);
   };
 
+  const handleReportChat = async () => {
+    if (!user || !active) return;
+    try {
+      await reportsApi.create({
+        title: `Reported chat with ${activePro?.name ?? 'unknown participant'}`,
+        description: `Conversation #${active.backendId ?? 'local'} was reported from ${mode} inbox. Participant: ${activePro?.name ?? 'unknown'} <${activePro?.email ?? ''}> (${activePro?.trade ?? ''}, ${activePro?.city ?? ''}).`,
+        reporterEmail: user.email,
+        targetEmail: activePro?.email ?? '',
+        category: 'Conduct',
+        severity: 'Medium',
+      });
+      window.alert(t('chatReported'));
+    } catch {
+      window.alert(t('couldNotSubmitReport'));
+    }
+  };
+
+  const handleFlagMessage = async (message: ChatMessage) => {
+    if (!user || !active) return;
+    try {
+      await reportsApi.create({
+        title: `Flagged message in chat with ${activePro?.name ?? 'unknown participant'}`,
+        description: `Message #${message.id} in conversation #${active.backendId ?? 'local'} was flagged. Sender: ${message.from}. Participant: ${activePro?.name ?? 'unknown'} <${activePro?.email ?? ''}>. Body: ${message.body}`,
+        reporterEmail: user.email,
+        targetEmail: message.from === (mode === 'client' ? 'user' : 'pro') ? user.email : activePro?.email ?? '',
+        category: 'Conduct',
+        severity: 'Medium',
+      });
+      window.alert(t('messageFlagged'));
+    } catch {
+      window.alert(t('couldNotSubmitReport'));
+    }
+  };
+
   const showThread = !!activeProId;
 
   return (
@@ -410,6 +464,12 @@ export default function MessagesDrawer() {
               </Typography>
             )}
           </Box>
+
+          {showThread && active && active.messages.length > 0 && (
+            <IconButton size="small" color="error" onClick={handleReportChat} title={t('reportChat')}>
+              <FlagOutlinedIcon fontSize="small" />
+            </IconButton>
+          )}
 
           {showThread && active && active.messages.length > 0 && (
             <IconButton size="small" color="error" onClick={handleDelete} title={t('deleteConversation')}>
@@ -478,7 +538,7 @@ export default function MessagesDrawer() {
                 </Box>
               ) : (
                 active.messages.map((m) => (
-                  <MessageBubble key={m.id} message={m} proInitial={initial} mode={mode} />
+                  <MessageBubble key={m.id} message={m} proInitial={initial} mode={mode} onFlag={handleFlagMessage} />
                 ))
               )}
               {otherTyping && <TypingIndicator initial={initial} />}

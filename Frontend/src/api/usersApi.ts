@@ -10,6 +10,7 @@ export type UserApiDto = {
   birthYear: number | null;
   phoneNumber: string;
   status: UserStatus;
+  warningCount: number;
 };
 
 export type UpdateUserRequest = {

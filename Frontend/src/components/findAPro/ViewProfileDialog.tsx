@@ -52,11 +52,15 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
 
   if (!pro) return null;
 
+  const user = getUser();
+  const canMessage = !user || user.email.toLowerCase() !== pro.email.toLowerCase();
+
   const openMessageThread = async () => {
-    const user = getUser();
+    if (!canMessage) return;
     if (user) {
       await ensureConversation(user.email, pro.id, {
         name: pro.name,
+        email: pro.email,
         trade: pro.trade,
         city: pro.city,
       });
@@ -145,7 +149,7 @@ export default function ViewProfileDialog({ open, onClose, pro }: Props) {
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 140 }}>
-              <Button fullWidth variant="contained" onClick={openMessageThread}>
+              <Button fullWidth variant="contained" disabled={!canMessage} onClick={openMessageThread}>
                 {t('message')}
               </Button>
               <Button fullWidth variant="outlined" onClick={onClose}>
