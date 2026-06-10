@@ -7,6 +7,8 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+const REMEMBERED_EMAIL_KEY = "handsforhire_remembered_email";
+
 export default function LoginPage() {
   const { t } = useLanguage();
   const nav = useNavigate();
@@ -17,9 +19,9 @@ export default function LoginPage() {
     return st?.from || "/";
   }, [location.state]);
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(() => Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY)));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -40,6 +42,8 @@ export default function LoginPage() {
 try {
   setLoading(true);
   await login(email, password, remember);
+  if (remember) localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim().toLowerCase());
+  else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
   nav(redirectTo, { replace: true });
 } catch (err: unknown) {
   const message =
