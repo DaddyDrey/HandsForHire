@@ -47,6 +47,7 @@ import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
 import { announcementsApi, type AnnouncementApiDto as BackendAnnouncement } from "../../api/announcementsApi";
 import { messagesApi } from "../../api/messagesApi";
+import { getProHistory, type ProHistoryItem } from "../../services/proHistoryStore";
 
 const ANNOUNCEMENT_CATEGORIES: Array<{ value: string; key: 'catPlumbing' | 'catElectrical' | 'catCleaning' | 'catMoving' | 'catPainting' | 'catAssembly' | 'catHvac' | 'catHandyman' | 'catCarpentry' | 'catOther' }> = [
   { value: "Plumbing", key: "catPlumbing" },
@@ -68,15 +69,6 @@ type Announcement = {
   createdAt: string;
 };
 
-type ProHistory = {
-  id: string;
-  proId: string;
-  proName: string;
-  trade: string;
-  city: string;
-  viewedAt: string;
-};
-
 type Profile = {
   email: string;
   fullName: string;
@@ -85,7 +77,7 @@ type Profile = {
   birthYear: number | null;
   createdAt: string;
   announcements: Announcement[];
-  prosCheckedOut: ProHistory[];
+  prosCheckedOut: ProHistoryItem[];
 };
 
 export default function ProfilePage() {
@@ -100,6 +92,7 @@ export default function ProfilePage() {
   const [proProfiles, setProProfiles] = useState<ProApiDto[]>([]);
   const [proLoading, setProLoading] = useState(true);
   const proProfile = proProfiles[0] ?? null;
+  const verifiedProProfile = proProfiles.find((pro) => pro.status === "Verified") ?? null;
 
   useEffect(() => {
     if (!user) {
@@ -215,6 +208,11 @@ export default function ProfilePage() {
   const handlePostSubmit = async () => {
     setPostTouched(true);
     if (!postTitle.trim() || !postDescription.trim() || !postCategory || !postCity.trim()) return;
+    if (!verifiedProProfile) {
+      setMsgSeverity("error");
+      setMsg(t("proProfilePendingApproval"));
+      return;
+    }
     if (!backendUserId) {
       setMsgSeverity("error");
       setMsg(t("couldNotIdentifyAccount"));
@@ -253,7 +251,7 @@ export default function ProfilePage() {
       birthYear: backendUser?.birthYear ?? user.birthYear ?? null,
       createdAt: new Date().toISOString().slice(0, 10),
       announcements: [],
-      prosCheckedOut: [],
+      prosCheckedOut: getProHistory(user.email),
     };
   }, [backendUser, user]);
 
@@ -283,6 +281,11 @@ export default function ProfilePage() {
   };
 
   const announcementCount = announcements?.length ?? 0;
+  const proAnnouncementHint = verifiedProProfile
+    ? `${announcementCount} ${t("listingsCountLabel")}`
+    : proProfile
+      ? t("proProfilePendingApproval")
+      : t("noApplicationYet");
 
   return (
     <Section sx={{ py: { xs: 3, md: 5 } }}>
@@ -565,9 +568,9 @@ export default function ProfilePage() {
                 spacing={1.5}
               >
                 <Box>
-                  <Typography sx={{ fontWeight: 850 }}>{t("myAnnouncements")}</Typography>
+                  <Typography sx={{ fontWeight: 850 }}>{t("myJobs")}</Typography>
                   <Typography color="text.secondary" variant="body2">
-                    {proProfile ? `${announcementCount} ${t("listingsCountLabel")}` : t("noApplicationYet")}
+                    {proAnnouncementHint}
                   </Typography>
                 </Box>
                 <Button
@@ -575,7 +578,7 @@ export default function ProfilePage() {
                   variant="contained"
                   startIcon={<AddRoundedIcon />}
                   onClick={() => setPostOpen(true)}
-                  disabled={!backendUserId || !proProfile}
+                  disabled={!backendUserId || !verifiedProProfile}
                 >
                   {t("addNewBtn")}
                 </Button>
@@ -598,7 +601,7 @@ export default function ProfilePage() {
                 >
                   <WorkOutlineRoundedIcon sx={{ fontSize: 38, opacity: 0.55, mb: 1 }} />
                   <Typography sx={{ fontWeight: 750 }}>{t("noAnnouncementsYet")}</Typography>
-                  {proProfile && (
+                  {verifiedProProfile && (
                     <Button variant="outlined" size="small" sx={{ mt: 1.5 }} onClick={() => setPostOpen(true)}>
                       {t("postNewAnnouncement")}
                     </Button>

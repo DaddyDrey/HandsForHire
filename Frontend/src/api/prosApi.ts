@@ -24,6 +24,15 @@ export type CreateProRequest = {
   description: string;
 };
 
+export type UpdateProRequest = {
+  fullName: string;
+  birthYear: number;
+  trade: string;
+  city: string;
+  hourlyRate: number;
+  description: string;
+};
+
 export const prosApi = {
   async getAll(): Promise<ProApiDto[]> {
     const { data } = await axiosInstance.get<ProApiDto[]>('/Pros');
@@ -70,6 +79,10 @@ export const prosApi = {
 
   async delete(id: number): Promise<void> {
     await axiosInstance.delete(`/Pros/${id}`);
+  },
+
+  async update(id: number, req: UpdateProRequest): Promise<void> {
+    await axiosInstance.put(`/Pros/${id}`, req);
   },
 
   async setStatus(id: number, status: ProStatus): Promise<void> {

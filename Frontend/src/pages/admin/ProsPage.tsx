@@ -14,13 +14,24 @@ interface Pro {
   id: number;
   name: string;
   email: string;
+  birthYear: number;
   category: string;
   city: string;
   hourlyRate: number;
+  description: string;
   rating: number;
   reviews: number;
   status: ProStatus;
 }
+
+type EditProForm = {
+  name: string;
+  birthYear: string;
+  category: string;
+  city: string;
+  hourlyRate: string;
+  description: string;
+};
 
 function useStatusLabels(): Record<ProStatus, string> {
   const { t } = useLanguage();
@@ -65,13 +76,80 @@ export default function ProsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
+  const [editForm, setEditForm] = useState<EditProForm | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+
+  const openProDialog = (pro: Pro) => {
+    setSelectedPro(pro);
+    setEditForm({
+      name: pro.name,
+      birthYear: String(pro.birthYear),
+      category: pro.category,
+      city: pro.city,
+      hourlyRate: String(pro.hourlyRate),
+      description: pro.description,
+    });
+  };
+
+  const closeProDialog = () => {
+    setSelectedPro(null);
+    setEditForm(null);
+  };
+
+  const updateEditForm = (key: keyof EditProForm, value: string) => {
+    setEditForm((current) => current ? { ...current, [key]: value } : current);
+  };
 
   const setStatus = async (pro: Pro, next: ProStatus) => {
     setBusyId(pro.id);
     try {
       await prosApi.setStatus(pro.id, next);
       setPros((prev) => prev.map((p) => p.id === pro.id ? { ...p, status: next } : p));
+    } catch {
+      setLoadError(t("couldNotUpdatePro"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const saveSelectedPro = async () => {
+    if (!selectedPro || !editForm) return;
+
+    const nextName = editForm.name.trim();
+    const nextTrade = editForm.category.trim();
+    const nextCity = editForm.city.trim();
+    const nextBirthYear = Number(editForm.birthYear);
+    const nextHourlyRate = Number(editForm.hourlyRate);
+
+    if (!nextName || !nextTrade || !nextCity || !nextBirthYear || Number.isNaN(nextHourlyRate)) {
+      setLoadError(t("fieldRequired"));
+      return;
+    }
+
+    setBusyId(selectedPro.id);
+    try {
+      await prosApi.update(selectedPro.id, {
+        fullName: nextName,
+        birthYear: nextBirthYear,
+        trade: nextTrade,
+        city: nextCity,
+        hourlyRate: nextHourlyRate,
+        description: editForm.description.trim(),
+      });
+
+      const updated: Pro = {
+        ...selectedPro,
+        name: nextName,
+        birthYear: nextBirthYear,
+        category: nextTrade,
+        city: nextCity,
+        hourlyRate: nextHourlyRate,
+        description: editForm.description.trim(),
+      };
+
+      setPros((prev) => prev.map((p) => p.id === selectedPro.id ? updated : p));
+      setSelectedPro(updated);
+      setLoadError(null);
     } catch {
       setLoadError(t("couldNotUpdatePro"));
     } finally {
@@ -96,9 +174,11 @@ export default function ProsPage() {
             id: p.id,
             name: p.fullName,
             email: p.email,
+            birthYear: p.birthYear,
             category: p.trade,
             city: p.city,
             hourlyRate: p.hourlyRate,
+            description: p.description,
             rating: avgRating,
             reviews: proReviews.length,
             status: p.status,
@@ -220,7 +300,7 @@ export default function ProsPage() {
               <Button
                 size="small"
                 variant="outlined"
-                onClick={() => setSelectedPro(pro)}
+                onClick={() => openProDialog(pro)}
                 sx={{ fontSize: "0.7rem", py: 0.25, px: 1.5, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "primary.main", color: "primary.main" } }}
               >
                 {pro.status === "Pending" ? t("reviewBtn") : t("viewBtn")}
@@ -265,11 +345,11 @@ export default function ProsPage() {
 
       <Dialog
         open={!!selectedPro}
-        onClose={() => setSelectedPro(null)}
+        onClose={closeProDialog}
         fullWidth
         maxWidth="sm"
       >
-        {selectedPro && (
+        {selectedPro && editForm && (
           <>
             <DialogTitle sx={{ pb: 1 }}>
               <Stack direction="row" spacing={2} alignItems="center">
@@ -302,6 +382,51 @@ export default function ProsPage() {
             </DialogTitle>
             <DialogContent dividers>
               <Stack spacing={2}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                  <TextField
+                    label={t("fullNameField")}
+                    value={editForm.name}
+                    onChange={(e) => updateEditForm("name", e.target.value)}
+                    fullWidth
+                  />
+                  <TextField
+                    label={t("birthYear")}
+                    type="number"
+                    value={editForm.birthYear}
+                    onChange={(e) => updateEditForm("birthYear", e.target.value)}
+                    fullWidth
+                  />
+                </Stack>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                  <TextField
+                    label={t("tradeField")}
+                    value={editForm.category}
+                    onChange={(e) => updateEditForm("category", e.target.value)}
+                    fullWidth
+                  />
+                  <TextField
+                    label={t("cityField")}
+                    value={editForm.city}
+                    onChange={(e) => updateEditForm("city", e.target.value)}
+                    fullWidth
+                  />
+                </Stack>
+                <TextField
+                  label={t("hourlyRateField")}
+                  type="number"
+                  value={editForm.hourlyRate}
+                  onChange={(e) => updateEditForm("hourlyRate", e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label={t("descriptionField")}
+                  value={editForm.description}
+                  onChange={(e) => updateEditForm("description", e.target.value)}
+                  multiline
+                  minRows={3}
+                  fullWidth
+                />
+                <Divider />
                 <Stack direction="row" spacing={4} sx={{ flexWrap: "wrap" }}>
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("tradeField")}</Typography>
@@ -336,7 +461,10 @@ export default function ProsPage() {
               </Stack>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setSelectedPro(null)}>{t("closeBtn")}</Button>
+              <Button onClick={closeProDialog}>{t("closeBtn")}</Button>
+              <Button onClick={saveSelectedPro} variant="contained" disabled={busyId === selectedPro.id}>
+                {t("saveBtn")}
+              </Button>
             </DialogActions>
           </>
         )}
