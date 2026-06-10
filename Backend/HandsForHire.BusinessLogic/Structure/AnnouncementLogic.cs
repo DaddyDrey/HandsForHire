@@ -56,6 +56,14 @@ public class AnnouncementLogic : IAnnouncementLogic
 
     public async Task<AnnouncementDto> CreateAsync(CreateAnnouncementDto dto)
     {
+        var user = await _context.Users.FindAsync(dto.UserId);
+
+        if (user == null)
+            throw new InvalidOperationException("User not found.");
+
+        if (user.Status == UserStatus.Suspended)
+            throw new InvalidOperationException("Suspended users cannot create announcements.");
+
         var now = DateTime.UtcNow;
         var a = new Announcement
         {

@@ -8,6 +8,7 @@ export type User = {
   city?: string;
   birthYear?: number | null;
   phoneNumber?: string;
+  status?: "Active" | "Suspended";
 };
 
 type BackendUser = {
@@ -17,6 +18,7 @@ type BackendUser = {
   city?: string;
   birthYear?: number | null;
   phoneNumber?: string;
+  status?: "Active" | "Suspended";
 };
 
 const STORAGE_KEY = "handsforhire_auth";
@@ -47,6 +49,7 @@ export async function login(email: string, password: string, remember: boolean) 
       city: data.city ?? "",
       birthYear: data.birthYear ?? null,
       phoneNumber: data.phoneNumber ?? "",
+      status: data.status ?? "Active",
     };
     persistUser(user, remember);
     return user;
@@ -71,6 +74,7 @@ export async function register(fullName: string, email: string, password: string
       city: data.city ?? "",
       birthYear: data.birthYear ?? null,
       phoneNumber: data.phoneNumber ?? "",
+      status: data.status ?? "Active",
     };
     persistUser(user, remember);
     return user;
@@ -100,6 +104,7 @@ export function getUser(): User | null {
       city: parsed.city ?? "",
       birthYear: parsed.birthYear ?? null,
       phoneNumber: parsed.phoneNumber ?? "",
+      status: parsed.status ?? "Active",
     };
   } catch {
     return null;
@@ -119,6 +124,10 @@ export function updateStoredUser(user: User) {
 
 export function isAdmin(user: User | null): boolean {
   return !!user && ADMIN_EMAILS.includes(user.email);
+}
+
+export function isSuspended(user: User | null): boolean {
+  return user?.status === "Suspended";
 }
 
 export async function changePassword(email: string, currentPassword: string, newPassword: string) {

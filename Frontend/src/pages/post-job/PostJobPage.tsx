@@ -18,16 +18,19 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
-import { getUser } from "../../auth/auth";
+import { getUser, isSuspended } from "../../auth/auth";
 import { useAnnouncementService } from "../../mock_data/announcements";
 import paths from "../../routes/paths";
 import type { UserApiDto } from "../../api/messagesApi";
+import { useLanguage } from "../../translations/useLanguage";
 
 const CATEGORIES = ["Plumbing", "Moving", "Cleaning", "Electrical", "Painting", "Assembly", "HVAC", "Handyman", "Other"];
 
 export default function PostJobPage() {
+  const { t } = useLanguage();
   const nav = useNavigate();
   const user = getUser();
+  const suspended = isSuspended(user);
   const { create } = useAnnouncementService();
 
   const [title, setTitle] = useState("");
@@ -59,11 +62,20 @@ export default function PostJobPage() {
     setSubmitted(true);
     setError("");
 
+    if (suspended) {
+      setError(t("suspendedCreationBlocked"));
+      return;
+    }
+
     if (!title.trim() || !description.trim() || !category || !city.trim()) return;
 
     try {
       setSaving(true);
       const backendUser = await ensureBackendUser();
+      if (backendUser.status === "Suspended") {
+        setError(t("suspendedCreationBlocked"));
+        return;
+      }
       await create({
         userId: backendUser.id,
         title: title.trim(),
@@ -104,6 +116,7 @@ export default function PostJobPage() {
             </Typography>
           </Box>
 
+          {suspended && <Alert severity="warning">{t("suspendedCreationBlocked")}</Alert>}
           {error && <Alert severity="error">{error}</Alert>}
 
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -152,7 +165,7 @@ export default function PostJobPage() {
                     rows={5}
                   />
 
-                  <Button type="submit" variant="contained" size="large" disabled={saving} sx={{ alignSelf: "flex-start" }}>
+                  <Button type="submit" variant="contained" size="large" disabled={saving || suspended} sx={{ alignSelf: "flex-start" }}>
                     {saving ? "Posting..." : "Post job"}
                   </Button>
                 </Stack>

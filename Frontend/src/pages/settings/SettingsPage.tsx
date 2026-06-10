@@ -103,6 +103,7 @@ export default function SettingsPage() {
         city: city.trim(),
         birthYear: parsedBirthYear,
         phoneNumber: phoneNumber.trim(),
+        status: user.status,
       });
 
       setLoadedUser((current) => current ? {

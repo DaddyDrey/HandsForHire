@@ -102,9 +102,6 @@ public class UserLogic : IUserLogic
         if (user == null || string.IsNullOrWhiteSpace(user.PasswordHash))
             return null;
 
-        if (user.Status != UserStatus.Active)
-            throw new InvalidOperationException("This account is suspended.");
-
         return VerifyPassword(dto.Password, user.PasswordHash) ? ToDto(user) : null;
     }
 
