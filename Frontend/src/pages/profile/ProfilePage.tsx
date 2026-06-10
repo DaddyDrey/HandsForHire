@@ -47,6 +47,7 @@ import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
 import { announcementsApi, type AnnouncementApiDto as BackendAnnouncement } from "../../api/announcementsApi";
 import { messagesApi } from "../../api/messagesApi";
+import { getProHistory, type ProHistoryItem } from "../../services/proHistoryStore";
 
 const ANNOUNCEMENT_CATEGORIES: Array<{ value: string; key: 'catPlumbing' | 'catElectrical' | 'catCleaning' | 'catMoving' | 'catPainting' | 'catAssembly' | 'catHvac' | 'catHandyman' | 'catCarpentry' | 'catOther' }> = [
   { value: "Plumbing", key: "catPlumbing" },
@@ -68,15 +69,6 @@ type Announcement = {
   createdAt: string;
 };
 
-type ProHistory = {
-  id: string;
-  proId: string;
-  proName: string;
-  trade: string;
-  city: string;
-  viewedAt: string;
-};
-
 type Profile = {
   email: string;
   fullName: string;
@@ -85,7 +77,7 @@ type Profile = {
   birthYear: number | null;
   createdAt: string;
   announcements: Announcement[];
-  prosCheckedOut: ProHistory[];
+  prosCheckedOut: ProHistoryItem[];
 };
 
 export default function ProfilePage() {
@@ -259,7 +251,7 @@ export default function ProfilePage() {
       birthYear: backendUser?.birthYear ?? user.birthYear ?? null,
       createdAt: new Date().toISOString().slice(0, 10),
       announcements: [],
-      prosCheckedOut: [],
+      prosCheckedOut: getProHistory(user.email),
     };
   }, [backendUser, user]);
 

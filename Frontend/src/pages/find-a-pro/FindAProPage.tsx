@@ -34,6 +34,7 @@ import paths from '../../routes/paths';
 import { useMessagesDrawer } from '../../components/messages/MessagesDrawerContext';
 import { ensureConversation } from '../../services/messagesStore';
 import { professionsApi } from '../../api/professionsApi';
+import { recordProView } from '../../services/proHistoryStore';
 import type { ProProfile } from '../../types/pro';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
@@ -176,6 +177,7 @@ export default function FindAProPage() {
 
   const openProfile = (p: ProProfile) => {
     if (!user) return requireAuth();
+    recordProView(user.email, p);
     setSelectedPro(p);
     setProfileOpen(true);
   };
