@@ -568,7 +568,7 @@ export default function ProfilePage() {
                 spacing={1.5}
               >
                 <Box>
-                  <Typography sx={{ fontWeight: 850 }}>{t("myAnnouncements")}</Typography>
+                  <Typography sx={{ fontWeight: 850 }}>{t("myJobs")}</Typography>
                   <Typography color="text.secondary" variant="body2">
                     {proAnnouncementHint}
                   </Typography>
