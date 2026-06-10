@@ -6,6 +6,7 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 
 import { messagesApi } from "../../api/messagesApi";
 import { prosApi } from "../../api/prosApi";
+import { reportsApi } from "../../api/reportsApi";
 import { useAnnouncementService, type Announcement, type AnnouncementStatus } from "../../mock_data/announcements";
 import { useLanguage } from "../../translations/useLanguage";
 
@@ -195,6 +196,7 @@ function useStatusChip() {
 }
 
 const LANG_TO_LOCALE: Record<string, string> = { en: "en-US", ro: "ro-RO", ru: "ru-RU" };
+const ADMIN_EMAILS = ["demo@handsforhire.com"];
 
 export default function DashboardPage() {
   const theme = useTheme();
@@ -206,6 +208,7 @@ export default function DashboardPage() {
 
   const [usersCount, setUsersCount] = useState<number | null>(null);
   const [prosCount, setProsCount] = useState<number | null>(null);
+  const [pendingReportsCount, setPendingReportsCount] = useState<number | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -214,11 +217,13 @@ export default function DashboardPage() {
     Promise.all([
       messagesApi.getAllUsers().catch(() => []),
       prosApi.getAll().catch(() => []),
+      reportsApi.getAll().catch(() => []),
       getAllAnnouncements().catch(() => []),
-    ]).then(([users, pros, jobs]) => {
+    ]).then(([users, pros, reports, jobs]) => {
       if (cancelled) return;
-      setUsersCount(users.length);
+      setUsersCount(users.filter((user) => !ADMIN_EMAILS.includes(user.email.toLowerCase())).length);
       setProsCount(pros.length);
+      setPendingReportsCount(reports.filter((report) => report.status === "Pending").length);
       setAnnouncements(jobs);
       setLoading(false);
     });
@@ -317,9 +322,9 @@ export default function DashboardPage() {
             />
             <MetricCard
               label={t("pendingReportsCard")}
-              value="0"
-              delta={t("needsAttention")}
-              deltaType="warn"
+              value={String(pendingReportsCount ?? 0)}
+              delta={(pendingReportsCount ?? 0) > 0 ? t("needsAttention") : t("allOkay")}
+              deltaType={(pendingReportsCount ?? 0) > 0 ? "warn" : "up"}
             />
           </Box>
 
