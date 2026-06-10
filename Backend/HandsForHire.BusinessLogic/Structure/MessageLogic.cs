@@ -9,10 +9,12 @@ namespace HandsForHire.BusinessLogic.Structure;
 public class MessageLogic : IMessageLogic
 {
     private readonly AppDbContext _context;
+    private readonly IContentModerationService _moderation;
 
-    public MessageLogic(AppDbContext context)
+    public MessageLogic(AppDbContext context, IContentModerationService moderation)
     {
         _context = context;
+        _moderation = moderation;
     }
 
     public async Task<IEnumerable<MessageDto>> GetByConversationAsync(int conversationId)
@@ -34,6 +36,8 @@ public class MessageLogic : IMessageLogic
 
     public async Task<MessageDto> CreateAsync(CreateMessageDto dto)
     {
+        var sanitizedBody = _moderation.SanitizeText(dto.Body);
+
         var conversation = await _context.Conversations.FindAsync(dto.ConversationId)
             ?? throw new InvalidOperationException("Conversation not found.");
 
@@ -42,7 +46,7 @@ public class MessageLogic : IMessageLogic
         {
             ConversationId = dto.ConversationId,
             From = dto.From,
-            Body = dto.Body,
+            Body = sanitizedBody,
             SentAt = now,
             ReadAt = dto.From == MessageSender.User ? now : null
         };

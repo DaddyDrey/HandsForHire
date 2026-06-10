@@ -319,7 +319,17 @@ export async function sendMessage(
       messages: [...(current?.messages ?? []), optimistic],
     });
     bumpTick();
-    await messagesApi.sendMessage(backendId, mode === 'client' ? 'User' : 'Pro', text);
+    const savedMessage = await messagesApi.sendMessage(backendId, mode === 'client' ? 'User' : 'Pro', text);
+    const afterSave = conversationByKey.get(key);
+    if (afterSave) {
+      conversationByKey.set(key, {
+        ...afterSave,
+        messages: afterSave.messages.map((message) =>
+          message.id === optimistic.id ? convertMessage(savedMessage) : message
+        ),
+      });
+      bumpTick();
+    }
     await fetchMessages(email, proId, mode);
     await fetchAllConversations(email);
   } catch {
@@ -328,8 +338,8 @@ export async function sendMessage(
     if (current) {
       conversationByKey.set(key, {
         ...current,
-        messages: current.messages.map((message) =>
-          message.pending && message.body === text ? { ...message, pending: false, failed: true } : message
+        messages: current.messages.filter(
+          (message) => !(message.pending && message.body === text)
         ),
       });
       bumpTick();
