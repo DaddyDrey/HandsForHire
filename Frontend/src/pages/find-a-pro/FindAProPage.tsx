@@ -118,7 +118,7 @@ export default function FindAProPage() {
         if (cancelled) return;
         setPros(
           prosData
-            .filter((p) => p.status !== 'Suspended')
+            .filter((p) => p.status === 'Verified')
             .sort((a, b) => b.id - a.id)
             .map((p) => mapApiProToPro(p, reviewsData))
         );

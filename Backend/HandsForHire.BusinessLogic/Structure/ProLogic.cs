@@ -114,7 +114,7 @@ public class ProLogic : IProLogic
             City = dto.City.Trim(),
             HourlyRate = dto.HourlyRate,
             Description = dto.Description.Trim(),
-            Status = ProStatus.Verified
+            Status = ProStatus.Pending
         };
 
         _context.Pros.Add(pro);
