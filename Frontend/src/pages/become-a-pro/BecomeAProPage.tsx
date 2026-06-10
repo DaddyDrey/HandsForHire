@@ -23,10 +23,19 @@ import { professionsApi } from '../../api/professionsApi';
 import { getUser } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useLanguage } from '../../translations/useLanguage';
+import type { TranslationKey } from '../../translations/translations';
 
 const DEFAULT_TRADE_OPTIONS = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC', 'Handyman'];
 const CUSTOM_TRADE = '__custom__';
 const MAX_HOURLY_RATE = 400;
+const TRADE_TRANSLATION_KEYS: Record<string, TranslationKey> = {
+  electrician: 'electrician',
+  plumber: 'plumber',
+  carpenter: 'carpenter',
+  painter: 'painter',
+  hvac: 'hvac',
+  handyman: 'handyman',
+};
 
 export default function BecomeAProPage() {
   const { t } = useLanguage();
@@ -112,6 +121,11 @@ export default function BecomeAProPage() {
 
     const numericValue = Number(value);
     setHourlyRate(String(Math.min(MAX_HOURLY_RATE, Math.max(0, numericValue))));
+  };
+
+  const getTradeLabel = (value: string) => {
+    const key = TRADE_TRANSLATION_KEYS[value.trim().toLowerCase()];
+    return key ? t(key) : value;
   };
 
   return (
@@ -217,7 +231,7 @@ export default function BecomeAProPage() {
                           </MenuItem>
                           {tradeOptions.map((opt) => (
                             <MenuItem key={opt} value={opt}>
-                              {opt}
+                              {getTradeLabel(opt)}
                             </MenuItem>
                           ))}
                           <MenuItem value={CUSTOM_TRADE}>
