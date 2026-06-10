@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "../../auth/auth.ts";
 import { useLanguage } from "../../translations/useLanguage";
@@ -21,6 +23,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState(() => localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(() => Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY)));
 
   const [loading, setLoading] = useState(false);
@@ -31,60 +34,69 @@ export default function LoginPage() {
     setError("");
 
     if (!isValidEmail(email)) {
-      setError(t('invalidEmail'));
+      setError(t("invalidEmail"));
       return;
     }
     if (password.length < 6) {
-      setError(t('passwordTooShort'));
+      setError(t("passwordTooShort"));
       return;
     }
 
-try {
-  setLoading(true);
-  await login(email, password, remember);
-  if (remember) localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim().toLowerCase());
-  else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
-  nav(redirectTo, { replace: true });
-} catch (err: unknown) {
-  const message =
-    err instanceof Error ? err.message : t('loginFailed');
-  setError(message);
-} finally {
-  setLoading(false);
-}
+    try {
+      setLoading(true);
+      await login(email, password, remember);
+      if (remember) localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim().toLowerCase());
+      else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+      nav(redirectTo, { replace: true });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("loginFailed"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>{t('loginTitle')}</h1>
-        <p style={styles.sub}>{t('loginSubtitle')}</p>
+        <h1 style={styles.title}>{t("loginTitle")}</h1>
+        <p style={styles.sub}>{t("loginSubtitle")}</p>
 
         {error && <div style={styles.error}>{error}</div>}
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
           <label style={styles.label}>
-            {t('email')}
+            {t("email")}
             <input
               style={styles.input}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              placeholder={t('emailPlaceholder')}
+              placeholder={t("emailPlaceholder")}
               autoComplete="email"
             />
           </label>
 
           <label style={styles.label}>
-            {t('password')}
-            <input
-              style={styles.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-            />
+            {t("password")}
+            <span style={styles.passwordWrap}>
+              <input
+                style={{ ...styles.input, ...styles.passwordInput }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="********"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                title={showPassword ? t("hidePassword") : t("showPassword")}
+                onClick={() => setShowPassword((current) => !current)}
+                style={styles.passwordToggle}
+              >
+                {showPassword ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
+              </button>
+            </span>
           </label>
 
           <label style={styles.checkboxRow}>
@@ -93,32 +105,24 @@ try {
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
             />
-            {t('rememberMe')}
+            {t("rememberMe")}
           </label>
 
           <button disabled={loading} style={styles.button} type="submit">
-            {loading ? t('loggingIn') : t('loginButton')}
+            {loading ? t("loggingIn") : t("loginButton")}
           </button>
           <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-  <div style={{ fontSize: 13, opacity: 0.9 }}>
-    {t('noAccount')}{" "}
-    <button
-      type="button"
-      onClick={() => nav("/signup")}
-      style={{
-        background: "transparent",
-        border: "none",
-        padding: 0,
-        cursor: "pointer",
-        textDecoration: "underline",
-        fontWeight: 700,
-        color: "inherit",
-      }}
-    >
-      {t('createOne')}
-    </button>
-  </div>
-</div>
+            <div style={{ fontSize: 13, opacity: 0.9 }}>
+              {t("noAccount")}{" "}
+              <button
+                type="button"
+                onClick={() => nav("/signup")}
+                style={styles.linkButton}
+              >
+                {t("createOne")}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
@@ -152,6 +156,29 @@ const styles: Record<string, React.CSSProperties> = {
     color: "inherit",
     outline: "none",
   },
+  passwordWrap: {
+    position: "relative",
+    display: "block",
+  },
+  passwordInput: {
+    paddingRight: 44,
+  },
+  passwordToggle: {
+    position: "absolute",
+    right: 8,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 32,
+    height: 32,
+    border: "none",
+    borderRadius: 8,
+    background: "transparent",
+    color: "inherit",
+    cursor: "pointer",
+    display: "grid",
+    placeItems: "center",
+    opacity: 0.78,
+  },
   checkboxRow: { display: "flex", gap: 8, alignItems: "center", fontSize: 14 },
   button: {
     padding: "10px 12px",
@@ -159,6 +186,15 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none",
     cursor: "pointer",
     fontWeight: 700,
+  },
+  linkButton: {
+    background: "transparent",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
+    textDecoration: "underline",
+    fontWeight: 700,
+    color: "inherit",
   },
   error: {
     marginTop: 10,
