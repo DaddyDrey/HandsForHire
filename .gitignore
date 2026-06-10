@@ -28,3 +28,7 @@ obj/
 *.db
 *.db-shm
 *.db-wal
+
+# Local email validation/reference documents
+valid-emails.txt
+valid-email-domains.txt

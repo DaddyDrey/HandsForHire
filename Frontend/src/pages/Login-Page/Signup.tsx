@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from "react";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { useLocation, useNavigate } from "react-router-dom";
 import { register } from "../../auth/auth.ts";
 import { useLanguage } from "../../translations/useLanguage";
-
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-}
+import { isAllowedEmail } from "../../utils/emailValidation";
 
 const REMEMBERED_EMAIL_KEY = "handsforhire_remembered_email";
 
@@ -23,6 +22,8 @@ export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [remember, setRemember] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -32,9 +33,9 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    if (!isValidEmail(email)) return setError(t('invalidEmail'));
-    if (password.length < 6) return setError(t('passwordTooShort'));
-    if (password !== confirm) return setError(t('passwordsMismatch'));
+    if (!isAllowedEmail(email)) return setError(t("invalidEmail"));
+    if (password.length < 6) return setError(t("passwordTooShort"));
+    if (password !== confirm) return setError(t("passwordsMismatch"));
 
     try {
       setLoading(true);
@@ -43,8 +44,7 @@ export default function Signup() {
       else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
       nav(redirectTo, { replace: true });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : t('signupFailed');
-      setError(message);
+      setError(err instanceof Error ? err.message : t("signupFailed"));
     } finally {
       setLoading(false);
     }
@@ -53,58 +53,80 @@ export default function Signup() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>{t('signupTitle')}</h1>
-        <p style={styles.sub}>{t('signupSubtitle')}</p>
+        <h1 style={styles.title}>{t("signupTitle")}</h1>
+        <p style={styles.sub}>{t("signupSubtitle")}</p>
 
         {error && <div style={styles.error}>{error}</div>}
 
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
           <label style={styles.label}>
-            {t('fullName')}
+            {t("fullName")}
             <input
               style={styles.input}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               type="text"
-              placeholder={t('fullNamePlaceholder')}
+              placeholder={t("fullNamePlaceholder")}
               autoComplete="name"
             />
           </label>
 
           <label style={styles.label}>
-            {t('email')}
+            {t("email")}
             <input
               style={styles.input}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              placeholder={t('emailPlaceholder')}
+              placeholder={t("emailPlaceholder")}
               autoComplete="email"
             />
           </label>
 
           <label style={styles.label}>
-            {t('password')}
-            <input
-              style={styles.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
+            {t("password")}
+            <span style={styles.passwordWrap}>
+              <input
+                style={{ ...styles.input, ...styles.passwordInput }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="********"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                title={showPassword ? t("hidePassword") : t("showPassword")}
+                onClick={() => setShowPassword((current) => !current)}
+                style={styles.passwordToggle}
+              >
+                {showPassword ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
+              </button>
+            </span>
           </label>
 
           <label style={styles.label}>
-            {t('confirmPassword')}
-            <input
-              style={styles.input}
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
+            {t("confirmPassword")}
+            <span style={styles.passwordWrap}>
+              <input
+                style={{ ...styles.input, ...styles.passwordInput }}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                type={showConfirm ? "text" : "password"}
+                placeholder="********"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                aria-label={showConfirm ? t("hidePassword") : t("showPassword")}
+                title={showConfirm ? t("hidePassword") : t("showPassword")}
+                onClick={() => setShowConfirm((current) => !current)}
+                style={styles.passwordToggle}
+              >
+                {showConfirm ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
+              </button>
+            </span>
           </label>
 
           <label style={styles.checkboxRow}>
@@ -113,29 +135,21 @@ export default function Signup() {
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
             />
-            {t('rememberMe')}
+            {t("rememberMe")}
           </label>
 
           <button disabled={loading} style={styles.button} type="submit">
-            {loading ? t('creatingAccount') : t('signupButton')}
+            {loading ? t("creatingAccount") : t("signupButton")}
           </button>
 
           <div style={{ fontSize: 13, opacity: 0.9 }}>
-            {t('alreadyHaveAccount')}{" "}
+            {t("alreadyHaveAccount")}{" "}
             <button
               type="button"
               onClick={() => nav("/login")}
-              style={{
-                background: "transparent",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                textDecoration: "underline",
-                fontWeight: 700,
-                color: "inherit",
-              }}
+              style={styles.linkButton}
             >
-              {t('signInLink')}
+              {t("signInLink")}
             </button>
           </div>
         </form>
@@ -171,6 +185,29 @@ const styles: Record<string, React.CSSProperties> = {
     color: "inherit",
     outline: "none",
   },
+  passwordWrap: {
+    position: "relative",
+    display: "block",
+  },
+  passwordInput: {
+    paddingRight: 44,
+  },
+  passwordToggle: {
+    position: "absolute",
+    right: 8,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 32,
+    height: 32,
+    border: "none",
+    borderRadius: 8,
+    background: "transparent",
+    color: "inherit",
+    cursor: "pointer",
+    display: "grid",
+    placeItems: "center",
+    opacity: 0.78,
+  },
   checkboxRow: { display: "flex", gap: 8, alignItems: "center", fontSize: 14 },
   button: {
     padding: "10px 12px",
@@ -178,6 +215,15 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none",
     cursor: "pointer",
     fontWeight: 700,
+  },
+  linkButton: {
+    background: "transparent",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
+    textDecoration: "underline",
+    fontWeight: 700,
+    color: "inherit",
   },
   error: {
     marginTop: 10,
