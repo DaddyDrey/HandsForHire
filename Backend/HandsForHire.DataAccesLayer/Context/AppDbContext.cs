@@ -26,6 +26,10 @@ public class AppDbContext : DbContext
             .HasIndex(c => new { c.UserId, c.ProId })
             .IsUnique();
 
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
         modelBuilder.Entity<Message>()
             .HasOne(m => m.Conversation)
             .WithMany(c => c.Messages)

@@ -47,8 +47,15 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateUserDto dto)
     {
-        var createdUser = await _UserLogic.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
+        try
+        {
+            var createdUser = await _UserLogic.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("register")]

@@ -54,7 +54,7 @@ public class UserLogic : IUserLogic
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
         if (existing != null)
-            return ToDto(existing);
+            throw new InvalidOperationException("An account with this email already exists.");
 
         var user = new User
         {
