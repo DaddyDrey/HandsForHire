@@ -20,7 +20,7 @@ import ContainerMax from '../../components/common/ContainerMax';
 import Section from '../../components/common/Section';
 import { prosApi } from '../../api/prosApi';
 import { professionsApi } from '../../api/professionsApi';
-import { getUser } from '../../auth/auth';
+import { getUser, isSuspended } from '../../auth/auth';
 import paths from '../../routes/paths';
 import { useLanguage } from '../../translations/useLanguage';
 import type { TranslationKey } from '../../translations/translations';
@@ -58,6 +58,8 @@ export default function BecomeAProPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isCustomTrade = trade === CUSTOM_TRADE;
+  const currentUser = getUser();
+  const suspended = isSuspended(currentUser);
 
   useEffect(() => {
     void professionsApi.getAll()
@@ -69,9 +71,13 @@ export default function BecomeAProPage() {
     e.preventDefault();
     setSubmitted(true);
 
-    const currentUser = getUser();
     if (!currentUser) {
       setErrorMessage(t('pleaseLogInFirst'));
+      return;
+    }
+
+    if (suspended) {
+      setErrorMessage(t('suspendedCreationBlocked'));
       return;
     }
 
@@ -287,7 +293,13 @@ export default function BecomeAProPage() {
                       rows={4}
                     />
 
-                    <Button type="submit" variant="contained" size="large" disabled={submitting} sx={{ alignSelf: 'flex-start', px: 3 }}>
+                    {suspended && (
+                      <Typography color="error" variant="body2">
+                        {t('suspendedCreationBlocked')}
+                      </Typography>
+                    )}
+
+                    <Button type="submit" variant="contained" size="large" disabled={submitting || suspended} sx={{ alignSelf: 'flex-start', px: 3 }}>
                       {t('submitApplication')}
                     </Button>
                   </Stack>

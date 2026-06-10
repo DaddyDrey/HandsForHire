@@ -44,6 +44,8 @@ export default function SettingsPage() {
   const [pwd2, setPwd2] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordSeverity, setPasswordSeverity] = useState<"success" | "error">("success");
   const [severity, setSeverity] = useState<"success" | "error" | "info">("info");
 
   useEffect(() => {
@@ -101,6 +103,7 @@ export default function SettingsPage() {
         city: city.trim(),
         birthYear: parsedBirthYear,
         phoneNumber: phoneNumber.trim(),
+        status: user.status,
       });
 
       setLoadedUser((current) => current ? {
@@ -121,18 +124,26 @@ export default function SettingsPage() {
   };
 
   const onChangePassword = async () => {
+    setPasswordMessage("");
+
     if (currentPwd.length < 6) {
       showMessage("error", t("currentPasswordRequired"));
+      setPasswordSeverity("error");
+      setPasswordMessage(t("currentPasswordRequired"));
       return;
     }
 
     if (pwd.length < 6) {
       showMessage("error", t("passwordTooShort"));
+      setPasswordSeverity("error");
+      setPasswordMessage(t("passwordTooShort"));
       return;
     }
 
     if (pwd !== pwd2) {
       showMessage("error", t("passwordsMismatch"));
+      setPasswordSeverity("error");
+      setPasswordMessage(t("passwordsMismatch"));
       return;
     }
 
@@ -142,8 +153,13 @@ export default function SettingsPage() {
       setPwd("");
       setPwd2("");
       showMessage("success", t("passwordUpdated"));
+      setPasswordSeverity("success");
+      setPasswordMessage(t("passwordUpdated"));
     } catch (error: unknown) {
-      showMessage("error", error instanceof Error ? error.message : t("couldNotChangePassword"));
+      const nextMessage = error instanceof Error ? error.message : t("couldNotChangePassword");
+      showMessage("error", nextMessage);
+      setPasswordSeverity("error");
+      setPasswordMessage(nextMessage);
     }
   };
 
@@ -296,6 +312,7 @@ export default function SettingsPage() {
                 <TextField label={t("currentPassword")} type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} />
                 <TextField label={t("newPassword")} type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
                 <TextField label={t("confirmPasswordLabel")} type="password" value={pwd2} onChange={(e) => setPwd2(e.target.value)} />
+                {passwordMessage && <Alert severity={passwordSeverity}>{passwordMessage}</Alert>}
                 <Divider />
                 <Stack
                   direction={{ xs: "column", sm: "row" }}

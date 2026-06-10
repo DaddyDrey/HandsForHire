@@ -7,6 +7,8 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+const REMEMBERED_EMAIL_KEY = "handsforhire_remembered_email";
+
 export default function Signup() {
   const { t } = useLanguage();
   const nav = useNavigate();
@@ -21,7 +23,7 @@ export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,6 +39,8 @@ export default function Signup() {
     try {
       setLoading(true);
       await register(fullName || email.split("@")[0], email, password, remember);
+      if (remember) localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim().toLowerCase());
+      else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
       nav(redirectTo, { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('signupFailed');

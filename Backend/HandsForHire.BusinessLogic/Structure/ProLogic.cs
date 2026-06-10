@@ -105,6 +105,11 @@ public class ProLogic : IProLogic
         await EnsureProfessionExistsAsync(dto.Trade);
 
         var normalizedEmail = dto.Email.Trim().ToLower();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+        if (user?.Status == UserStatus.Suspended)
+            throw new InvalidOperationException("Suspended users cannot create new listings.");
+
         var pro = new Pro
         {
             Email = normalizedEmail,

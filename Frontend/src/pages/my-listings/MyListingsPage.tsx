@@ -19,7 +19,7 @@ import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import { useNavigate } from "react-router-dom";
 
-import { getUser } from "../../auth/auth";
+import { getUser, isSuspended } from "../../auth/auth";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
@@ -31,6 +31,7 @@ export default function MyListingsPage() {
   const nav = useNavigate();
   const user = getUser();
   const userEmail = user?.email;
+  const suspended = isSuspended(user);
 
   const [listings, setListings] = useState<ProApiDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,6 +122,7 @@ export default function MyListingsPage() {
                 size="large"
                 startIcon={<AddRoundedIcon />}
                 onClick={() => nav(paths.becomeAPro)}
+                disabled={suspended}
                 sx={{ alignSelf: { xs: "stretch", md: "center" } }}
               >
                 Create new listing
@@ -129,6 +131,7 @@ export default function MyListingsPage() {
           </Box>
 
           {message && <Alert severity={severity}>{message}</Alert>}
+          {suspended && <Alert severity="warning">{t("suspendedCreationBlocked")}</Alert>}
 
           <Card
             variant="outlined"
@@ -158,6 +161,7 @@ export default function MyListingsPage() {
                     variant="outlined"
                     startIcon={<AddRoundedIcon />}
                     onClick={() => nav(paths.becomeAPro)}
+                    disabled={suspended}
                   >
                     New
                   </Button>
@@ -189,6 +193,7 @@ export default function MyListingsPage() {
                       variant="contained"
                       startIcon={<AddRoundedIcon />}
                       onClick={() => nav(paths.becomeAPro)}
+                      disabled={suspended}
                     >
                       Create new listing
                     </Button>

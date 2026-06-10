@@ -43,8 +43,15 @@ public class AnnouncementsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateAnnouncementDto dto)
     {
-        var created = await _AnnouncementLogic.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await _AnnouncementLogic.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{id}")]

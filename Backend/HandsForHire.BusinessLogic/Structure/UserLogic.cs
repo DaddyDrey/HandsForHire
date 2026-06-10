@@ -54,7 +54,7 @@ public class UserLogic : IUserLogic
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
         if (existing != null)
-            return ToDto(existing);
+            throw new InvalidOperationException("An account with this email already exists.");
 
         var user = new User
         {
@@ -101,9 +101,6 @@ public class UserLogic : IUserLogic
 
         if (user == null || string.IsNullOrWhiteSpace(user.PasswordHash))
             return null;
-
-        if (user.Status != UserStatus.Active)
-            throw new InvalidOperationException("This account is suspended.");
 
         return VerifyPassword(dto.Password, user.PasswordHash) ? ToDto(user) : null;
     }

@@ -40,6 +40,7 @@ import {
   setAvatarDataUrl,
   getAvatarDataUrl,
   clearAvatar,
+  isSuspended,
 } from "../../auth/auth";
 import { useLanguage } from "../../translations/useLanguage";
 import { prosApi, type ProApiDto } from "../../api/prosApi";
@@ -124,6 +125,7 @@ export default function ProfilePage() {
   const [backendUser, setBackendUser] = useState<Awaited<ReturnType<typeof messagesApi.getUserByEmail>> | null>(null);
 
   const userEmail = user?.email;
+  const suspended = isSuspended(user);
   useEffect(() => {
     if (!userEmail) return;
     let cancelled = false;
@@ -208,6 +210,11 @@ export default function ProfilePage() {
   const handlePostSubmit = async () => {
     setPostTouched(true);
     if (!postTitle.trim() || !postDescription.trim() || !postCategory || !postCity.trim()) return;
+    if (suspended) {
+      setMsgSeverity("error");
+      setMsg(t("suspendedCreationBlocked"));
+      return;
+    }
     if (!verifiedProProfile) {
       setMsgSeverity("error");
       setMsg(t("proProfilePendingApproval"));
@@ -469,7 +476,7 @@ export default function ProfilePage() {
                     </Typography>
                   )}
                 </Box>
-                <Button variant="contained" size="small" onClick={() => nav(paths.becomeAPro)}>
+                <Button variant="contained" size="small" onClick={() => nav(paths.becomeAPro)} disabled={suspended}>
                   {t("addNewBtn")}
                 </Button>
               </Stack>
@@ -578,7 +585,7 @@ export default function ProfilePage() {
                   variant="contained"
                   startIcon={<AddRoundedIcon />}
                   onClick={() => setPostOpen(true)}
-                  disabled={!backendUserId || !verifiedProProfile}
+                  disabled={!backendUserId || !verifiedProProfile || suspended}
                 >
                   {t("addNewBtn")}
                 </Button>
@@ -601,7 +608,12 @@ export default function ProfilePage() {
                 >
                   <WorkOutlineRoundedIcon sx={{ fontSize: 38, opacity: 0.55, mb: 1 }} />
                   <Typography sx={{ fontWeight: 750 }}>{t("noAnnouncementsYet")}</Typography>
-                  {verifiedProProfile && (
+                  {suspended && (
+                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                      {t("suspendedCreationBlocked")}
+                    </Typography>
+                  )}
+                  {verifiedProProfile && !suspended && (
                     <Button variant="outlined" size="small" sx={{ mt: 1.5 }} onClick={() => setPostOpen(true)}>
                       {t("postNewAnnouncement")}
                     </Button>
