@@ -23,8 +23,19 @@ import { useAnnouncementService } from "../../mock_data/announcements";
 import paths from "../../routes/paths";
 import type { UserApiDto } from "../../api/messagesApi";
 import { useLanguage } from "../../translations/useLanguage";
+import type { TranslationKey } from "../../translations/translations";
 
-const CATEGORIES = ["Plumbing", "Moving", "Cleaning", "Electrical", "Painting", "Assembly", "HVAC", "Handyman", "Other"];
+const CATEGORIES: { value: string; key: TranslationKey }[] = [
+  { value: "Plumbing", key: "catPlumbing" },
+  { value: "Moving", key: "catMoving" },
+  { value: "Cleaning", key: "catCleaning" },
+  { value: "Electrical", key: "catElectrical" },
+  { value: "Painting", key: "catPainting" },
+  { value: "Assembly", key: "catAssembly" },
+  { value: "HVAC", key: "catHvac" },
+  { value: "Handyman", key: "catHandyman" },
+  { value: "Other", key: "otherTrade" },
+];
 
 export default function PostJobPage() {
   const { t } = useLanguage();
@@ -43,7 +54,7 @@ export default function PostJobPage() {
 
   const ensureBackendUser = async (): Promise<UserApiDto> => {
     const email = user?.email.trim().toLowerCase();
-    if (!email) throw new Error("You need to be logged in to post a job.");
+    if (!email) throw new Error(t("loginToPostJob"));
 
     try {
       const { data } = await axiosInstance.get<UserApiDto>(`/Users/by-email/${encodeURIComponent(email)}`);
@@ -85,7 +96,7 @@ export default function PostJobPage() {
       });
       nav(paths.account, { replace: true });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Could not post job.");
+      setError(err instanceof Error ? err.message : t("couldNotPostJob"));
     } finally {
       setSaving(false);
     }
@@ -109,10 +120,10 @@ export default function PostJobPage() {
             }}
           >
             <Typography variant="h1" sx={{ fontSize: { xs: "2.3rem", md: "3.25rem" }, lineHeight: 1.05 }}>
-              Post a job
+              {t('PostAnAnnouncement')}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
-              Tell professionals what you need, where it is, and what kind of help you are looking for.
+              {t('PostJobDescription')}
             </Typography>
           </Box>
 
@@ -125,20 +136,20 @@ export default function PostJobPage() {
                 <Stack spacing={2.5}>
                   <TextField
                     fullWidth
-                    label="Job title"
+                    label={t("jobTitle")}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     error={hasError(title)}
-                    helperText={hasError(title) ? "Title is required." : ""}
+                    helperText={hasError(title) ? t("titleRequired") : ""}
                   />
 
                   <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                     <FormControl fullWidth error={submitted && !category}>
-                      <InputLabel>Category</InputLabel>
-                      <Select value={category} label="Category" onChange={(e) => setCategory(e.target.value)}>
+                      <InputLabel>{t("categoryField")}</InputLabel>
+                      <Select value={category} label={t("categoryField")} onChange={(e) => setCategory(e.target.value)}>
                         {CATEGORIES.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            {option}
+                          <MenuItem key={option.value} value={option.value}>
+                            {t(option.key)}
                           </MenuItem>
                         ))}
                       </Select>
@@ -146,27 +157,27 @@ export default function PostJobPage() {
 
                     <TextField
                       fullWidth
-                      label="City"
+                      label={t("city")}
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       error={hasError(city)}
-                      helperText={hasError(city) ? "City is required." : ""}
+                      helperText={hasError(city) ? t("cityRequired") : ""}
                     />
                   </Stack>
 
                   <TextField
                     fullWidth
-                    label="Description"
+                    label={t("description")}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     error={hasError(description)}
-                    helperText={hasError(description) ? "Description is required." : ""}
+                    helperText={hasError(description) ? t("descriptionRequired") : ""}
                     multiline
                     rows={5}
                   />
 
                   <Button type="submit" variant="contained" size="large" disabled={saving || suspended} sx={{ alignSelf: "flex-start" }}>
-                    {saving ? "Posting..." : "Post job"}
+                    {saving ? t("postingBtn") : t("postJobButton")}
                   </Button>
                 </Stack>
               </Box>

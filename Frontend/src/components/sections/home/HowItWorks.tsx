@@ -23,7 +23,7 @@ export default function HowItWorks() {
           {t('howItWorks')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3.5 }}>
-          Three simple steps to get your project done right.
+          {t('howItWorksSubtitle')}
         </Typography>
 
         <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' } }}>

@@ -118,7 +118,7 @@ background: "linear-gradient(to bottom, transparent 20%, #020817 100%)",  pointe
                 transition: 'all 200ms ease',
               }}
             >
-              Post a job
+              {t('PostAnAnnouncement')}
             </Button>
 
             <Button

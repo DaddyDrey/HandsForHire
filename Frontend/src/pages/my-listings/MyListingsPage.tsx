@@ -20,11 +20,18 @@ import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import { useNavigate } from "react-router-dom";
 
 import { getUser, isSuspended } from "../../auth/auth";
-import { prosApi, type ProApiDto } from "../../api/prosApi";
+import { prosApi, type ProApiDto, type ProStatus } from "../../api/prosApi";
 import ContainerMax from "../../components/common/ContainerMax";
 import Section from "../../components/common/Section";
 import paths from "../../routes/paths";
 import { useLanguage } from "../../translations/useLanguage";
+import type { TranslationKey } from "../../translations/translations";
+
+const statusKey: Record<ProStatus, TranslationKey> = {
+  Pending: "statusPending",
+  Verified: "statusVerified",
+  Suspended: "statusSuspended",
+};
 
 export default function MyListingsPage() {
   const { t } = useLanguage();
@@ -111,10 +118,10 @@ export default function MyListingsPage() {
                   variant="h1"
                   sx={{ fontSize: { xs: "2.25rem", md: "3.1rem" }, lineHeight: 1.05 }}
                 >
-                  My listings
+                  {t('MyListings')}
                 </Typography>
                 <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
-                  Manage every service you offer from one place.
+                  {t('ListingsDescription')}
                 </Typography>
               </Box>
               <Button
@@ -125,7 +132,7 @@ export default function MyListingsPage() {
                 disabled={suspended}
                 sx={{ alignSelf: { xs: "stretch", md: "center" } }}
               >
-                Create new listing
+                {t("createNewListing")}
               </Button>
             </Stack>
           </Box>
@@ -152,7 +159,7 @@ export default function MyListingsPage() {
                   spacing={1.5}
                 >
                   <Box>
-                    <Typography sx={{ fontWeight: 850, fontSize: 18 }}>Active services</Typography>
+                    <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("activeServices")}</Typography>
                     <Typography color="text.secondary" variant="body2">
                       {activeListings.length} {t("listingsCountLabel")}
                     </Typography>
@@ -163,7 +170,7 @@ export default function MyListingsPage() {
                     onClick={() => nav(paths.becomeAPro)}
                     disabled={suspended}
                   >
-                    New
+                    {t("newBtn")}
                   </Button>
                 </Stack>
 
@@ -185,9 +192,9 @@ export default function MyListingsPage() {
                     }}
                   >
                     <WorkOutlineRoundedIcon sx={{ fontSize: 44, opacity: 0.6, mb: 1 }} />
-                    <Typography sx={{ fontWeight: 850, fontSize: 18 }}>No active listings yet</Typography>
+                    <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("noActiveListingsYet")}</Typography>
                     <Typography color="text.secondary" sx={{ mt: 0.75, mb: 2 }}>
-                      Create your first service so clients can find you.
+                      {t("createFirstService")}
                     </Typography>
                     <Button
                       variant="contained"
@@ -195,7 +202,7 @@ export default function MyListingsPage() {
                       onClick={() => nav(paths.becomeAPro)}
                       disabled={suspended}
                     >
-                      Create new listing
+                      {t("createNewListing")}
                     </Button>
                   </Box>
                 ) : (
@@ -241,7 +248,7 @@ export default function MyListingsPage() {
                               <Typography sx={{ fontWeight: 900, fontSize: 17 }} noWrap>
                                 {listing.trade}
                               </Typography>
-                              <Chip size="small" label={listing.status} variant="outlined" />
+                              <Chip size="small" label={t(statusKey[listing.status])} variant="outlined" />
                             </Stack>
                             <Typography color="text.secondary" variant="body2" noWrap>
                               {listing.fullName}
@@ -270,7 +277,7 @@ export default function MyListingsPage() {
                             overflow: "hidden",
                           }}
                         >
-                          {listing.description || "No description provided."}
+                          {listing.description || t("noDescriptionProvided")}
                         </Typography>
 
                         <Box

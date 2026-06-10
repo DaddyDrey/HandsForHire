@@ -70,7 +70,7 @@ try {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              placeholder="you@example.com"
+              placeholder={t('emailPlaceholder')}
               autoComplete="email"
             />
           </label>

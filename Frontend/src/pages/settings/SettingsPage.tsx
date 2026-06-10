@@ -77,12 +77,12 @@ export default function SettingsPage() {
     const parsedBirthYear = birthYear.trim() ? Number(birthYear) : null;
 
     if (!fullName.trim() || !email.trim()) {
-      showMessage("error", "Name and email are required.");
+      showMessage("error", t("accountRequired"));
       return;
     }
 
     if (parsedBirthYear !== null && (Number.isNaN(parsedBirthYear) || parsedBirthYear < 1900)) {
-      showMessage("error", "Enter a valid birth year.");
+      showMessage("error", t("validBirthYear"));
       return;
     }
 
@@ -115,9 +115,9 @@ export default function SettingsPage() {
         phoneNumber: phoneNumber.trim(),
       } : current);
 
-      showMessage("success", "Account updated.");
+      showMessage("success", t("accountUpdated"));
     } catch (error: unknown) {
-      showMessage("error", error instanceof Error ? error.message : "Could not update account.");
+      showMessage("error", error instanceof Error ? error.message : t("couldNotUpdateAccount"));
     } finally {
       setSaving(false);
     }
@@ -193,10 +193,10 @@ export default function SettingsPage() {
             }}
           >
             <Typography variant="h1" sx={{ fontSize: { xs: "2.3rem", md: "3.25rem" }, lineHeight: 1.05 }}>
-              Settings
+              {t("settingsTitle")}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 680 }}>
-              Manage your account, security, and workspace theme.
+              {t("settingsSubtitle")}
             </Typography>
           </Box>
 
@@ -205,7 +205,7 @@ export default function SettingsPage() {
           <Card variant="outlined" sx={panelSx}>
             <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
               <Stack spacing={2}>
-                <Typography sx={{ fontWeight: 850, fontSize: 18 }}>Account</Typography>
+                <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("account")}</Typography>
                 <Divider />
                 <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" } }}>
                   <TextField label={t("fullNameLabel")} value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                     inputProps={{ min: 1900, max: new Date().getFullYear() - 16 }}
                   />
                   <TextField
-                    label="Phone number"
+                    label={t("phoneNumber")}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     sx={{ gridColumn: { md: "span 2" } }}
@@ -232,7 +232,7 @@ export default function SettingsPage() {
                   disabled={saving}
                   sx={{ alignSelf: "flex-start" }}
                 >
-                  Save account
+                  {t("saveAccount")}
                 </Button>
               </Stack>
             </CardContent>
@@ -243,7 +243,7 @@ export default function SettingsPage() {
               <Stack spacing={2}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <PaletteOutlinedIcon color="primary" />
-                  <Typography sx={{ fontWeight: 850, fontSize: 18 }}>Theme</Typography>
+                  <Typography sx={{ fontWeight: 850, fontSize: 18 }}>{t("themeLabel")}</Typography>
                 </Stack>
                 <Divider />
                 <Box
@@ -290,13 +290,13 @@ export default function SettingsPage() {
                 >
                   <Stack spacing={1.5}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography sx={{ fontWeight: 850 }}>Preview</Typography>
+                      <Typography sx={{ fontWeight: 850 }}>{t("previewLabel")}</Typography>
                       <Chip label={mode.name} size="small" color="primary" />
                     </Stack>
                     <Box sx={{ height: 86, borderRadius: 2, background: mode.preview }} />
                     <Stack direction="row" spacing={1}>
-                      <Button variant="contained">Primary</Button>
-                      <Button variant="outlined">Secondary</Button>
+                      <Button variant="contained">{t("primaryPreview")}</Button>
+                      <Button variant="outlined">{t("secondaryPreview")}</Button>
                     </Stack>
                   </Stack>
                 </Box>

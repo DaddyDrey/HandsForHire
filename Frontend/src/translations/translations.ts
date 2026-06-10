@@ -13,6 +13,7 @@ const translations = {
     becomeAPro: 'Become a pro',
     signIn: 'Log In',
     messagesNav: 'Messages',
+    MyListings: 'My Listings',
 
     // Messages page
     messagesTitle: 'Messages',
@@ -84,6 +85,9 @@ const translations = {
     // CTA
     readyToGetWorkDone: 'Ready to get work done?',
     ctaDescription: "Post a job or join as a professional — we'll handle the matching.",
+    PostAnAnnouncement: "Post An Announcement",
+    categoriesSubtitle: 'Browse by trade and find the right professional for the job.',
+    howItWorksSubtitle: 'Three simple steps to get your project done right.',
 
     // FindAPro page
     findAProTitle: 'Find a Pro',
@@ -160,6 +164,7 @@ const translations = {
     loginTitle: 'Login',
     loginSubtitle: 'Log in with your HandsForHire account.',
     email: 'Email',
+    emailPlaceholder: 'you@example.com',
     password: 'Password',
     rememberMe: 'Remember me',
     loggingIn: 'Logging in...',
@@ -173,6 +178,7 @@ const translations = {
     // Signup
     signupTitle: 'Create account',
     signupSubtitle: 'Create a real account and start using HandsForHire.',
+    fullNamePlaceholder: 'Alex Smith',
     confirmPassword: 'Confirm password',
     creatingAccount: 'Creating...',
     signupButton: 'Sign up',
@@ -196,6 +202,7 @@ const translations = {
     applicationSuccess: 'Application submitted successfully!',
     fieldRequired: 'This field is required',
     selectTrade: 'Select a trade',
+    applicationSubmitFailed: 'Could not submit application.',
 
     electricianDesc: 'Wiring, outlets, lighting, panels, troubleshooting, and safe electrical installs.',
     plumberDesc: 'Leaks, pipes, faucets, toilets, boilers, and quick fixes for water systems.',
@@ -204,10 +211,32 @@ const translations = {
     hvacDesc: 'Air conditioning and ventilation: install, maintenance, filter changes, and diagnostics.',
     handymanDesc: 'General home repairs: mounting, assembling, small fixes, and everyday maintenance.',
 
+    //PostAnAnnouncementPage
+    PostJobDescription: 'Tell professionals what you need, where it is, and what kind of help you are looking for.',
+    jobTitle: 'Job title',
+    titleRequired: 'Title is required.',
+    cityRequired: 'City is required.',
+    descriptionRequired: 'Description is required.',
+    postJobButton: 'Post job',
+    loginToPostJob: 'You need to be logged in to post a job.',
+    couldNotPostJob: 'Could not post job.',
+
         // Profile page
     myAccount: 'My account',
     privateAccountInfo: 'Private account information (only you can see this).',
     account: 'Account',
+    settingsTitle: 'Settings',
+    settingsSubtitle: 'Manage your account, security, and workspace theme.',
+    phoneNumber: 'Phone number',
+    saveAccount: 'Save account',
+    accountRequired: 'Name and email are required.',
+    validBirthYear: 'Enter a valid birth year.',
+    accountUpdated: 'Account updated.',
+    couldNotUpdateAccount: 'Could not update account.',
+    themeLabel: 'Theme',
+    previewLabel: 'Preview',
+    primaryPreview: 'Primary',
+    secondaryPreview: 'Secondary',
     uploadPhoto: 'Upload photo',
     removePhoto: 'Remove photo',
     profilePhotoUpdated: 'Profile photo updated.',
@@ -238,6 +267,15 @@ const translations = {
     couldNotDeleteAccount: 'Could not delete account.',
     notProvided: '-',
     newUser: 'New User',
+
+    //Listings
+    ListingsDescription: 'Manage every service you offer from one place.',
+    createNewListing: 'Create new listing',
+    activeServices: 'Active services',
+    newBtn: 'New',
+    noActiveListingsYet: 'No active listings yet',
+    createFirstService: 'Create your first service so clients can find you.',
+    noDescriptionProvided: 'No description provided.',
 
     // Footer
     footerText: 'HandsForHire. Built with care.',
@@ -287,6 +325,7 @@ const translations = {
 
     // Common admin actions/labels
     viewBtn: 'View',
+    addBtn: 'Add',
     reviewBtn: 'Review',
     suspendBtn: 'Suspend',
     restoreBtn: 'Restore',
@@ -307,6 +346,9 @@ const translations = {
     roleField: 'Role',
     userIdField: 'User ID',
     proIdField: 'Pro ID',
+    loadingLabel: 'Loading...',
+    openNavigation: 'Open navigation',
+    closeNavigation: 'Close navigation',
 
     // Users page
     usersPageTitle: 'Users',
@@ -324,6 +366,13 @@ const translations = {
     noProsFound: 'No pros found',
     couldNotLoadPros: 'Could not load pros from the server.',
     couldNotUpdatePro: 'Could not update pro status.',
+    approvedProfessionsTitle: 'Approved professions',
+    approvedProfessionsSubtitle: 'Control which trades can be selected by professionals.',
+    professionNamePlaceholder: 'Profession name',
+    noProfessionsYet: 'No professions yet',
+    failedToLoadProfessions: 'Failed to load professions.',
+    couldNotAddProfession: 'Could not add profession.',
+    couldNotDeleteProfession: 'Could not delete profession.',
     tradeField: 'Trade',
     cityField: 'City',
     hourlyRateField: 'Hourly rate',
@@ -447,6 +496,7 @@ const translations = {
     becomeAPro: 'Devino specialist',
     signIn: 'Logare',
     messagesNav: 'Mesaje',
+    MyListings: 'Anunțurile mele',
 
     // Messages page
     messagesTitle: 'Mesaje',
@@ -518,6 +568,9 @@ const translations = {
     // CTA
     readyToGetWorkDone: 'Ești gata să finalizezi lucrarea?',
     ctaDescription: 'Postează o lucrare sau alătură-te ca specialist — noi ne ocupăm de potrivire.',
+    PostAnAnnouncement: "Postează un anunț",
+    categoriesSubtitle: 'Caută după meserie și găsește specialistul potrivit pentru lucrare.',
+    howItWorksSubtitle: 'Trei pași simpli ca proiectul tău să fie făcut corect.',
 
     // FindAPro page
     findAProTitle: 'Găsește un Specialist',
@@ -594,6 +647,7 @@ const translations = {
     loginTitle: 'Autentificare',
     loginSubtitle: 'Autentifică-te cu contul tău HandsForHire.',
     email: 'Email',
+    emailPlaceholder: 'tu@example.com',
     password: 'Parolă',
     rememberMe: 'Ține-mă minte',
     loggingIn: 'Se autentifică...',
@@ -607,6 +661,7 @@ const translations = {
     // Signup
     signupTitle: 'Creează cont',
     signupSubtitle: 'Creează un cont real și începe să folosești HandsForHire.',
+    fullNamePlaceholder: 'Alex Popescu',
     confirmPassword: 'Confirmă parola',
     creatingAccount: 'Se creează...',
     signupButton: 'Înregistrare',
@@ -630,6 +685,7 @@ const translations = {
     applicationSuccess: 'Cererea a fost trimisă cu succes!',
     fieldRequired: 'Acest câmp este obligatoriu',
     selectTrade: 'Selectează o meserie',
+    applicationSubmitFailed: 'Nu am putut trimite aplicația.',
 
     electricianDesc: 'Cablaje, prize, iluminat, tablouri electrice, depanare și instalări în siguranță.',
     plumberDesc: 'Scurgeri, țevi, robinete, toalete, boilere și reparații rapide pentru instalații sanitare.',
@@ -638,10 +694,32 @@ const translations = {
     hvacDesc: 'Climatizare și ventilație: instalare, mentenanță, filtre și diagnosticare.',
     handymanDesc: 'Reparații generale: montaj, asamblare, mici intervenții și întreținere zilnică.',
 
-        // Profile page
+    //PostAnAnnouncementPage
+    PostJobDescription: 'Spune profesioniștilor de ce ai nevoie, unde se află și ce tip de ajutor cauți.',
+    jobTitle: 'Titlul lucrării',
+    titleRequired: 'Titlul este obligatoriu.',
+    cityRequired: 'Orașul este obligatoriu.',
+    descriptionRequired: 'Descrierea este obligatorie.',
+    postJobButton: 'Postează lucrarea',
+    loginToPostJob: 'Trebuie să fii autentificat pentru a posta o lucrare.',
+    couldNotPostJob: 'Nu am putut posta lucrarea.',
+
+    // Profile page
     myAccount: 'Contul meu',
     privateAccountInfo: 'Informații private despre cont (doar tu le poți vedea).',
     account: 'Cont',
+    settingsTitle: 'Setări',
+    settingsSubtitle: 'Gestionează contul, securitatea și tema spațiului tău de lucru.',
+    phoneNumber: 'Număr de telefon',
+    saveAccount: 'Salvează contul',
+    accountRequired: 'Numele și emailul sunt obligatorii.',
+    validBirthYear: 'Introdu un an de naștere valid.',
+    accountUpdated: 'Contul a fost actualizat.',
+    couldNotUpdateAccount: 'Nu am putut actualiza contul.',
+    themeLabel: 'Temă',
+    previewLabel: 'Previzualizare',
+    primaryPreview: 'Principal',
+    secondaryPreview: 'Secundar',
     uploadPhoto: 'Încarcă poză',
     removePhoto: 'Șterge poza',
     profilePhotoUpdated: 'Poza de profil a fost actualizată.',
@@ -672,6 +750,15 @@ const translations = {
     couldNotDeleteAccount: 'Contul nu a putut fi șters.',
     notProvided: '-',
     newUser: 'Utilizator nou',
+
+    //Listings
+    ListingsDescription: 'Gestionează toate serviciile tale dintr-un singur loc.',
+    createNewListing: 'Creează un anunț nou',
+    activeServices: 'Servicii active',
+    newBtn: 'Nou',
+    noActiveListingsYet: 'Nu ai încă anunțuri active',
+    createFirstService: 'Creează primul serviciu ca să te poată găsi clienții.',
+    noDescriptionProvided: 'Nu a fost oferită nicio descriere.',
 
     // Footer
     footerText: 'HandsForHire. Construit cu grijă.',
@@ -721,6 +808,7 @@ const translations = {
 
     // Common admin actions/labels
     viewBtn: 'Detalii',
+    addBtn: 'Adaugă',
     reviewBtn: 'Verifică',
     suspendBtn: 'Suspendă',
     restoreBtn: 'Restabilește',
@@ -741,6 +829,9 @@ const translations = {
     roleField: 'Rol',
     userIdField: 'ID utilizator',
     proIdField: 'ID specialist',
+    loadingLabel: 'Se încarcă...',
+    openNavigation: 'Deschide navigarea',
+    closeNavigation: 'Închide navigarea',
 
     // Users page
     usersPageTitle: 'Utilizatori',
@@ -758,6 +849,13 @@ const translations = {
     noProsFound: 'Niciun specialist găsit',
     couldNotLoadPros: 'Nu s-au putut încărca specialiștii.',
     couldNotUpdatePro: 'Nu s-a putut actualiza statusul specialistului.',
+    approvedProfessionsTitle: 'Profesii aprobate',
+    approvedProfessionsSubtitle: 'Controlează ce meserii pot fi selectate de specialiști.',
+    professionNamePlaceholder: 'Numele profesiei',
+    noProfessionsYet: 'Nu există încă profesii',
+    failedToLoadProfessions: 'Nu am putut încărca profesiile.',
+    couldNotAddProfession: 'Nu am putut adăuga profesia.',
+    couldNotDeleteProfession: 'Nu am putut șterge profesia.',
     tradeField: 'Profesie',
     cityField: 'Oraș',
     hourlyRateField: 'Tarif orar',
@@ -881,6 +979,7 @@ const translations = {
     becomeAPro: 'Стать мастером',
     signIn: 'Войти',
     messagesNav: 'Сообщения',
+    MyListings: 'Мои объявления',
 
     // Messages page
     messagesTitle: 'Сообщения',
@@ -952,6 +1051,9 @@ const translations = {
     // CTA
     readyToGetWorkDone: 'Готовы приступить к делу?',
     ctaDescription: 'Разместите заказ или присоединитесь как специалист — мы подберём пару.',
+    PostAnAnnouncement: 'Опубликовать объявление',
+    categoriesSubtitle: 'Ищите по профессии и найдите подходящего специалиста для работы.',
+    howItWorksSubtitle: 'Три простых шага, чтобы выполнить ваш проект правильно.',
 
     // FindAPro page
     findAProTitle: 'Найти Специалиста',
@@ -1028,6 +1130,7 @@ const translations = {
     loginTitle: 'Вход',
     loginSubtitle: 'Войдите в свой аккаунт HandsForHire.',
     email: 'Email',
+    emailPlaceholder: 'you@example.com',
     password: 'Пароль',
     rememberMe: 'Запомнить меня',
     loggingIn: 'Вход...',
@@ -1041,6 +1144,7 @@ const translations = {
     // Signup
     signupTitle: 'Создать аккаунт',
     signupSubtitle: 'Создайте реальный аккаунт и начните пользоваться HandsForHire.',
+    fullNamePlaceholder: 'Алексей Иванов',
     confirmPassword: 'Подтвердите пароль',
     creatingAccount: 'Создание...',
     signupButton: 'Зарегистрироваться',
@@ -1064,6 +1168,7 @@ const translations = {
     applicationSuccess: 'Заявка успешно отправлена!',
     fieldRequired: 'Это поле обязательно',
     selectTrade: 'Выберите специальность',
+    applicationSubmitFailed: 'Не удалось отправить заявку.',
 
     electricianDesc: 'Проводка, розетки, освещение, электрощиты, диагностика и безопасная установка.',
     plumberDesc: 'Протечки, трубы, краны, сантехника, бойлеры и быстрые решения для воды.',
@@ -1072,10 +1177,32 @@ const translations = {
     hvacDesc: 'Климат и вентиляция: установка, обслуживание, фильтры и диагностика.',
     handymanDesc: 'Бытовой мастер: мелкий ремонт, крепления, сборка, помощь по дому.',
 
+    //PostAnAnnouncementPage
+    PostJobDescription: 'Расскажите специалистам, что вам нужно, где это находится и какую помощь вы ищете.',
+    jobTitle: 'Название заказа',
+    titleRequired: 'Название обязательно.',
+    cityRequired: 'Город обязателен.',
+    descriptionRequired: 'Описание обязательно.',
+    postJobButton: 'Опубликовать заказ',
+    loginToPostJob: 'Войдите в аккаунт, чтобы опубликовать заказ.',
+    couldNotPostJob: 'Не удалось опубликовать заказ.',
+
         // Profile page
     myAccount: 'Мой аккаунт',
     privateAccountInfo: 'Личная информация аккаунта (видна только вам).',
     account: 'Аккаунт',
+    settingsTitle: 'Настройки',
+    settingsSubtitle: 'Управляйте аккаунтом, безопасностью и темой рабочего пространства.',
+    phoneNumber: 'Номер телефона',
+    saveAccount: 'Сохранить аккаунт',
+    accountRequired: 'Имя и email обязательны.',
+    validBirthYear: 'Введите корректный год рождения.',
+    accountUpdated: 'Аккаунт обновлён.',
+    couldNotUpdateAccount: 'Не удалось обновить аккаунт.',
+    themeLabel: 'Тема',
+    previewLabel: 'Предпросмотр',
+    primaryPreview: 'Основная',
+    secondaryPreview: 'Вторичная',
     uploadPhoto: 'Загрузить фото',
     removePhoto: 'Удалить фото',
     profilePhotoUpdated: 'Фото профиля обновлено.',
@@ -1106,6 +1233,15 @@ const translations = {
     couldNotDeleteAccount: 'Не удалось удалить аккаунт.',
     notProvided: '-',
     newUser: 'Новый пользователь',
+
+    //Listings
+    ListingsDescription: 'Управляйте всеми услугами, которые вы предлагаете, из одного места.',
+    createNewListing: 'Создать новое объявление',
+    activeServices: 'Активные услуги',
+    newBtn: 'Новое',
+    noActiveListingsYet: 'Активных объявлений пока нет',
+    createFirstService: 'Создайте первую услугу, чтобы клиенты могли вас найти.',
+    noDescriptionProvided: 'Описание не указано.',
 
     // Footer
     footerText: 'HandsForHire. Сделано с заботой.',
@@ -1155,6 +1291,7 @@ const translations = {
 
     // Common admin actions/labels
     viewBtn: 'Просмотр',
+    addBtn: 'Добавить',
     reviewBtn: 'Проверить',
     suspendBtn: 'Заблокировать',
     restoreBtn: 'Восстановить',
@@ -1175,6 +1312,9 @@ const translations = {
     roleField: 'Роль',
     userIdField: 'ID пользователя',
     proIdField: 'ID специалиста',
+    loadingLabel: 'Загрузка...',
+    openNavigation: 'Открыть навигацию',
+    closeNavigation: 'Закрыть навигацию',
 
     // Users page
     usersPageTitle: 'Пользователи',
@@ -1192,6 +1332,13 @@ const translations = {
     noProsFound: 'Специалисты не найдены',
     couldNotLoadPros: 'Не удалось загрузить специалистов.',
     couldNotUpdatePro: 'Не удалось обновить статус специалиста.',
+    approvedProfessionsTitle: 'Одобренные профессии',
+    approvedProfessionsSubtitle: 'Управляйте профессиями, которые могут выбрать специалисты.',
+    professionNamePlaceholder: 'Название профессии',
+    noProfessionsYet: 'Профессий пока нет',
+    failedToLoadProfessions: 'Не удалось загрузить профессии.',
+    couldNotAddProfession: 'Не удалось добавить профессию.',
+    couldNotDeleteProfession: 'Не удалось удалить профессию.',
     tradeField: 'Профессия',
     cityField: 'Город',
     hourlyRateField: 'Часовая ставка',

@@ -15,8 +15,10 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 import { professionsApi, type ProfessionDto } from "../../api/professionsApi";
+import { useLanguage } from "../../translations/useLanguage";
 
 export default function ProfessionsPage() {
+  const { t } = useLanguage();
   const theme = useTheme();
   const [professions, setProfessions] = useState<ProfessionDto[]>([]);
   const [name, setName] = useState("");
@@ -30,7 +32,7 @@ export default function ProfessionsPage() {
       setProfessions(await professionsApi.getAll());
       setError("");
     } catch {
-      setError("Failed to load professions.");
+      setError(t("failedToLoadProfessions"));
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ export default function ProfessionsPage() {
       setName("");
       setError("");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Could not add profession.");
+      setError(err instanceof Error ? err.message : t("couldNotAddProfession"));
     } finally {
       setSaving(false);
     }
@@ -63,15 +65,15 @@ export default function ProfessionsPage() {
       setProfessions((current) => current.filter((item) => item.id !== profession.id));
       setError("");
     } catch {
-      setError("Could not delete profession.");
+      setError(t("couldNotDeleteProfession"));
     }
   };
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={500} gutterBottom>Approved professions</Typography>
+      <Typography variant="h5" fontWeight={500} gutterBottom>{t("approvedProfessionsTitle")}</Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Control which trades can be selected by professionals.
+        {t("approvedProfessionsSubtitle")}
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -85,7 +87,7 @@ export default function ProfessionsPage() {
             onKeyDown={(e) => {
               if (e.key === "Enter") void addProfession();
             }}
-            placeholder="Profession name"
+            placeholder={t("professionNamePlaceholder")}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -96,14 +98,14 @@ export default function ProfessionsPage() {
             sx={{ flex: 1 }}
           />
           <Button variant="contained" onClick={() => void addProfession()} disabled={saving || !name.trim()}>
-            Add
+            {t("addBtn")}
           </Button>
         </Stack>
 
         {loading ? (
-          <Typography color="text.secondary" sx={{ py: 3, textAlign: "center" }}>Loading...</Typography>
+          <Typography color="text.secondary" sx={{ py: 3, textAlign: "center" }}>{t("loadingLabel")}</Typography>
         ) : professions.length === 0 ? (
-          <Typography color="text.secondary" sx={{ py: 3, textAlign: "center" }}>No professions yet</Typography>
+          <Typography color="text.secondary" sx={{ py: 3, textAlign: "center" }}>{t("noProfessionsYet")}</Typography>
         ) : (
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
             {professions.map((profession) => (

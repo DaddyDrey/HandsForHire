@@ -54,7 +54,7 @@ export default function CTA() {
                     transition: 'all 200ms ease',
                   }}
                 >
-                  Post a job
+                  {t('PostAnAnnouncement')}
                 </Button>
 
                 <Button
