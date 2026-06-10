@@ -4,10 +4,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "../../auth/auth.ts";
 import { useLanguage } from "../../translations/useLanguage";
-
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-}
+import { isAllowedEmail } from "../../utils/emailValidation";
 
 const REMEMBERED_EMAIL_KEY = "handsforhire_remembered_email";
 
@@ -33,7 +30,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (!isValidEmail(email)) {
+    if (!isAllowedEmail(email)) {
       setError(t("invalidEmail"));
       return;
     }
