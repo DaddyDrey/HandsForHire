@@ -266,6 +266,12 @@ const translations = {
     aboutFaq5Question: 'How do clients contact professionals?',
     aboutFaq5Answer: 'Clients can open a professional profile and start a direct message conversation from the platform.',
 
+    // Contacts page
+    contactsHeroChip: 'Contacts',
+    contactsHeroTitle: 'Get in touch with the HandsForHire team.',
+    contactsHeroText: 'For questions about the platform, project details, or support, you can contact the team members directly by email, phone, or GitHub.',
+    contactsTeamMember: 'Project team member',
+
     // Admin Dashboard
     dashboardTitle: 'Dashboard',
     dashboardSubtitle: 'Overview of platform activity',
@@ -712,6 +718,12 @@ const translations = {
     aboutFaq5Question: 'Cum contacteaza clientii profesionistii?',
     aboutFaq5Answer: 'Clientii pot deschide profilul unui profesionist si pot incepe o conversatie directa prin platforma.',
 
+    // Contacts page
+    contactsHeroChip: 'Contacte',
+    contactsHeroTitle: 'Ia legatura cu echipa HandsForHire.',
+    contactsHeroText: 'Pentru intrebari despre platforma, detalii despre proiect sau suport, poti contacta membrii echipei direct prin email, telefon sau GitHub.',
+    contactsTeamMember: 'Membru al echipei proiectului',
+
     // Admin Dashboard
     dashboardTitle: 'Tablou de bord',
     dashboardSubtitle: 'Privire generală asupra activității platformei',
@@ -1157,6 +1169,12 @@ const translations = {
     aboutFaq4Answer: 'Да. У каждого объявления есть отдельное действие удаления, поэтому удаление одной услуги не удаляет весь аккаунт.',
     aboutFaq5Question: 'Как клиенты связываются с профессионалами?',
     aboutFaq5Answer: 'Клиенты могут открыть профиль профессионала и начать прямую переписку через платформу.',
+
+    // Contacts page
+    contactsHeroChip: 'Контакты',
+    contactsHeroTitle: 'Свяжитесь с командой HandsForHire.',
+    contactsHeroText: 'По вопросам о платформе, деталях проекта или поддержке вы можете связаться с участниками команды напрямую по email, телефону или через GitHub.',
+    contactsTeamMember: 'Участник команды проекта',
 
     // Admin Dashboard
     dashboardTitle: 'Панель управления',
