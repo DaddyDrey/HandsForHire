@@ -10,6 +10,7 @@ export type ReportApiDto = {
   title: string;
   description: string;
   reporterEmail: string;
+  targetEmail: string;
   category: ReportCategory;
   severity: ReportSeverity;
   status: ReportStatus;
@@ -22,6 +23,7 @@ export type CreateReportRequest = {
   title: string;
   description: string;
   reporterEmail: string;
+  targetEmail: string;
   category: ReportCategory;
   severity?: ReportSeverity;
 };

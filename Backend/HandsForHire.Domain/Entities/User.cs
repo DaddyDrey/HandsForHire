@@ -3,7 +3,8 @@ namespace HandsForHire.Domain.Entities;
 public enum UserStatus
 {
     Active = 0,
-    Suspended = 1
+    Suspended = 1,
+    Verified = 2
 }
 
 public class User
@@ -16,4 +17,5 @@ public class User
     public string PhoneNumber { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public UserStatus Status { get; set; } = UserStatus.Active;
+    public int WarningCount { get; set; }
 }

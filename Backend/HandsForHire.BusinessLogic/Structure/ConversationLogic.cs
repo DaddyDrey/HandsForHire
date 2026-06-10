@@ -28,6 +28,7 @@ public class ConversationLogic : IConversationLogic
                 UserName = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
                 UserEmail = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault() ?? string.Empty,
                 ProName = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.FullName).FirstOrDefault() ?? string.Empty,
+                ProEmail = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Email).FirstOrDefault() ?? string.Empty,
                 ProTrade = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Trade).FirstOrDefault() ?? string.Empty,
                 ProCity = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.City).FirstOrDefault() ?? string.Empty,
                 CreatedAt = c.CreatedAt,
@@ -54,6 +55,7 @@ public class ConversationLogic : IConversationLogic
                 UserName = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
                 UserEmail = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault() ?? string.Empty,
                 ProName = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.FullName).FirstOrDefault() ?? string.Empty,
+                ProEmail = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Email).FirstOrDefault() ?? string.Empty,
                 ProTrade = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Trade).FirstOrDefault() ?? string.Empty,
                 ProCity = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.City).FirstOrDefault() ?? string.Empty,
                 CreatedAt = c.CreatedAt,
@@ -79,6 +81,7 @@ public class ConversationLogic : IConversationLogic
                 UserName = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
                 UserEmail = _context.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault() ?? string.Empty,
                 ProName = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.FullName).FirstOrDefault() ?? string.Empty,
+                ProEmail = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Email).FirstOrDefault() ?? string.Empty,
                 ProTrade = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.Trade).FirstOrDefault() ?? string.Empty,
                 ProCity = _context.Pros.Where(p => p.Id == c.ProId).Select(p => p.City).FirstOrDefault() ?? string.Empty,
                 CreatedAt = c.CreatedAt,
@@ -96,6 +99,19 @@ public class ConversationLogic : IConversationLogic
 
     public async Task<ConversationDto> EnsureAsync(CreateConversationDto dto)
     {
+        var parties = await (
+            from user in _context.Users
+            from pro in _context.Pros
+            where user.Id == dto.UserId && pro.Id == dto.ProId
+            select new { UserEmail = user.Email, ProEmail = pro.Email }
+        ).FirstOrDefaultAsync();
+
+        if (parties == null)
+            throw new InvalidOperationException("Conversation participant was not found.");
+
+        if (parties.UserEmail.ToLower() == parties.ProEmail.ToLower())
+            throw new InvalidOperationException("You cannot message yourself.");
+
         var existing = await _context.Conversations
             .FirstOrDefaultAsync(c => c.UserId == dto.UserId && c.ProId == dto.ProId);
 

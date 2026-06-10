@@ -53,6 +53,7 @@ function mapApiProToPro(p: ProApiDto, reviews: ReviewApiDto[]): ProProfile {
   return {
     id: String(p.id),
     name: p.fullName,
+    email: p.email,
     age: getAge(p.birthYear),
     trade: p.trade,
     city: p.city,
@@ -181,6 +182,8 @@ export default function FindAProPage() {
     setSelectedPro(p);
     setProfileOpen(true);
   };
+
+  const canMessage = (p: ProProfile) => !user || user.email.toLowerCase() !== p.email.toLowerCase();
 
   const closeProfile = () => {
     setProfileOpen(false);
@@ -431,10 +434,13 @@ export default function FindAProPage() {
                     <Button
                       fullWidth
                       variant="contained"
+                      disabled={!canMessage(p)}
                       onClick={async () => {
                         if (!user) return requireAuth();
+                        if (!canMessage(p)) return;
                         await ensureConversation(user.email, p.id, {
                           name: p.name,
+                          email: p.email,
                           trade: p.trade,
                           city: p.city,
                         });

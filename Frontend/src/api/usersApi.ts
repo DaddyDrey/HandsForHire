@@ -1,6 +1,7 @@
 import axiosInstance from './axiosInstance';
 
-export type UserStatus = 'Active' | 'Suspended';
+export type UserStatus = 'Active' | 'Suspended' | 'Verified';
+type UserStatusApiValue = UserStatus | 0 | 1 | 2;
 
 export type UserApiDto = {
   id: number;
@@ -10,7 +11,25 @@ export type UserApiDto = {
   birthYear: number | null;
   phoneNumber: string;
   status: UserStatus;
+  warningCount: number;
 };
+
+type BackendUserApiDto = Omit<UserApiDto, 'status'> & {
+  status: UserStatusApiValue;
+};
+
+function normalizeUserStatus(status: UserStatusApiValue): UserStatus {
+  if (status === 1 || status === 'Suspended') return 'Suspended';
+  if (status === 2 || status === 'Verified') return 'Verified';
+  return 'Active';
+}
+
+function normalizeUser(user: BackendUserApiDto): UserApiDto {
+  return {
+    ...user,
+    status: normalizeUserStatus(user.status),
+  };
+}
 
 export type UpdateUserRequest = {
   fullName: string;
@@ -23,10 +42,10 @@ export type UpdateUserRequest = {
 export const usersApi = {
   async getByEmail(email: string): Promise<UserApiDto | null> {
     try {
-      const { data } = await axiosInstance.get<UserApiDto>(
+      const { data } = await axiosInstance.get<BackendUserApiDto>(
         `/Users/by-email/${encodeURIComponent(email)}`
       );
-      return data;
+      return normalizeUser(data);
     } catch {
       return null;
     }

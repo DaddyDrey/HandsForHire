@@ -6,7 +6,7 @@ import {
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
-import { messagesApi, type UserApiDto } from "../../api/messagesApi";
+import { messagesApi, type UserApiDto, type UserStatus } from "../../api/messagesApi";
 import { useLanguage } from "../../translations/useLanguage";
 
 const ADMIN_EMAILS = ["demo@handsforhire.com"];
@@ -15,14 +15,16 @@ type Row = {
   id: number;
   email: string;
   fullName: string;
-  status: "Active" | "Suspended" | "Pending" | "Demo";
+  status: UserStatus | "Pending" | "Demo";
   role: "Admin" | "User";
   isAdmin: boolean;
+  warningCount: number;
 };
 
 const statusColor: Record<string, "success" | "error" | "warning" | "primary" | "default"> = {
   Active: "success",
   Suspended: "error",
+  Verified: "success",
   Pending: "warning",
   Demo: "primary",
 };
@@ -31,7 +33,7 @@ function mapUser(u: UserApiDto): Row {
   const isAdmin = ADMIN_EMAILS.includes(u.email.toLowerCase());
   let status: Row["status"];
   if (isAdmin) status = "Demo";
-  else status = u.status === "Suspended" ? "Suspended" : "Active";
+  else status = u.status;
   return {
     id: u.id,
     email: u.email,
@@ -39,6 +41,7 @@ function mapUser(u: UserApiDto): Row {
     status,
     role: isAdmin ? "Admin" : "User",
     isAdmin,
+    warningCount: u.warningCount ?? 0,
   };
 }
 
@@ -54,6 +57,7 @@ export default function UsersPage() {
   const statusLabel: Record<string, string> = {
     Active: t("statusActive"),
     Suspended: t("statusSuspended"),
+    Verified: t("statusVerified"),
     Pending: t("statusPending"),
     Demo: t("statusDemo"),
   };
@@ -66,9 +70,8 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<Row | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
 
-  const toggleStatus = async (user: Row) => {
+  const setStatus = async (user: Row, next: UserStatus) => {
     if (user.isAdmin) return;
-    const next = user.status === "Suspended" ? "Active" : "Suspended";
     setBusyId(user.id);
     try {
       await messagesApi.setUserStatus(user.id, next);
@@ -126,6 +129,7 @@ export default function UsersPage() {
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <MenuItem value="All">{t("allStatuses")}</MenuItem>
             <MenuItem value="Active">{t("statusActive")}</MenuItem>
+            <MenuItem value="Verified">{t("statusVerified")}</MenuItem>
             <MenuItem value="Suspended">{t("statusSuspended")}</MenuItem>
             <MenuItem value="Pending">{t("statusPending")}</MenuItem>
           </Select>
@@ -136,7 +140,7 @@ export default function UsersPage() {
         <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
           <Box component="thead">
             <Box component="tr">
-              {[t("email"), t("nameField"), t("statusField"), t("roleField"), ""].map((h) => (
+              {[t("email"), t("nameField"), t("statusField"), t("warningsField"), t("roleField"), ""].map((h) => (
                 <Box
                   key={h}
                   component="th"
@@ -150,21 +154,21 @@ export default function UsersPage() {
           <Box component="tbody">
             {loading && (
               <Box component="tr">
-                <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center" }}>
+                <Box component="td" colSpan={6} sx={{ px: 2.5, py: 5, textAlign: "center" }}>
                   <CircularProgress size={20} />
                 </Box>
               </Box>
             )}
             {!loading && loadError && (
               <Box component="tr">
-                <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center", color: "error.main", fontSize: "0.8rem" }}>
+                <Box component="td" colSpan={6} sx={{ px: 2.5, py: 5, textAlign: "center", color: "error.main", fontSize: "0.8rem" }}>
                   {loadError}
                 </Box>
               </Box>
             )}
             {!loading && !loadError && filtered.length === 0 && (
               <Box component="tr">
-                <Box component="td" colSpan={5} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
+                <Box component="td" colSpan={6} sx={{ px: 2.5, py: 5, textAlign: "center", color: "text.disabled", fontSize: "0.8rem" }}>
                   {t("noUsersFound")}
                 </Box>
               </Box>
@@ -184,6 +188,15 @@ export default function UsersPage() {
                 <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
                   <Chip label={statusLabel[user.status] ?? user.status} size="small" color={statusColor[user.status]} variant="outlined" sx={{ fontSize: "0.65rem", height: 20 }} />
                 </Box>
+                <Box component="td" sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                  <Chip
+                    label={t("warningsCount").replace("{n}", String(user.warningCount))}
+                    size="small"
+                    color={user.warningCount > 0 ? "warning" : "default"}
+                    variant="outlined"
+                    sx={{ fontSize: "0.65rem", height: 20 }}
+                  />
+                </Box>
                 <Box component="td" sx={{ px: 2.5, py: 1.5, fontSize: "0.8rem", color: "text.secondary", borderBottom: `1px solid ${theme.palette.divider}` }}>
                   {user.role === "Admin" ? t("roleAdmin") : t("roleUser")}
                 </Box>
@@ -202,7 +215,7 @@ export default function UsersPage() {
                         size="small"
                         variant="outlined"
                         disabled={busyId === user.id}
-                        onClick={() => toggleStatus(user)}
+                        onClick={() => setStatus(user, user.status === "Suspended" ? "Active" : "Suspended")}
                         sx={{
                           fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0,
                           borderColor: "divider", color: "text.secondary",
@@ -212,6 +225,17 @@ export default function UsersPage() {
                         }}
                       >
                         {user.status === "Suspended" ? t("restoreBtn") : t("suspendBtn")}
+                      </Button>
+                    )}
+                    {!user.isAdmin && user.status !== "Verified" && user.status !== "Suspended" && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={busyId === user.id}
+                        onClick={() => setStatus(user, "Verified")}
+                        sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
+                      >
+                        {t("verifyBtn")}
                       </Button>
                     )}
                   </Box>
@@ -280,6 +304,10 @@ export default function UsersPage() {
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("statusField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{statusLabel[selectedUser.status] ?? selectedUser.status}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">{t("warningsField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedUser.warningCount}</Typography>
                   </Box>
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("roleField")}</Typography>

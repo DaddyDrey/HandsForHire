@@ -224,6 +224,10 @@ namespace HandsForHire.DataAccesLayer.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("TargetEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("TEXT");
 
@@ -304,6 +308,9 @@ namespace HandsForHire.DataAccesLayer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WarningCount")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

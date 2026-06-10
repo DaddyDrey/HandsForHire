@@ -1,15 +1,48 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Box } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Alert, Box } from '@mui/material';
 import MainAppBar from './app-bar/MainAppBar';
 import MainFooter from './footer/MainFooter';
 import paths from '../../routes/paths';
 import ScrollToTop from '../../components/common/ScrollToTop';
 import { MessagesDrawerProvider } from '../../components/messages/MessagesDrawerProvider';
+import { getUser, updateStoredUser, type User } from '../../auth/auth';
+import { usersApi } from '../../api/usersApi';
+import { useLanguage } from '../../translations/useLanguage';
 
 export default function MainLayout() {
   const location = useLocation();
+  const { t } = useLanguage();
   const hideFooter = [paths.contacts, paths.about, paths.terms].includes(location.pathname);
   const isHomePage = location.pathname === paths.home;
+  const [user, setUser] = useState<User | null>(() => getUser());
+
+  useEffect(() => {
+    const stored = getUser();
+    setUser(stored);
+    if (!stored?.email) return;
+
+    let cancelled = false;
+    usersApi.getByEmail(stored.email).then((fresh) => {
+      if (cancelled || !fresh) return;
+      const nextUser: User = {
+        ...stored,
+        fullName: fresh.fullName,
+        email: fresh.email,
+        city: fresh.city,
+        birthYear: fresh.birthYear,
+        phoneNumber: fresh.phoneNumber,
+        status: fresh.status,
+        warningCount: fresh.warningCount,
+      };
+      updateStoredUser(nextUser);
+      setUser(nextUser);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname]);
 
   return (
     <MessagesDrawerProvider>
@@ -28,6 +61,13 @@ export default function MainLayout() {
         <ScrollToTop />
         <MainAppBar />
         <Box component="main" sx={{ flex: 1, pt: isHomePage ? 0 : { xs: 8, md: 9 } }}>
+          {!!user?.warningCount && (
+            <Box sx={{ px: { xs: 2, md: 4 }, pt: isHomePage ? { xs: 8, md: 9 } : 2 }}>
+              <Alert severity="warning">
+                {t("accountWarningNotice").replace("{n}", String(user.warningCount))}
+              </Alert>
+            </Box>
+          )}
           <Outlet />
         </Box>
         {!hideFooter && <MainFooter />}

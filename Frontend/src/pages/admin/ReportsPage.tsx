@@ -6,6 +6,8 @@ import {
 } from "@mui/material";
 
 import { reportsApi, type ReportApiDto, type ReportAction } from "../../api/reportsApi";
+import { messagesApi, type UserApiDto } from "../../api/messagesApi";
+import { prosApi, type ProApiDto } from "../../api/prosApi";
 import { useLanguage } from "../../translations/useLanguage";
 
 function useCategoryLabel(): Record<string, string> {
@@ -23,7 +25,7 @@ function useCategoryLabel(): Record<string, string> {
 function useActionLabel(): Record<ReportAction, string> {
   const { t } = useLanguage();
   return {
-    None: "—",
+    None: "вЂ”",
     Reviewed: t("actReviewed"),
     Suspended: t("actSuspended"),
     Escalated: t("actEscalated"),
@@ -53,11 +55,22 @@ export default function ReportsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [selected, setSelected] = useState<ReportApiDto | null>(null);
+  const [users, setUsers] = useState<UserApiDto[]>([]);
+  const [pros, setPros] = useState<ProApiDto[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    reportsApi.getAll()
-      .then((data) => { if (!cancelled) setReports(data); })
+    Promise.all([
+      reportsApi.getAll(),
+      messagesApi.getAllUsers().catch(() => [] as UserApiDto[]),
+      prosApi.getAll().catch(() => [] as ProApiDto[]),
+    ])
+      .then(([reportsData, usersData, prosData]) => {
+        if (cancelled) return;
+        setReports(reportsData);
+        setUsers(usersData);
+        setPros(prosData);
+      })
       .catch(() => { if (!cancelled) setLoadError(t("couldNotLoadReports")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -82,6 +95,16 @@ export default function ReportsPage() {
         ? { ...x, status: "Resolved", actionTaken: action, resolvedAt: new Date().toISOString() }
         : x
       ));
+      const targetEmail = getReportTargetEmail(r);
+      if (targetEmail) {
+        const target = targetEmail.toLowerCase();
+        setUsers((prev) => prev.map((u) => {
+          if (u.email.toLowerCase() !== target) return u;
+          if (action === "Warned") return { ...u, warningCount: u.warningCount + 1 };
+          if (action === "Suspended") return { ...u, status: "Suspended" };
+          return u;
+        }));
+      }
     } catch {
       setLoadError(t("couldNotUpdateReport"));
     } finally {
@@ -100,6 +123,66 @@ export default function ReportsPage() {
 
   const reportList = tab === 0 ? pending : resolved;
 
+  const getTargetUser = (email: string) => {
+    const normalized = email.toLowerCase();
+    return users.find((u) => u.email.toLowerCase() === normalized) ?? null;
+  };
+
+  const deleteReport = async (r: ReportApiDto) => {
+    if (!window.confirm(t("confirmDeleteReport"))) return;
+    setBusyId(r.id);
+    try {
+      await reportsApi.delete(r.id);
+      setReports((prev) => prev.filter((x) => x.id !== r.id));
+      if (selected?.id === r.id) setSelected(null);
+    } catch {
+      setLoadError(t("couldNotUpdateReport"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const inferTargetEmail = (r: ReportApiDto) => {
+    const haystack = `${r.title} ${r.description}`;
+    const emails = haystack.match(/[^\s<>()[\],;:]+@[^\s<>()[\],;:]+\.[^\s<>()[\],;:.]+/g) ?? [];
+    const reporter = r.reporterEmail.toLowerCase();
+    const emailMatch = emails.find((email) => email.toLowerCase() !== reporter);
+    if (emailMatch) return emailMatch;
+
+    const name = extractReportedName(r);
+    if (!name) return "";
+
+    const normalizedName = normalizeName(name);
+    const userMatch = users.find((u) =>
+      normalizeName(u.fullName) === normalizedName ||
+      normalizeName(u.email.split("@")[0]) === normalizedName
+    );
+    if (userMatch) return userMatch.email;
+
+    const proMatch = pros.find((p) =>
+      normalizeName(p.fullName) === normalizedName ||
+      normalizeName(p.email.split("@")[0]) === normalizedName
+    );
+    return proMatch?.email ?? "";
+  };
+
+  const getReportTargetEmail = (r: ReportApiDto) => r.targetEmail || inferTargetEmail(r);
+
+  const normalizeName = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+  const extractReportedName = (r: ReportApiDto) => {
+    const match = r.title.match(/\bwith\s+(.+)$/i);
+    return match?.[1]?.trim() ?? "";
+  };
+
+  const renderTargetInfo = (r: ReportApiDto) => {
+    const targetEmail = getReportTargetEmail(r);
+    if (!targetEmail) return t("noTargetUser");
+    const target = getTargetUser(targetEmail);
+    const warnings = target?.warningCount ?? 0;
+    return `${targetEmail} · ${t("warningsCount").replace("{n}", String(warnings))}`;
+  };
+
   // Stats
   const categoryStats = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -114,7 +197,7 @@ export default function ReportsPage() {
       (r) => r.status === "Resolved" && r.resolvedAt && new Date(r.resolvedAt).getTime() >= monthStart
     );
     const resolvedAll = reports.filter((r) => r.status === "Resolved" && r.resolvedAt);
-    let avgDays = "—";
+    let avgDays = "вЂ”";
     if (resolvedAll.length > 0) {
       const totalMs = resolvedAll.reduce((sum, r) => {
         const created = new Date(r.createdAt).getTime();
@@ -194,13 +277,28 @@ export default function ReportsPage() {
                   {r.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.72rem" }}>
-                  {t("reportedByPhrase")} {r.reporterEmail} · {formatDate(r.createdAt, locale)} · {categoryLabel[r.category]}
-                  {isResolved && r.actionTaken !== "None" && ` · ${actionLabel[r.actionTaken]}`}
+                  {t("reportedByPhrase")} {r.reporterEmail} В· {formatDate(r.createdAt, locale)} В· {categoryLabel[r.category]}
+                  {isResolved && r.actionTaken !== "None" && ` В· ${actionLabel[r.actionTaken]}`}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontSize: "0.72rem", mt: 0.25 }}>
+                  {t("targetUserField")}: {renderTargetInfo(r)}
                 </Typography>
               </Box>
 
               {isResolved ? (
-                <Chip label={t("statusResolved")} size="small" color="success" variant="outlined" sx={{ fontSize: "0.65rem", height: 20, flexShrink: 0 }} />
+                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                  <Chip label={t("statusResolved")} size="small" color="success" variant="outlined" sx={{ fontSize: "0.65rem", height: 20, flexShrink: 0 }} />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    disabled={busyId === r.id}
+                    onClick={() => deleteReport(r)}
+                    sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0 }}
+                  >
+                    {t("deleteReportBtn")}
+                  </Button>
+                </Stack>
               ) : (
                 <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                   <Button
@@ -211,17 +309,24 @@ export default function ReportsPage() {
                   >
                     {t("reviewBtn")}
                   </Button>
-                  {(r.category === "Reliability" || r.category === "Fraud") && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={busyId === r.id}
-                      onClick={() => resolveWith(r, "Suspended")}
-                      sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "error.main", color: "error.main" } }}
-                    >
-                      {t("suspendBtn")}
-                    </Button>
-                  )}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={busyId === r.id}
+                    onClick={() => resolveWith(r, "Reviewed")}
+                    sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "success.main", color: "success.main" } }}
+                  >
+                    {t("markReviewedBtn")}
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={busyId === r.id || !getReportTargetEmail(r)}
+                    onClick={() => resolveWith(r, "Suspended")}
+                    sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "error.main", color: "error.main" } }}
+                  >
+                    {t("suspendBtn")}
+                  </Button>
                   {r.category === "Payment" && (
                     <Button
                       size="small"
@@ -233,17 +338,25 @@ export default function ReportsPage() {
                       {t("escalateBtn")}
                     </Button>
                   )}
-                  {r.category !== "Reliability" && r.category !== "Fraud" && r.category !== "Payment" && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={busyId === r.id}
-                      onClick={() => resolveWith(r, "Warned")}
-                      sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "warning.main", color: "warning.main" } }}
-                    >
-                      {t("warnUserBtn")}
-                    </Button>
-                  )}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={busyId === r.id || !getReportTargetEmail(r)}
+                    onClick={() => resolveWith(r, "Warned")}
+                    sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0, borderColor: "divider", color: "text.secondary", "&:hover": { borderColor: "warning.main", color: "warning.main" } }}
+                  >
+                    {t("warnUserBtn")}
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    disabled={busyId === r.id}
+                    onClick={() => deleteReport(r)}
+                    sx={{ fontSize: "0.7rem", py: 0.25, px: 1.25, minWidth: 0 }}
+                  >
+                    {t("deleteReportBtn")}
+                  </Button>
                 </Box>
               )}
             </Box>
@@ -326,7 +439,7 @@ export default function ReportsPage() {
                     {t("descriptionField")}
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: "pre-wrap" }}>
-                    {selected.description || "—"}
+                    {selected.description || "вЂ”"}
                   </Typography>
                 </Box>
                 <Divider />
@@ -334,6 +447,10 @@ export default function ReportsPage() {
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("reporterField")}</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{selected.reporterEmail}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">{t("targetUserField")}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{renderTargetInfo(selected)}</Typography>
                   </Box>
                   <Box>
                     <Typography variant="caption" color="text.secondary">{t("categoryField")}</Typography>

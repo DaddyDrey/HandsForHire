@@ -43,8 +43,15 @@ public class ConversationsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Ensure(CreateConversationDto dto)
     {
-        var conversation = await _ConversationLogic.EnsureAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = conversation.Id }, conversation);
+        try
+        {
+            var conversation = await _ConversationLogic.EnsureAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = conversation.Id }, conversation);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete("{id}")]
