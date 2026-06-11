@@ -1,9 +1,13 @@
+using HandsForHire.DataAccesLayer.Context;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace HandsForHire.DataAccesLayer.Migrations
 {
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260610043000_AddReportTargetsAndUserWarnings")]
     public partial class AddReportTargetsAndUserWarnings : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
